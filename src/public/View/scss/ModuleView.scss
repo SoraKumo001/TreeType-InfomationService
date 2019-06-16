@@ -1,0 +1,21 @@
+[data-jwf-style="ModuleView"] {
+  display: flex;
+  flex-wrap: wrap;
+  overflow: auto;
+  > table {
+    background-color: rgb(53, 121, 167);
+    border-radius: 5%;
+    margin: 1em;
+    padding:0.1em;
+    color: white;
+    td:nth-child(1) {
+      font-weight: bold;
+      white-space: nowrap;
+      background-color: rgba(17, 87, 134, 0.7);
+    }
+    td:nth-child(2) {
+      background-color: rgba(17, 87, 134, 0.4);
+      width: 10em;
+    }
+  }
+}
