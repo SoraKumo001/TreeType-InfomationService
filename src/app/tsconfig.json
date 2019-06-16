@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "commonjs",
+    "outDir": "../../dist/app/",
+    "sourceMap": true,
+    "strict": true,
+    "composite": true,
+  },"references": [
+		{"path": "../../node_modules/active-module-framework/src"}
+	]
+}

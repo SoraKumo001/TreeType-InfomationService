@@ -1,0 +1,6 @@
+{
+	"references": [
+		{"path": "./src/app"}
+	],
+	"exclude": ["."]
+}
