@@ -21,9 +21,9 @@ export interface LISTVIEW_EVENT_DRAG_START {
   event: DragEvent;
 }
 export interface ListViewEventMap extends WINDOW_EVENT_MAP {
-  itemClick: LISTVIEW_EVENT_ITEM_CLICK;
-  itemDblClick: LISTVIEW_EVENT_ITEM_CLICK;
-  itemDragStart: LISTVIEW_EVENT_DRAG_START;
+  itemClick: [LISTVIEW_EVENT_ITEM_CLICK];
+  itemDblClick: [LISTVIEW_EVENT_ITEM_CLICK];
+  itemDragStart: [LISTVIEW_EVENT_DRAG_START];
 }
 /**
  *ListView用クラス
@@ -32,7 +32,7 @@ export interface ListViewEventMap extends WINDOW_EVENT_MAP {
  * @class ListView
  * @extends {Window}
  */
-export class ListView extends Window {
+export class ListView extends Window<ListViewEventMap> {
   private headers: HTMLElement;
   private resizers: HTMLElement;
   private itemArea: HTMLElement;
@@ -762,18 +762,5 @@ export class ListView extends Window {
     this.resize();
   }
 
-  /**
-   *
-   *
-   * @template K
-   * @param {K} type
-   * @param {(ev: ListViewEventMap[K]) => unknown} listener
-   * @memberof ListView
-   */
-  public addEventListener<K extends keyof ListViewEventMap>(
-    type: K|string,
-    listener: (this:Window,ev: ListViewEventMap[K]) => unknown
-  ): void {
-    super.addEventListener(type, listener as (e: unknown) => unknown);
-  }
+
 }

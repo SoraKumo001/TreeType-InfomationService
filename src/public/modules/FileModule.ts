@@ -18,19 +18,7 @@ export interface CustomMap extends ModuleMap {
   upload_file: [number]; //parentId
 }
 
-export class FileModule extends AppModule {
-  public addEventListener<K extends keyof CustomMap>(
-    name: K,
-    proc: (...params: CustomMap[K]) => unknown
-  ): void {
-    super.addEventListener(name, proc);
-  }
-  public callEvent<K extends keyof CustomMap>(
-    name: K,
-    ...params: CustomMap[K]
-  ): void {
-    super.callEvent(name, ...params);
-  }
+export class FileModule extends AppModule<CustomMap> {
   public getDirs() {
     const adapter = this.getAdapter();
     return adapter.exec("Files.getDirList") as Promise<FileInfo>;

@@ -112,11 +112,13 @@ export interface JDATA {
 }
 
 export interface WINDOW_EVENT_MAP {
-  active: { active: boolean };
-  closed: {};
-  layout: {};
-  layouted: {};
-  visibled: { visible: boolean };
+  [key: string]: unknown[];
+  active: [{ active: boolean }];
+  measure:[];
+  closed: [];
+  layout: [];
+  layouted: [];
+  visibled: [{ visible: boolean }];
 }
 
 /**
@@ -142,8 +144,10 @@ export interface WINDOW_PARAMS {
  * @export
  * @class Window
  */
-export class Window {
-  private Events = new Map<string, ((e: unknown) => unknown)[]>();
+export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
+  private listeners: {
+    [key: string]: unknown[];
+  } = {};
   private hNode: JNode;
   private JData: JDATA = {
     x: 0,
@@ -466,20 +470,17 @@ export class Window {
    * @memberof Window
    */
   // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
-  addEventListener<K extends keyof WINDOW_EVENT_MAP>(
-    type: K | string,
-    listener: (this: Window, ev: WINDOW_EVENT_MAP[K]) => unknown
-  ): void {
-    let eventData = this.Events.get(type);
-    if (!eventData) {
-      eventData = [];
-      this.Events.set(type, eventData);
+  addEventListener<K extends keyof T>(name: K&string, proc: (...params: T[K]) => void): void {
+    const listener = this.listeners[name];
+    if (!listener) {
+      this.listeners[name as string] = [proc];
+      return;
     }
-    for (let ev of eventData) {
-      if (String(ev) === String(listener)) return;
-    }
-    eventData.push(listener as (e: unknown) => unknown);
+    if (listener.indexOf(proc) >= 0)
+      return;
+    listener.push(proc);
   }
+
   /**
    *イベントの削除
    *
@@ -489,26 +490,19 @@ export class Window {
    * @memberof Window
    */
   // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
-  removeEventListener<K extends keyof WINDOW_EVENT_MAP>(
-    type: K | string,
-    listener?: (this: Window, ev: WINDOW_EVENT_MAP[K]) => void
-  ): void {
-    if (listener == null) {
-      this.Events.delete(type);
+  removeEventListener<K extends keyof T>(name: K&string, proc:(...params: T[K]) => void): void {
+    const listener = this.listeners[name];
+    if (!listener) {
+      this.listeners[name as string] = [proc];
       return;
     }
-
-    let eventData = this.Events.get(type);
-    if (!eventData) {
-      eventData = [];
-      this.Events.set(type, eventData);
-    }
-    for (let index in eventData) {
-      if (String(eventData[index]) === String(listener)) {
-        eventData.splice(parseInt(index), 1);
-      }
-    }
+    const index = listener.indexOf(proc);
+    if (index < 0)
+      return;
+    listener.splice(index, 1);
   }
+
+  //
   /**
    *イベントの要求
    *
@@ -516,14 +510,11 @@ export class Window {
    * @param {*} params パラメータ
    * @memberof Window
    */
-  public callEvent<K extends keyof WINDOW_EVENT_MAP>(
-    type: K | string,
-    params: WINDOW_EVENT_MAP[K] | unknown
-  ): void {
-    const eventData = this.Events.get(type);
-    if (eventData) {
-      for (let ev of eventData) {
-        ev(params as WINDOW_EVENT_MAP[K]);
+  callEvent<K extends keyof T>(name: K&string, ...params: T[K]) {
+    const listener = this.listeners[name];
+    if (listener) {
+      for (const proc of listener) {
+        (proc as ((...params: T[K]) => unknown))(...params);
       }
     }
   }
@@ -952,7 +943,7 @@ export class Window {
 
     if (!this.isAutoSize()) return false;
 
-    this.callEvent("measure", {});
+    this.callEvent("measure");
     //client.style.position = "static";
     if (jdata.instructionSize.width >= 0)
       client.style.width = jdata.instructionSize.width + "px";
@@ -1035,7 +1026,7 @@ export class Window {
       this.hNode.style.width = this.JData.width + "px";
       this.hNode.style.height = this.JData.height + "px";
       flag = true;
-      this.callEvent("layout", {});
+      this.callEvent("layout");
     }
 
     let client = this.getClient();
@@ -1122,7 +1113,7 @@ export class Window {
     }
     //} while (retry);
     this.orderSort(client);
-    if (this.JData.redraw || flag) this.callEvent("layouted", {});
+    if (this.JData.redraw || flag) this.callEvent("layouted");
     this.JData.redraw = false;
   }
   private orderSort(client: HTMLElement): boolean {
@@ -1245,7 +1236,7 @@ export class Window {
       }
       if (this.parentNode) this.parentNode.removeChild(this);
       this.removeEventListener("animationend", animationEnd);
-      that.callEvent("closed", {});
+      that.callEvent("closed");
     }
     const animation = this.JData.animationEnable
       ? this.JData.animation["close"]

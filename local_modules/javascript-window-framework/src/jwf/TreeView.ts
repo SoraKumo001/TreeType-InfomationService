@@ -4,6 +4,7 @@ import "./scss/TreeView.scss";
 
 export interface TREEVIEW_EVENT_SELECT {
   item: TreeItem;
+  user:boolean;
 }
 export interface TREEVIEW_EVENT_DROP {
   item: TreeItem;
@@ -18,11 +19,11 @@ export interface TREEVIEW_EVENT_OPEN {
   opened: boolean;
 }
 export interface TreeViewEventMap extends WINDOW_EVENT_MAP {
-  itemOpen: TREEVIEW_EVENT_OPEN;
-  itemSelect: TREEVIEW_EVENT_SELECT;
-  itemDblClick: TREEVIEW_EVENT_SELECT;
-  itemDrop: TREEVIEW_EVENT_DROP;
-  itemDragStart: TREEVIEW_EVENT_DRAG_START;
+  itemOpen: [TREEVIEW_EVENT_OPEN];
+  itemSelect: [TREEVIEW_EVENT_SELECT];
+  itemDblClick: [TREEVIEW_EVENT_SELECT];
+  itemDrop: [TREEVIEW_EVENT_DROP];
+  itemDragStart: [TREEVIEW_EVENT_DRAG_START];
 }
 type TreeItemElement = HTMLDivElement & {
   treeItem?: TreeItem;
@@ -57,14 +58,14 @@ export class TreeItem {
     row1.addEventListener(
       "click",
       (): void => {
-        this.selectItem();
+        this.selectItem(false,true);
       }
     );
     row1.addEventListener(
       "dblclick",
       (): void => {
         const treeView = this.getTreeView();
-        if (treeView) treeView.callEvent("itemDblClick", { item: this });
+        if (treeView) treeView.callEvent("itemDblClick", { item: this,user:true });
       }
     );
     row1.addEventListener(
@@ -117,6 +118,7 @@ export class TreeItem {
     );
 
     let body = document.createElement("div");
+    body.dataset.kind = "TreeBody";
     this.body = body;
     row1.appendChild(body);
     body.textContent = label != null ? label : "";
@@ -363,9 +365,9 @@ export class TreeItem {
    *
    * @memberof TreeItem
    */
-  public selectItem(scroll?: boolean): void {
+  public selectItem(scroll?: boolean,user?:boolean): void {
     let treeView = this.getTreeView();
-    if (treeView) treeView.selectItem(this, scroll);
+    if (treeView) treeView.selectItem(this, scroll,user);
   }
   /**
    *所属先のTreeViewを返す
@@ -392,7 +394,7 @@ export class TreeItem {
  * @class TreeView
  * @extends {Window}
  */
-export class TreeView extends Window {
+export class TreeView<T extends TreeViewEventMap=TreeViewEventMap> extends Window<T> {
   private mRootItem: TreeItem;
   private mSelectItem: TreeItem | null = null;
   /**
@@ -461,7 +463,7 @@ export class TreeView extends Window {
    * @param {TreeItem} item 選択するアイテム
    * @memberof TreeView
    */
-  public selectItem(item: TreeItem, scroll?: boolean): void {
+  public selectItem(item: TreeItem, scroll?: boolean,user?:boolean): void {
     const that = this;
     function animationEnd(this: HTMLElement): void {
       this.removeEventListener("animationend", animationEnd);
@@ -489,7 +491,7 @@ export class TreeView extends Window {
         item.getNode().addEventListener("animationend", animationEnd);
       }
     }
-    this.callEvent("itemSelect", { item: item });
+    this.callEvent("itemSelect", { item,user:user?true:false });
   }
   /**
    * 設定されている値を条件にアイテムを選択
@@ -543,32 +545,5 @@ export class TreeView extends Window {
       }
     }
   }
-  /**
-   *アイテムツリーが展開されら発生する
-   *
-   * @param {'itemOpen'} type
-   * @param {(event:TREEVIEW_EVENT_OPEN)=>void} callback
-   * @memberof TreeView
-   */
-  /**
-   *アイテムが選択されたら発生
-   *
-   * @param {'itemSelect'} type
-   * @param {(event:TREEVIEW_EVENT_SELECT)=>void} callback
-   * @memberof TreeView
-   */
-  /**
-   *アイテムにドラッグドロップされたら発生
-   *
-   * @param {'itemDrop'} type
-   * @param {(event: TREEVIEW_EVENT_DROP) => void} callback
-   * @memberof TreeView
-   */
 
-  public addEventListener<K extends keyof TreeViewEventMap>(
-    type: K | string,
-    listener: (ev: TreeViewEventMap[K]) => unknown
-  ): void {
-    super.addEventListener(type, listener as (e: unknown) => unknown);
-  }
 }

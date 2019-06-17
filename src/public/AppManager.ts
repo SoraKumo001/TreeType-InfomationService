@@ -29,7 +29,7 @@ export class AppManager {
     });
     if (moduleSrc) return moduleSrc[1] as T;
     const module = new moduleType(this);
-    this.modules.push([moduleType,module]);
+    this.modules.push([moduleType as typeof AppModule,module]);
     return module;
   }
 }

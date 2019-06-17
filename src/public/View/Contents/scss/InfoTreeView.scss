@@ -1,0 +1,15 @@
+[data-jwf-style=TreeView] {
+  [data-kind=TreeItem] {
+    color: black;
+    &[data-content-type=TEXT] {
+      padding-left: 0.8em;
+      color: #008127;
+    }
+    &[data-content-stat="0"] > [data-kind=TreeRow] > [data-kind=TreeBody] {
+      text-decoration: line-through blue;
+    }
+    &[data-content-stat="-1"] > [data-kind=TreeRow] > [data-kind=TreeBody] {
+      text-decoration: line-through red;
+    }
+  }
+}

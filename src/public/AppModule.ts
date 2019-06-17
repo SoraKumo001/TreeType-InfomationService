@@ -5,7 +5,7 @@ export interface ModuleMap{
 }
 
 
-export class AppModule {
+export class AppModule<T extends ModuleMap=ModuleMap> {
   private listeners: {
     [key: string]: unknown[];
   } = {};
@@ -19,20 +19,20 @@ export class AppModule {
   public getAdapter() {
     return this.manager.getAdapter();
   }
-  addEventListener<K extends keyof ModuleMap>(name: K, proc: (...params: ModuleMap[K]) => unknown): void {
+  addEventListener<K extends keyof T>(name: K&string, proc: (...params: T[K]) => void): void {
     const listener = this.listeners[name];
     if (!listener) {
-      this.listeners[name] = [proc];
+      this.listeners[name as string] = [proc];
       return;
     }
     if (listener.indexOf(proc) >= 0)
       return;
     listener.push(proc);
   }
-  removeEventListener<K extends keyof ModuleMap>(name: K, proc: ModuleMap[K]): void {
+  removeEventListener<K extends keyof T>(name: K&string, proc:(...params: T[K]) => void): void {
     const listener = this.listeners[name];
     if (!listener) {
-      this.listeners[name] = [proc];
+      this.listeners[name as string] = [proc];
       return;
     }
     const index = listener.indexOf(proc);
@@ -40,11 +40,11 @@ export class AppModule {
       return;
     listener.splice(index, 1);
   }
-  callEvent<K extends keyof ModuleMap>(name: K, ...params: ModuleMap[K]) {
+  callEvent<K extends keyof T>(name: K&string, ...params: T[K]) {
     const listener = this.listeners[name];
     if (listener) {
       for (const proc of listener) {
-        (proc as ((...params: ModuleMap[K]) => unknown))(...params);
+        (proc as ((...params: T[K]) => unknown))(...params);
       }
     }
   }

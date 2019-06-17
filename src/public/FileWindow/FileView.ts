@@ -1,8 +1,14 @@
 import * as JWF from "javascript-window-framework";
 import { FileModule, FileInfo } from "../modules/FileModule";
 import { FileEditWindow } from "./FileEditWindow";
+import { ModuleMap } from "../AppModule";
+import { WINDOW_EVENT_MAP } from "javascript-window-framework";
 const IMAGE_FILE = require("./images/file.svg");
 const IMAGE_FOLDER = require("./images/folder.svg");
+
+export interface CustomMap extends WINDOW_EVENT_MAP {
+  selectDir: [number ]; //parameter
+}
 
 /**
  *
@@ -11,6 +17,19 @@ const IMAGE_FOLDER = require("./images/folder.svg");
  * @extends {JWF.Window}
  */
 export class FileView extends JWF.Window {
+  public addEventListener<K extends keyof CustomMap>(
+    name: K,
+    proc: (...params: CustomMap[K]) => unknown
+  ): void {
+    super.addEventListener(name, proc);
+  }
+  public callEvent<K extends keyof CustomMap>(
+    name: K,
+    ...params: CustomMap[K]
+  ): void {
+    super.callEvent(name, ...params);
+  }
+
   fileModule: FileModule;
   fileList: JWF.ListView;
   parentId: number;

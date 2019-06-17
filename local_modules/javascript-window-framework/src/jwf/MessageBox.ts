@@ -5,9 +5,9 @@ import { FrameWindow } from "./FrameWindow";
 import "./scss/MessageBox.scss";
 
 export interface MessageBoxEventMap extends WINDOW_EVENT_MAP {
-  buttonClick: unknown;
+  buttonClick: [unknown];
 }
-export class MessageBox extends FrameWindow {
+export class MessageBox extends FrameWindow<MessageBoxEventMap> {
   private label: Window;
   public constructor(
     title: string,
@@ -44,12 +44,6 @@ export class MessageBox extends FrameWindow {
         }.bind(b)
       );
     }
-  }
-  public addEventListener<K extends keyof MessageBoxEventMap>(
-    type: K|string,
-    listener: (this:Window,ev: MessageBoxEventMap[K]) => void
-  ): void {
-    super.addEventListener(type, listener as (e: unknown) => unknown);
   }
   public setText(text: string): void {
     this.label.getClient().innerText = text;
