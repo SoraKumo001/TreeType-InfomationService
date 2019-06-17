@@ -4,11 +4,11 @@ import "./scss/Button.scss";
 
 export interface BUTTON_EVENT_ITEM_CLICK {
   event: Event;
-  button: Button;
+  button: Button|ImageButton;
 }
 export interface ButtonEventMap extends WINDOW_EVENT_MAP {
-  buttonClick: BUTTON_EVENT_ITEM_CLICK;
-  buttonDblClick: BUTTON_EVENT_ITEM_CLICK;
+  buttonClick: [BUTTON_EVENT_ITEM_CLICK];
+  buttonDblClick: [BUTTON_EVENT_ITEM_CLICK];
 }
 /**
  *ボタン用クラス
@@ -17,7 +17,7 @@ export interface ButtonEventMap extends WINDOW_EVENT_MAP {
  * @class Button
  * @extends {Window}
  */
-export class Button extends Window {
+export class Button extends Window<ButtonEventMap> {
   private nodeText: HTMLElement;
   private nodeValue: unknown;
   /**
@@ -121,26 +121,8 @@ export class Button extends Window {
   public getValue(): unknown {
     return this.nodeValue;
   }
-  /**
-   *イベントの設定
-   * 'buttonClick','buttonDblClick'
-   *
-   * @template K
-   * @param {K} type
-   * @param {(ev: ButtonEventMap[K]) => unknown} listener
-   * @memberof Button
-   */
-  addEventListener<K extends keyof ButtonEventMap>(
-    type: K | string,
-    listener: (this: Window, ev: ButtonEventMap[K]) => unknown
-  ): void {
-    super.addEventListener(type, listener as (
-      this: Window,
-      e: unknown
-    ) => unknown);
-  }
 }
-export class ImageButton extends Window {
+export class ImageButton extends Window<ButtonEventMap> {
   private nodeImg: HTMLImageElement;
   /**
    *Creates an instance of Button.
@@ -179,7 +161,7 @@ export class ImageButton extends Window {
     button.addEventListener(
       "click",
       (e): void => {
-        this.callEvent("buttonClick", { event: e });
+        this.callEvent("buttonClick", { event: e,button:this });
         this.callEvent("submit", { event: e });
       }
     );
@@ -187,7 +169,7 @@ export class ImageButton extends Window {
       "dblclick",
       (e): void => {
         this.callEvent("buttonDblClick", {
-          event: e
+          event: e,button:this
         });
       }
     );
@@ -215,19 +197,5 @@ export class ImageButton extends Window {
     let node = this.getClient();
     node.style.justifyContent = style;
   }
-  /**
-   *イベントの設定
-   * 'buttonClick','buttonDblClick'
-   *
-   * @template K
-   * @param {K} type
-   * @param {(ev: ButtonEventMap[K]) => unknown} listener
-   * @memberof Button
-   */
-  public addEventListener<K extends keyof ButtonEventMap>(
-    type: K | string,
-    listener: (ev: ButtonEventMap[K]) => unknown
-  ): void {
-    super.addEventListener(type, listener as (e: unknown) => unknown);
-  }
+
 }

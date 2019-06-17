@@ -88,11 +88,11 @@ export class Files extends amf.Module {
     for (; i < length; i++) {
       const name = dirs[i];
       const result = await remoteDB.get(
-        "insert into files values(default,$1,0,$2,$3,now(),null) returning files_id",
+        "insert into files values(default,$1,0,$2,$3,now(),null) on conflict do nothing returning files_id",
         parseInt(pid as never),
         remoteNo,
         name
-      ).catch(()=>{return null;});
+      );
       if (!result) return 0;
       id = result.files_id as number;
     }

@@ -6,9 +6,9 @@ export interface CALENDARVIEW_EVENT_DATE_CLICK {
   date: Date;
 }
 export interface CalendarViewEventMap extends WINDOW_EVENT_MAP {
-  date: CALENDARVIEW_EVENT_DATE_CLICK;
+  date: [CALENDARVIEW_EVENT_DATE_CLICK];
 }
-export class CalendarView extends Window {
+export class CalendarView extends Window<CalendarViewEventMap> {
   private titleCell: HTMLTableDataCellElement;
   private dateCells: (HTMLTableDataCellElement & { date?: Date })[];
   private calendarDate: Date = new Date();
@@ -132,16 +132,5 @@ export class CalendarView extends Window {
   private onCellClick(cell: HTMLDivElement & { date?: Date }): void {
     if (cell.date) this.callEvent("date", { date: cell.date });
   }
-  public addEventListener<K extends keyof CalendarViewEventMap>(
-    type: K|string,
-    listener: (ev: CalendarViewEventMap[K]) => unknown
-  ): void {
-    super.addEventListener(type, listener as (e: unknown) => unknown);
-  }
-  public callEvent<K extends keyof CalendarViewEventMap>(
-    type: K,
-    param: CalendarViewEventMap[K]
-  ): void {
-    super.callEvent(type, param);
-  }
+
 }

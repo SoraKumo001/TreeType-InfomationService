@@ -6,7 +6,7 @@ import { SettingModule } from "./modules/SettingModule";
 import { ModuleView } from "./View/Setting/ModuleView";
 import { DatabaseView } from "./View/Setting/DatabaseView";
 import { UserListView } from "./View/Setting/UserListView";
-import { FileWindow } from "./FileWindow/FileWindow";
+
 
 //ページ読み込み時に実行する処理を設定
 addEventListener("DOMContentLoaded", () => {

@@ -19,7 +19,7 @@ export interface ITEM_OPTION {
   }[];
 }
 export interface TableFormViewMap extends WINDOW_EVENT_MAP {
-  itemChange: FormInputElement;
+  itemChange: [FormInputElement];
 }
 
 export type FormInputElement = (HTMLInputElement | HTMLSelectElement) & {
@@ -34,7 +34,7 @@ export type FormInputElement = (HTMLInputElement | HTMLSelectElement) & {
  * @class TableFormView
  * @extends {Window}
  */
-export class TableFormView extends Window {
+export class TableFormView extends Window<TableFormViewMap> {
   private items: HTMLDivElement;
   private footer: HTMLDivElement;
   public constructor(params?: WINDOW_PARAMS) {
@@ -54,12 +54,6 @@ export class TableFormView extends Window {
     const footer = document.createElement("div");
     this.footer = footer;
     clientArea.appendChild(footer);
-  }
-  public addEventListener<K extends keyof TableFormViewMap>(
-    type: K|string,
-    listener: (this: Window, ev: TableFormViewMap[K]) => unknown
-  ): void {
-    super.addEventListener(type, listener as (e: unknown) => unknown);
   }
   public addItem(params: ITEM_OPTION | ITEM_OPTION[]): HTMLElement | null {
     //配列ならば分解し再入力

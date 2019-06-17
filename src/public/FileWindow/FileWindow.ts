@@ -45,7 +45,7 @@ export class FileWindow extends JWF.FrameWindow {
     splitter.addChild(1, fileView, "client");
     fileView.addEventListener(
       "selectDir",
-      (parentId: unknown): void => {
+      (parentId): void => {
         dirTree.selectDir(parentId as number);
       }
     );
