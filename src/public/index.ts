@@ -1,11 +1,12 @@
 import { AppManager } from "./AppManager";
 import { UserModule, UserInfo } from "./modules/UserModule";
 import { UserEditWindow } from "./View/User/UserEditWindow";
-import { MainView } from "./View/MainView";
+import { MainView } from "./View/Contents/MainView";
 import { SettingModule } from "./modules/SettingModule";
 import { ModuleView } from "./View/Setting/ModuleView";
 import { DatabaseView } from "./View/Setting/DatabaseView";
 import { UserListView } from "./View/Setting/UserListView";
+import { BasicView } from "./View/Setting/BasicView";
 
 
 //ページ読み込み時に実行する処理を設定
@@ -28,7 +29,7 @@ addEventListener("DOMContentLoaded", () => {
   settingModule.addSetting("システム/モジュール確認",ModuleView);
   settingModule.addSetting("システム/データベース設定",DatabaseView);
   settingModule.addSetting("システム/ユーザ設定",UserListView);
-  settingModule.addSetting("システム/基本設定");
+  settingModule.addSetting("システム/基本設定",BasicView);
 
   //初回認証
   userModule.request();

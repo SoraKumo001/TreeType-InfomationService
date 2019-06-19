@@ -21,7 +21,8 @@ export interface MainContents {
   childs?: MainContents[];
 }
 export interface CustomMap extends ModuleMap {
-  selectPage: [number, boolean | undefined]; //parameter
+  selectPage:[number] //pid
+  selectContents: [number, boolean | undefined]; //parameter
   createContents: [number, number]; //pid,id
   deleteContents: [number]; //id
 }
@@ -47,12 +48,16 @@ export class ContentsModule extends AppModule<CustomMap> {
       id ? id : 1
     ) as Promise<TreeContents | null>;
   }
-  public getPage(id: number) {
+  public async getPage(id: number) {
     const adapter = this.getAdapter();
-    return adapter.exec("Contents.getPage", id) as Promise<MainContents | null>;
+    const page = await adapter.exec("Contents.getPage", id) as MainContents | null;
+    if(page){
+      this.callEvent("selectPage",page.id);
+    }
+    return page;
   }
-  public selectPage(id: number, tree?: boolean) {
-    this.callEvent("selectPage", id, tree);
+  public selectContents(id: number, tree?: boolean) {
+    this.callEvent("selectContents", id, tree);
   }
   public getContents(id: number, child?: boolean) {
     const adapter = this.getAdapter();

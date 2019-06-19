@@ -17,16 +17,20 @@ export interface CustomMap extends ModuleMap {
 export class UserModule extends AppModule<CustomMap> {
   userInfo?: UserInfo;
 
-  constructor(manager:AppManager){
+  constructor(manager: AppManager) {
     super(manager);
     const adapter = this.getAdapter();
-    const value = sessionStorage.getItem(adapter.getKeyName()+"UserInfo");
-    if(value){
+    const value = sessionStorage.getItem(adapter.getKeyName() + "UserInfo");
+    if (value) {
       this.userInfo = JSON.parse(value);
     }
   }
   public getUserInfo() {
     return this.userInfo;
+  }
+  public isAdmin() {
+    const userInfo = this.userInfo;
+    return userInfo && userInfo.admin;
   }
   /**
    *セッションログイン処理
@@ -55,7 +59,10 @@ export class UserModule extends AppModule<CustomMap> {
     )) as UserInfo;
     if (user) {
       this.userInfo = user;
-      sessionStorage.setItem(adapter.getKeyName()+"UserInfo",JSON.stringify(user));
+      sessionStorage.setItem(
+        adapter.getKeyName() + "UserInfo",
+        JSON.stringify(user)
+      );
     }
     this.callEvent("loginUser", user);
     return user;

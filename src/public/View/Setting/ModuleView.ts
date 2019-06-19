@@ -1,4 +1,3 @@
-import * as JWF from "javascript-window-framework";
 import { SettingView } from "../../modules/SettingModule";
 import { AppManager } from "../../AppManager";
 import { InfoModule } from "../../modules/InfoModule";

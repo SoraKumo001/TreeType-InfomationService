@@ -6,6 +6,7 @@ import "highlight.js/styles/dark.css";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
 import { AppModule } from "../../AppModule";
+import { UserModule } from "../../modules/UserModule";
 
 const highlight = require("highlight.js/lib/highlight");
 highlight.registerLanguage(
@@ -29,9 +30,10 @@ export interface ContentsArea extends HTMLDivElement {
  * @extends {JWF.Window}
  */
 export class InfoContentsView extends JWF.Window {
+  userModule: UserModule;
   contentsModule: ContentsModule;
   contentsPage: HTMLDivElement;
-  contentsNode: { [key: number]: HTMLDivElement } = {};
+  contentsNode: { [key: number]: ContentsArea } = {};
   timerHandle?: number;
   selectId: number = 0;
   manager: AppManager;
@@ -45,17 +47,18 @@ export class InfoContentsView extends JWF.Window {
     this.manager = manager;
     const contentsModule = manager.getModule(ContentsModule);
     this.contentsModule = contentsModule;
+    this.userModule = manager.getModule(UserModule);
 
-    contentsModule.addEventListener("selectPage", (id, tree) => {
+    contentsModule.addEventListener("selectContents", (id, tree) => {
       if (!tree) this.loadPage(id);
     });
     contentsModule.addEventListener("createContents", async (pid, id) => {
-      await this.loadSubPage(pid,id);
+      await this.loadSubPage(pid, id);
       this.jumpContents(id);
     });
-    contentsModule.addEventListener("deleteContents", (id) => {
+    contentsModule.addEventListener("deleteContents", id => {
       const contents = this.contentsNode[id];
-      if(contents && contents.parentNode){
+      if (contents && contents.parentNode) {
         contents.parentNode.removeChild(contents);
       }
     });
@@ -64,6 +67,29 @@ export class InfoContentsView extends JWF.Window {
     const contentsPage = document.createElement("div");
     this.getClient().appendChild(contentsPage);
     this.contentsPage = contentsPage;
+
+    const client = this.getClient();
+    //スクロール時にツリービューの選択を変更
+    client.addEventListener("scroll", () => {
+      const scrollTop = client.scrollTop-20;
+      let nearNode: ContentsArea | null = null;
+      let near = 0;
+      for (const node of Object.values(this.contentsNode)) {
+        const p = Math.abs(node.offsetTop - scrollTop);
+        if (p > 0 &&  (nearNode === null || p < near)) {
+          nearNode = node;
+          near = p;
+        }
+      }
+      if (nearNode) {
+        const contents = nearNode.contents;
+        const id = contents.id;
+        if (this.selectId !== id) {
+          this.contentsModule.selectContents(id, true);
+          this.selectId = id;
+        }
+      }
+    });
   }
   /**
    *
@@ -78,7 +104,6 @@ export class InfoContentsView extends JWF.Window {
     contentsArea.contents = value;
     contentsArea.className = "ContentsArea";
     contentsArea.dataset.contentsType = value.type;
-    //Contents.nodes[value["id"]] = area;
     var contents = document.createElement("div");
     contents.className = "Contents";
     contentsArea.appendChild(contents);
@@ -173,7 +198,7 @@ export class InfoContentsView extends JWF.Window {
       }
     };
     contentsArea.update(value);
-
+    /*
     //ツリービューの選択を変更する処理
     const changeActiveId = (e: MouseEvent) => {
       const id = value.id;
@@ -187,6 +212,7 @@ export class InfoContentsView extends JWF.Window {
     title.addEventListener("mouseover", changeActiveId);
     body.addEventListener("click", changeActiveId);
     title.addEventListener("click", changeActiveId);
+*/
 
     return contentsArea;
   }
@@ -214,23 +240,19 @@ export class InfoContentsView extends JWF.Window {
     if (!page) return;
     const node = this.createContents(page);
     contentsPage.appendChild(node);
-    //this.jumpContents(id);
+    this.jumpContents(id);
   }
-  public async loadSubPage(pid: number,id:number) {
+  public async loadSubPage(pid: number, id: number) {
+    //対象が存在しなければ全てを読み込みなおす
     const parent = this.contentsNode[pid];
-    if(!parent)
-      this.loadPage(id,true);
+    if (!parent) this.loadPage(id, true);
 
-    //while (parent.childNodes.length)
-    //  parent.removeChild(parent.childNodes[0]);
-    //ページ単位でコンテンツの読み出し
+    //部分的なコンテンツの読み出し
     const contentsModule = this.contentsModule;
-    const contents = await contentsModule.getContents(pid,true);
+    const contents = await contentsModule.getContents(pid, true);
     if (!contents) return;
     const node = this.createContents(contents);
-    if(parent.parentNode)
-      parent.parentNode.replaceChild(node,parent);
-    //this.jumpContents(id);
+    if (parent.parentNode) parent.parentNode.replaceChild(node, parent);
   }
   public jumpContents(id: number) {
     const node = this.contentsNode[id];
@@ -239,7 +261,7 @@ export class InfoContentsView extends JWF.Window {
         node.getBoundingClientRect().top -
         this.contentsPage.getBoundingClientRect().top;
       setTimeout(() => {
-        this.scrollTo(this.getClient(), y - 200);
+        this.scrollTo(this.getClient(), y - 50);
       }, 0);
     }
   }

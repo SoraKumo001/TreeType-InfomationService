@@ -4,11 +4,7 @@ import { ContentsModule, TreeContents } from "../../modules/ContentsModule";
 import { TreeItem, TreeViewEventMap } from "javascript-window-framework";
 import "./scss/InfoTreeView.scss";
 
-export interface CustomMap extends TreeViewEventMap {
-  selectPage: [number]; //pageId
-}
-
-export class InfoTreeView extends JWF.TreeView<CustomMap> {
+export class InfoTreeView extends JWF.TreeView {
   private contentsModule: ContentsModule;
   private selectId: number = 0;
   public constructor(manager: AppManager) {
@@ -18,13 +14,9 @@ export class InfoTreeView extends JWF.TreeView<CustomMap> {
 
     this.addEventListener("itemSelect", e => {
       if (e.user)
-        contentsModule.callEvent(
-          "selectPage",
-          e.item.getItemValue() as number,
-          false
-        );
+        contentsModule.selectContents(e.item.getItemValue() as number,false);
     });
-    contentsModule.addEventListener("selectPage", id => {
+    contentsModule.addEventListener("selectContents", id => {
       this.selectId = id;
       this.selectItemFromValue(id);
     });
