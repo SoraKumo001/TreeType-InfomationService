@@ -9,32 +9,58 @@ export interface CustomMap extends TreeViewEventMap {
 }
 
 export class InfoTreeView extends JWF.TreeView<CustomMap> {
-
   private contentsModule: ContentsModule;
-  private selectId : number = 0;
+  private selectId: number = 0;
   public constructor(manager: AppManager) {
     super();
     const contentsModule = manager.getModule(ContentsModule);
     this.contentsModule = contentsModule;
 
-    this.addEventListener("itemSelect",(e)=>{
-      if(e.user)
-        contentsModule.callEvent("selectPage",e.item.getItemValue() as number);
-    })
-    contentsModule.addEventListener("selectPage",(id)=>{
+    this.addEventListener("itemSelect", e => {
+      if (e.user)
+        contentsModule.callEvent(
+          "selectPage",
+          e.item.getItemValue() as number,
+          false
+        );
+    });
+    contentsModule.addEventListener("selectPage", id => {
       this.selectId = id;
       this.selectItemFromValue(id);
     });
+    contentsModule.addEventListener("createContents", (pid, id) => {
+      this.loadSubTree(pid,id);
+    });
+    contentsModule.addEventListener("deleteContents", (id) => {
+      const item = this.findItemFromValue(id);
+      if(item)
+        item.removeItem();
+    });
 
-    this.loadTree();
   }
-  public async loadTree() {
+  public async loadTree(selectId?: number, reload?: boolean) {
+    if (!reload && selectId && this.findItemFromValue(selectId)) {
+      this.selectItemFromValue(selectId);
+      return;
+    }
+
     this.clearItem();
     const value = await this.contentsModule.getTree();
-    if (value)
-      this.setTreeItem(this.getRootItem(), value);
-    if(this.selectId)
-      this.selectItemFromValue(this.selectId);
+    if (value) this.setTreeItem(this.getRootItem(), value);
+    if (selectId) this.selectItemFromValue(selectId);
+    else if (this.selectId) this.selectItemFromValue(this.selectId);
+  }
+  public async loadSubTree(parentId:number,selectId?: number) {
+    const item = this.findItemFromValue(parentId);
+    if(!item)
+      return this.loadTree(selectId,true);
+
+    item.clearItem();
+
+    const value = await this.contentsModule.getTree(parentId);
+    if (value) this.setTreeItem(item, value);
+    if (selectId) this.selectItemFromValue(selectId);
+    else if (this.selectId) this.selectItemFromValue(this.selectId);
   }
   private setTreeItem(item: TreeItem, value: TreeContents) {
     const node = item.getNode();
@@ -43,10 +69,10 @@ export class InfoTreeView extends JWF.TreeView<CustomMap> {
     node.dataset.contentStat = value.stat ? "true" : "false";
     node.dataset.contentType = value["type"] === "PAGE" ? "PAGE" : "TEXT";
     if (value.childs) {
-      var flag = node.dataset.contentType !== 'PAGE';
+      var flag = node.dataset.contentType !== "PAGE";
       for (var i = 0; value.childs[i]; i++) {
         var child = value.childs[i];
-        if ( /*Contents.visible || */child["stat"])
+        if (/*Contents.visible || */ child["stat"])
           this.setTreeItem(item.addItem("", flag), child);
       }
     }

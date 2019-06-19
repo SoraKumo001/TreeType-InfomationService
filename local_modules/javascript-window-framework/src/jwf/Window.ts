@@ -470,8 +470,8 @@ export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
    * @memberof Window
    */
   // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
-  addEventListener<K extends keyof T>(name: K&string, proc: (...params: T[K]) => void): void {
-    const listener = this.listeners[name];
+  addEventListener<K extends keyof T>(name: K, proc: (...params: T[K]) => void): void {
+    const listener = this.listeners[name as string];
     if (!listener) {
       this.listeners[name as string] = [proc];
       return;
@@ -510,8 +510,8 @@ export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
    * @param {*} params パラメータ
    * @memberof Window
    */
-  callEvent<K extends keyof T>(name: K&string, ...params: T[K]) {
-    const listener = this.listeners[name];
+  callEvent<K extends keyof T>(name: K, ...params: T[K]) {
+    const listener = this.listeners[name as string];
     if (listener) {
       for (const proc of listener) {
         (proc as ((...params: T[K]) => unknown))(...params);

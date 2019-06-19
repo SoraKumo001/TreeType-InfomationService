@@ -1,8 +1,8 @@
 const path = require('path');
 
 module.exports = {
-//  mode: 'production',
-    mode: 'development',
+  //mode: 'production',
+  mode: 'development',
   entry: [
     path.resolve(__dirname, 'src/public/index.ts')
   ],
@@ -19,7 +19,7 @@ module.exports = {
       use: ["source-map-loader"],
       enforce: "pre"
     }, {
-      test: /\.scss/,
+      test: /\.(scss|css)$/,
       use: [
         'style-loader',
         'css-loader',
@@ -33,7 +33,7 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.ts', '.js', '.scss', '.svg'],
+    extensions: ['.ts', '.js', '.scss', 'css', '.svg'],
     moduleExtensions: ['node_modules']
   },
   devtool: 'source-map',

@@ -42,7 +42,7 @@ export class LoginWindow extends JWF.FrameWindow {
     });
     this.addChild(textUserID, "top");
     textUserID.setMargin(0, 0, 0, 10);
-    if (userId) textUserID.setText(userId);
+    //if (userId) textUserID.setText(userId);
     const textUserPass = new JWF.TextBox({
       label: "パスワード",
       type: "password",

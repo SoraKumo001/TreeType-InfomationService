@@ -1,6 +1,6 @@
 import * as JWF from "javascript-window-framework";
-import { FileModule } from "../modules/FileModule";
-import { AppManager } from "../AppManager";
+import { FileModule } from "../../modules/FileModule";
+import { AppManager } from "../../AppManager";
 import { DirView } from "./DirView";
 import { FileView } from "./FileView";
 

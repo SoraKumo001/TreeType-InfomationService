@@ -1,7 +1,7 @@
 import * as JWF from "javascript-window-framework";
-import { FileModule, FileInfo } from "../modules/FileModule";
+import { FileModule, FileInfo } from "../../modules/FileModule";
 import { FileEditWindow } from "./FileEditWindow";
-import { ModuleMap } from "../AppModule";
+import { ModuleMap } from "../../AppModule";
 import { WINDOW_EVENT_MAP } from "javascript-window-framework";
 const IMAGE_FILE = require("./images/file.svg");
 const IMAGE_FOLDER = require("./images/folder.svg");

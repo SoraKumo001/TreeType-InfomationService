@@ -44,7 +44,6 @@ export class RouterModule extends AppModule<CustomMap> {
   }
   goLocation() {
     const p = this.getLocationParams();
-    console.log(window.location.search);
     this.lastParams = window.location.search.substring(1);
     this.callEvent("goLocation", p);
   }
