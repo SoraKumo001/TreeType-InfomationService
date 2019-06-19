@@ -44,7 +44,7 @@ export class TopMenu extends JWF.Window {
     //   titleNode.textContent = title
     // })
     const userModule = manager.getModule(UserModule);
-    userModule.addEventListener("user_login", (info: UserInfo) => {
+    userModule.addEventListener("loginUser", (info: UserInfo) => {
         userNode.textContent = info?info.name:"GUEST";
     });
   }

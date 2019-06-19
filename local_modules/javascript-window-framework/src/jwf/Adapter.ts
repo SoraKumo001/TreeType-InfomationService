@@ -32,7 +32,6 @@ export interface AdapterResult {
 export class Adapter {
   private handle: number | null;
   private scriptUrl: string;
-  private globalHash: string | null;
   private keyName: string;
   private functionSet: FunctionSet[] = [];
 
@@ -44,9 +43,11 @@ export class Adapter {
    */
   public constructor(scriptUrl?: string, keyName?: string) {
     this.scriptUrl = scriptUrl || "./";
-    this.keyName = keyName || "Session";
+    this.keyName = (keyName || "") + "Session";
     this.handle = null;
-    this.globalHash = null;
+  }
+  public getKeyName(): string {
+    return this.keyName;
   }
 
   /**
@@ -236,7 +237,7 @@ export class Adapter {
     }
     req.send(data == null ? null : JSON.stringify(data));
   }
-  public upload(buffer: Blob,funcName: string,  ...params: unknown[]) {
+  public upload(buffer: Blob, funcName: string, ...params: unknown[]) {
     return new Promise((resolve, reject) => {
       //ハッシュデータの読み出し
       const globalHash = localStorage.getItem(this.keyName);
@@ -265,9 +266,9 @@ export class Adapter {
             localStorage.setItem(this.keyName, res.globalHash);
           if (res.sessionHash)
             sessionStorage.setItem(this.keyName, res.sessionHash);
-          if(res.results && res.results.length){
+          if (res.results && res.results.length) {
             resolve(res.results[0]);
-          }else{
+          } else {
             resolve(null);
           }
         }

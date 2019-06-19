@@ -1,5 +1,5 @@
 import * as JWF from "javascript-window-framework";
-import { FileModule } from "../modules/FileModule";
+import { FileModule } from "../../modules/FileModule";
 /**
  *
  *

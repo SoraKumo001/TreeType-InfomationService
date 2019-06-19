@@ -34,7 +34,7 @@ export class RemoteDB extends amf.Module {
   }
   public addOpenListener(proc: () => void) {
     const listener = this.openListener;
-    if (listener.findIndex(proc)!==-1) {
+    if (listener.findIndex(proc) !== -1) {
       listener.push(proc);
     }
     const db = this.db;
@@ -79,7 +79,7 @@ export class RemoteDB extends amf.Module {
     const db = this.db;
     db.close();
   }
-  public isConnect(){
+  public isConnect() {
     return this.db.isConnect();
   }
   public run(sql: string, ...params: unknown[]) {
@@ -98,6 +98,13 @@ export class RemoteDB extends amf.Module {
     | null
   > {
     return this.db.get(sql, ...params);
+  }
+  public async get2(sql: string, ...params: unknown[]) {
+    const result = await this.get(sql, ...params);
+    if (!result) return null;
+    const v = Object.values(result);
+    if (v.length) return v[0];
+    return null;
   }
   public setItem(name: string, value: unknown) {
     this.items[name] = value;

@@ -16,7 +16,7 @@ export class AppManager {
    */
   public constructor() {
     //通信アダプタの作成
-    this.adapter = new JWF.Adapter("./");
+    this.adapter = new JWF.Adapter("./","IITS");
   }
   public getAdapter() {
     return this.adapter;

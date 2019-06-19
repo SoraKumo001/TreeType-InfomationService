@@ -15,7 +15,7 @@ addEventListener("DOMContentLoaded", () => {
 
   //ユーザが存在しなかった場合の初期化処理
   const userModule = manager.getModule(UserModule);
-  userModule.addEventListener("user_login", (userInfo:UserInfo) => {
+  userModule.addEventListener("loginUser", (userInfo:UserInfo) => {
     if (userInfo){
       //暫定ユーザーならローカル管理者の編集画面へ
       if (userInfo.no === 0 && userInfo.admin){
@@ -35,5 +35,6 @@ addEventListener("DOMContentLoaded", () => {
 
   new MainView(manager);
   //new FileWindow(manager);
+  //new TextEditWindow();
 
 });

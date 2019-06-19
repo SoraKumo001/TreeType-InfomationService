@@ -1,4 +1,5 @@
 import { AppModule, ModuleMap } from "../AppModule";
+import { AppManager } from "../AppManager";
 
 export interface UserInfo {
   no: number;
@@ -9,24 +10,20 @@ export interface UserInfo {
 }
 
 export interface CustomMap extends ModuleMap {
-  user_login: [UserInfo];
-  user_update: [UserInfo];
+  loginUser: [UserInfo];
+  updateUser: [UserInfo];
 }
 
-export class UserModule extends AppModule {
+export class UserModule extends AppModule<CustomMap> {
   userInfo?: UserInfo;
 
-  public addEventListener<K extends keyof CustomMap>(
-    name: K,
-    proc: (...params: CustomMap[K]) => unknown
-  ): void {
-    super.addEventListener(name, proc);
-  }
-  public callEvent<K extends keyof CustomMap>(
-    name: K,
-    ...params: CustomMap[K]
-  ): void {
-    super.callEvent(name, ...params);
+  constructor(manager:AppManager){
+    super(manager);
+    const adapter = this.getAdapter();
+    const value = sessionStorage.getItem(adapter.getKeyName()+"UserInfo");
+    if(value){
+      this.userInfo = JSON.parse(value);
+    }
   }
   public getUserInfo() {
     return this.userInfo;
@@ -44,7 +41,7 @@ export class UserModule extends AppModule {
     if (user) {
       this.userInfo = user;
     }
-    this.callEvent("user_login", user);
+    this.callEvent("loginUser", user);
     return user;
   }
   async login(userId: string, userPass: string, local: boolean, keep: boolean) {
@@ -58,14 +55,15 @@ export class UserModule extends AppModule {
     )) as UserInfo;
     if (user) {
       this.userInfo = user;
+      sessionStorage.setItem(adapter.getKeyName()+"UserInfo",JSON.stringify(user));
     }
-    this.callEvent("user_login", user);
+    this.callEvent("loginUser", user);
     return user;
   }
   async logout() {
     const adapter = this.getAdapter();
     const user = (await adapter.exec("Users.logout")) as UserInfo;
-    this.callEvent("user_login", user);
+    this.callEvent("loginUser", user);
     return user;
   }
   async setUser(
@@ -84,7 +82,7 @@ export class UserModule extends AppModule {
       userPass,
       local
     );
-    this.callEvent("user_update", info);
+    this.callEvent("updateUser", info);
 
     //暫定管理者なら再ログイン
     if (!this.userInfo || this.userInfo.no === 0) {
@@ -97,7 +95,7 @@ export class UserModule extends AppModule {
     return (adapter.exec("Users.delUser", userNo, local) as Promise<
       boolean | null
     >).then(result => {
-      this.callEvent("user_update", { no: userNo } as UserInfo);
+      this.callEvent("updateUser", { no: userNo } as UserInfo);
       return result;
     });
   }
