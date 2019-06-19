@@ -309,7 +309,7 @@ export class Contents extends amf.Module {
     if(!ids)
       return null;
 		for(const cid of ids)
-			this.deleteContents(cid.contents_id);
+			await this.deleteContents(cid.contents_id);
 		if(id === 1)
 			return true;
 		//関連ファイルの削除
@@ -318,7 +318,7 @@ export class Contents extends amf.Module {
   		const path = this.getDirPath(id);
   		const fileId = await files.getDirId(1, path);
       if(fileId)
-    		files.deleteFile(fileId);
+    		await files.deleteFile(fileId);
     }
 		//コンテンツの削除
 		return await remoteDB.run("delete from contents where contents_id=$1",id);
@@ -326,7 +326,14 @@ export class Contents extends amf.Module {
 	public getDirPath(id:number){
 		return sprintf("/Contents/%04d/%02d", (Math.floor(id / 100)) * 100, id % 100);
 	}
-
+  public updateContents(contents:MainContents){
+    const remoteDB = this.remoteDB;
+    if (!remoteDB) return null;
+		return remoteDB.run(
+			`update contents SET contents_stat=$1,contents_date=$2,contents_type=$3,contents_update=current_timestamp,
+			contents_title_type=$4,contents_title=$5,contents_value=$6 where contents_id=$7`,
+			contents.stat,contents.date,contents.type,contents.title_type,contents.title,contents.value,contents.id);
+	}
 
   public async JS_createContents(id: number, vector: number, type: string) {
     const remoteDB = this.remoteDB;
@@ -383,14 +390,7 @@ export class Contents extends amf.Module {
     return this.deleteContents(id);
   }
 
-  public updateContents(contents:MainContents){
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
-		return remoteDB.run(
-			`update contents SET contents_stat=$1,contents_date=$2,contents_type=$3,contents_update=current_timestamp,
-			contents_title_type=$4,contents_title=$5,contents_value=$6 where contents_id=$7`,
-			contents.stat,contents.date,contents.type,contents.title_type,contents.title,contents.value,contents.id);
-	}
+
   public async JS_updateContents(contents:MainContents){
     const users = await this.getSessionModule(Users);
     if (!users || !users.isAdmin()) return null;

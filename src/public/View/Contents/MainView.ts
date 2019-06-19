@@ -1,11 +1,13 @@
 import * as JWF from "javascript-window-framework";
-import { TopMenu } from "./TopMenu";
-import { AppManager } from "../AppManager";
-import { InfoTreeView } from "./Contents/InfoTreeView";
-import { ContentsModule } from "../modules/ContentsModule";
-import { InfoContentsView } from "./Contents/InfoContentsView";
-import { RouterModule } from "../modules/RouterModule";
-import { UserModule, UserInfo } from "../modules/UserModule";
+import { TopMenu } from "../TopMenu";
+import { AppManager } from "../../AppManager";
+import { InfoTreeView } from "./InfoTreeView";
+import { ContentsModule } from "../../modules/ContentsModule";
+import { InfoContentsView } from "./InfoContentsView";
+import { RouterModule } from "../../modules/RouterModule";
+import { UserModule, UserInfo } from "../../modules/UserModule";
+import { SeoModule } from "../../modules/SeoModule";
+import { TreeItem } from "javascript-window-framework";
 
 export class MainView extends JWF.Window {
   contentsModule: ContentsModule;
@@ -24,14 +26,32 @@ export class MainView extends JWF.Window {
     const infoContentsView = new InfoContentsView(manager);
     splitter.addChild(0, infoTreeView, "client");
     splitter.addChild(1, infoContentsView, "client");
-
+    const seoModule = manager.getModule(SeoModule);
     const contentsModule = manager.getModule(ContentsModule);
     this.contentsModule = contentsModule;
     const routerModule = manager.getModule(RouterModule);
     this.routerModule = routerModule;
 
-    contentsModule.addEventListener("selectPage", id => {
+    contentsModule.addEventListener("selectContents", id => {
       this.routerModule.setLocationParams({ p: id });
+    });
+    contentsModule.addEventListener("selectPage", id => {
+      let item: TreeItem | null = infoTreeView.findItemFromValue(id);
+      if (!item) return;
+      let title = '';
+      const values: { name: string; value: number }[] = [];
+      do {
+        const name = item.getItemText();
+        values.push({
+          name,
+          value: item.getItemValue() as number
+        });
+        if(title.length)
+          title += " - ";
+        title += name;
+      } while ((item = item.getParentItem()));
+      seoModule.setBreadcrumb(values);
+      document.title = title;
     });
 
     const userModule = manager.getModule(UserModule);
