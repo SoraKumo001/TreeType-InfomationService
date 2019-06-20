@@ -5,7 +5,7 @@ export class Params extends Module {
   public async onCreateModule() {
     const remoteDB = await this.getModule(RemoteDB);
     if (remoteDB) {
-      remoteDB.addOpenListener(() => {
+      remoteDB.addEventListener("connect",() => {
         remoteDB.run("create table IF NOT EXISTS params(params_name TEXT primary key,params_value json);");
       });
     }

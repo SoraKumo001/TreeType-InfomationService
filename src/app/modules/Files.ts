@@ -19,7 +19,7 @@ export class Files extends amf.Module {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
     if (remoteDB) {
-      remoteDB.addOpenListener(async () => {
+      remoteDB.addEventListener("connect",async () => {
         if (!(await remoteDB.isTable("files"))) {
           remoteDB.run(
             `create table files(files_id SERIAL PRIMARY KEY,files_parent INTEGER references files(files_id),files_kind INTEGER,users_no INTEGER references users(users_no),files_name TEXT,files_date TIMESTAMP with time zone,files_byte BYTEA,UNIQUE(files_parent,files_name));
@@ -28,7 +28,7 @@ export class Files extends amf.Module {
         }
       });
     }
-    this.getManager().addCommand(
+    this.addCommand(
       "download",
       (req: express.Request, res: express.Response) => {
         const fileId = req.query.id;
@@ -332,11 +332,4 @@ export class Files extends amf.Module {
     const buffer = this.getSession().getBuffer();
     if (buffer) return this.uploadFile(parentId, code, name, buffer);
   }
-
-  /*
-	public JS_download(){
-		if(MG::isParams(["id"]))
-			this.getFileStream(MG::getParam("id"));
-		return null;
-	}  */
 }

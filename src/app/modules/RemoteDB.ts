@@ -1,6 +1,7 @@
 import * as amf from "active-module-framework";
 import Postgres from "./lib/Postgres";
 import { Users } from "./Users";
+import { ModuleMap } from "active-module-framework";
 
 interface DATABASE_CONFIG {
   REMOTEDB_HOST: string;
@@ -10,7 +11,25 @@ interface DATABASE_CONFIG {
   REMOTEDB_PASSWORD?: string;
 }
 
-export class RemoteDB extends amf.Module {
+export function Sleep(timeout: number): Promise<void> {
+  return new Promise(
+    (resolv): void => {
+      setTimeout((): void => {
+        resolv();
+      }, timeout);
+    }
+  );
+}
+export interface CustomMap extends ModuleMap {
+  connect: [];
+  disconnect: [];
+}
+export class RemoteDB extends amf.Module<CustomMap> {
+  public constructor(manager: amf.Manager) {
+    super(manager);
+    const db = new Postgres();
+    this.db = db;
+  }
   public static getModuleInfo(): amf.ModuleInfo {
     return {
       className: this.name,
@@ -22,23 +41,27 @@ export class RemoteDB extends amf.Module {
   }
 
   private items: { [key: string]: unknown } = {};
-  private db: Postgres = new Postgres();
-  private openListener: (() => void)[] = [];
+  private db: Postgres;
+  private first = true;
 
   public async onCreateModule() {
-    if (!(await this.open())) {
-      //Module.output("RemoteDBのオープンに失敗");
-      return true;
-    }
+    await this.connect();
     return true;
   }
-  public addOpenListener(proc: () => void) {
-    const listener = this.openListener;
-    if (listener.findIndex(proc) !== -1) {
-      listener.push(proc);
+  public async connect(){
+    while (true) {
+      if (await this.open()) {
+        this.output("DBの接続完了");
+        //関連テーブルの初期化用
+        if(this.first){
+          this.callEvent("connect");
+          this.first = false;
+        }
+        return true;
+      }
+      this.output("RemoteDBのオープンに失敗");
+      await Sleep(1000);
     }
-    const db = this.db;
-    if (db.isConnect()) proc();
   }
   public async open() {
     const localDB = this.getLocalDB();
@@ -55,11 +78,19 @@ export class RemoteDB extends amf.Module {
         database,
         user,
         password,
-        port
+        port,
+        keepAlive: true
       }))
     ) {
       return false;
     }
+    const client = db.getClient();
+    client.on("error", async (error: Error) => {
+      console.error(error);
+      await this.close();
+      this.connect();
+    });
+
     //アイテム用テーブルの作成
     await this.run(
       "CREATE TABLE IF NOT EXISTS app_data (name text primary key,value json)"
@@ -69,11 +100,7 @@ export class RemoteDB extends amf.Module {
     );
     this.items = json ? (json.value as {}) : {};
 
-    //関連テーブルの初期化用
-    const listener = this.openListener;
-    for (const proc of listener) {
-      proc();
-    }
+    return true;
   }
   public close() {
     const db = this.db;

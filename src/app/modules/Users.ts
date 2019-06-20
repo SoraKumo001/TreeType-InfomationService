@@ -23,7 +23,7 @@ export class Users extends amf.Module {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
     if (remoteDB) {
-      remoteDB.addOpenListener(async () => {
+      remoteDB.addEventListener("connect",async () => {
         if (!(await remoteDB.isTable("users"))) {
           remoteDB.run(
             `create table IF NOT EXISTS users(users_no SERIAL PRIMARY KEY,users_enable BOOLEAN,users_id TEXT,

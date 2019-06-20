@@ -3,6 +3,8 @@ import * as pg from "pg";
 export default class Postgres {
   client: pg.Client;
   connectStat: boolean;
+  lastError?: unknown;
+  config?: pg.ClientConfig;
   constructor() {
     this.client = new pg.Client();
     this.client.addListener("end", () => {
@@ -10,8 +12,9 @@ export default class Postgres {
     });
     this.connectStat = false;
   }
-  lastError?: unknown;
-  config?: pg.ClientConfig;
+  public getClient(){
+    return this.client;
+  }
   public async open(config?: pg.ClientConfig) {
     this.connectStat = false;
     if (config) this.config = config;
@@ -19,6 +22,7 @@ export default class Postgres {
     else return false;
 
     const client = new pg.Client(config);
+    //client.addListener("");
     this.client = client;
     return client
       .connect()
@@ -49,8 +53,9 @@ export default class Postgres {
     if (result && result.value === 1) return true;
     return false;
   }
-  public close() {
-    this.client.end();
+  public async close() {
+    await this.client.end();
+    this.connectStat = false;
   }
   public async run(sql: string, ...params: unknown[]) {
     if (!this.isConnect())

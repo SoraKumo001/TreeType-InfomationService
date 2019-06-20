@@ -1,6 +1,8 @@
 import { Manager } from "./Manager";
 import { Session } from "./Session";
 import { LocalDB } from "./LocalDB";
+import { HtmlCreater } from "./HtmlCreater";
+import * as express from "express";
 
 export interface ModuleInfo {
   className?: string;
@@ -9,14 +11,16 @@ export interface ModuleInfo {
   author: string;
   info: string;
 }
-
+export interface ModuleMap{
+  [key:string]:unknown[]
+}
 /**
  *モジュール作成用基本クラス
  *
  * @export
  * @class Module
  */
-export class Module {
+export class Module<T extends ModuleMap=ModuleMap> {
   public static getModuleInfo(): ModuleInfo {
     return {
       className: this.name,
@@ -26,6 +30,39 @@ export class Module {
       info: ""
     };
   }
+    private listeners: {
+    [key: string]: unknown[];
+  } = {};
+  addEventListener<K extends keyof T>(name: K&string, proc: (...params: T[K]) => void): void {
+    const listener = this.listeners[name];
+    if (!listener) {
+      this.listeners[name as string] = [proc];
+      return;
+    }
+    if (listener.indexOf(proc) >= 0)
+      return;
+    listener.push(proc);
+  }
+  removeEventListener<K extends keyof T>(name: K&string, proc:(...params: T[K]) => void): void {
+    const listener = this.listeners[name];
+    if (!listener) {
+      this.listeners[name as string] = [proc];
+      return;
+    }
+    const index = listener.indexOf(proc);
+    if (index < 0)
+      return;
+    listener.splice(index, 1);
+  }
+  callEvent<K extends keyof T>(name: K&string, ...params: T[K]) {
+    const listener = this.listeners[name];
+    if (listener) {
+      for (const proc of listener) {
+        (proc as ((...params: T[K]) => unknown))(...params);
+      }
+    }
+  }
+  public async onCreateHtml?(creater:HtmlCreater): Promise<void>;
   public async onStartSession?(): Promise<void>;
   public async onEndSession?(): Promise<void>;
   public static Module: boolean = true;
@@ -80,4 +117,8 @@ export class Module {
     if (!this.session) return null;
     return this.session.getModule(constructor);
   }
+  addCommand(name: string, proc: (req: express.Request, res: express.Response) => void): void{
+    this.getManager().addCommand(name,proc);
+  }
+
 }

@@ -32,7 +32,7 @@ export class Contents extends amf.Module {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
     if (remoteDB) {
-      remoteDB.addOpenListener(async () => {
+      remoteDB.addEventListener("connect",async () => {
         if (!(await remoteDB.isTable("contents"))) {
           remoteDB.run(
             `create table contents(
