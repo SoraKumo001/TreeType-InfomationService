@@ -9,7 +9,7 @@ import { Module } from "./Module";
 import { LocalDB } from "./LocalDB";
 import { Session } from "./Session";
 import { AdapterResult } from "./Session";
-import { BaseHtml } from "./BaseHtml";
+import { HtmlCreater } from "./HtmlCreater";
 
 /**
  *マネージャ初期化用パラメータ
@@ -65,8 +65,8 @@ export class Manager {
   private express: express.Express;
   private static initFlag = false;
   private commands: {
-      [key: string]: (req: express.Request, res: express.Response) => void;
-    } = {};
+    [key: string]: (req: express.Request, res: express.Response) => void;
+  } = {};
 
   /**
    *Creates an instance of Manager.
@@ -218,7 +218,10 @@ export class Manager {
     if (module) return module as T;
     return null;
   }
-  public addCommand(name:string,proc:(req: express.Request, res: express.Response)=>void){
+  public addCommand(
+    name: string,
+    proc: (req: express.Request, res: express.Response) => void
+  ) {
     this.commands[name] = proc;
   }
   /**
@@ -266,16 +269,19 @@ export class Manager {
           }
         } else {
           const path = (req.header("location_path") || "") + params.remotePath;
+          const htmlNode = new HtmlCreater();
           if (
-            !(await BaseHtml.output(
+            !htmlNode.output(
+              req,
               res,
               path,
               params.rootPath,
               params.indexPath,
               params.cssPath,
               params.jsPath,
-              params.jsPriority
-            ))
+              params.jsPriority,
+              Object.values(this.modulesInstance)
+            )
           )
             next();
         }
@@ -312,8 +318,7 @@ export class Manager {
   private upload(req: express.Request, res: express.Response): void {
     if (req.body instanceof Buffer) {
       const params = req.query.params;
-      if(params)
-        this.excute(res,JSON.parse(params),req.body);
+      if (params) this.excute(res, JSON.parse(params), req.body);
     }
   }
   /**
@@ -333,11 +338,15 @@ export class Manager {
       .on(
         "end",
         (): Promise<void> => {
-          return this.excute(res,JSON.parse(postData));
+          return this.excute(res, JSON.parse(postData));
         }
       );
   }
-  private async excute(res: express.Response, params: AdapterFormat,buffer?:Buffer) {
+  private async excute(
+    res: express.Response,
+    params: AdapterFormat,
+    buffer?: Buffer
+  ) {
     //マネージャ機能をセッション用にコピー
     const session = new Session(this);
     await session.init(
