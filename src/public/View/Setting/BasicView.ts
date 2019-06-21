@@ -27,6 +27,7 @@ export class BasicView extends SettingView {
         type: "string",
         value: ""
       },
+      { name: "analytics", label: "アナリティクス", type: "string", value: "" },
       {
         label: "設定",
         type: "submit",
@@ -35,7 +36,7 @@ export class BasicView extends SettingView {
           click: async () => {
             const params = (form.getParams() as unknown)
             const msg = new JWF.MessageBox("設定保存","送信中");
-            if(await paramsModule.setGlobal("BASIC_DATA",params)){
+            if(await paramsModule.setGlobalParam("BASIC_DATA",params)){
               msg.close();
             }else{
               msg.setText("設定エラー");
@@ -49,7 +50,7 @@ export class BasicView extends SettingView {
   }
   public async loadSetting(){
     const form = this.form;
-    const params = await this.paramsModule.getGlobal("BASIC_DATA") as {[key: string]: string | number | boolean};
+    const params = await this.paramsModule.getGlobalParam("BASIC_DATA") as {[key: string]: string | number | boolean};
     if(params)
       form.setParams(params);
   }

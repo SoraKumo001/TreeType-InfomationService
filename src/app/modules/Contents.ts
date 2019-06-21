@@ -4,6 +4,8 @@ import { RemoteDB } from "./RemoteDB";
 import { Files } from "./Files";
 import { sprintf } from "sprintf";
 
+import express = require("express");
+
 interface TreeContents {
   id: number;
   pid: number;
@@ -32,7 +34,7 @@ export class Contents extends amf.Module {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
     if (remoteDB) {
-      remoteDB.addEventListener("connect",async () => {
+      remoteDB.addEventListener("connect", async () => {
         if (!(await remoteDB.isTable("contents"))) {
           remoteDB.run(
             `create table contents(
@@ -42,8 +44,7 @@ export class Contents extends amf.Module {
 					contents_stat INTEGER,contents_type TEXT,
 					contents_date timestamp with time zone,contents_update timestamp with time zone,
 					contents_title_type integer,contents_title TEXT,contents_value TEXT);
-          insert into contents values(default,null,1000,1,'PAGE',current_timestamp,current_timestamp,0,'Top','')
-          `
+          insert into contents values(default,null,1000,1,'PAGE',current_timestamp,current_timestamp,0,'Top','')`
           );
         }
         const files = await this.getModule(Files);
@@ -58,6 +59,8 @@ export class Contents extends amf.Module {
       "CREATE TABLE IF NOT EXISTS users (users_no integer primary key,users_enable boolean,\
 			users_id TEXT,users_password TEXT,users_name TEXT,users_info JSON,UNIQUE(users_id))"
     );
+
+
     return true;
   }
 
@@ -158,7 +161,24 @@ export class Contents extends amf.Module {
 
     return pages;
   }
-  public async getContents(id: number,child?:boolean) {
+  public async getBreadcrumb(id: number) {
+    const remoteDB = this.remoteDB;
+    if (!remoteDB) return null;
+    const bread = [];
+    while (id) {
+      let value = (await remoteDB.get(
+        "select contents_parent as pid,contents_title as title,contents_type as type from contents where contents_id=$1",
+        id
+      )) as { pid: number; type: string; title: string };
+      if (!value) return null;
+      if (value.type === "PAGE") {
+        bread.push({ id, title: value.title });
+      }
+      id = value.pid;
+    }
+    return bread;
+  }
+  public async getContents(id: number, child?: boolean) {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
 
@@ -169,12 +189,20 @@ export class Contents extends amf.Module {
       `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as update,contents_title_type as title_type,contents_title as title,contents_value as value from contents where contents_id=$1 ${visible}`,
       id
     )) as MainContents | null;
-    if(value && child){
+    if (value && child) {
       const childValue = await this.getChildContents(id);
-      if(childValue)
-        value.childs = childValue;
+      if (childValue) value.childs = childValue;
     }
     return value;
+  }
+  public async getPages(admin: boolean) {
+    const remoteDB = this.remoteDB;
+    if (!remoteDB) return null;
+    const visible = admin ? "and contents_stat=1" : "";
+
+    return (await remoteDB.all(
+      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as update,contents_title_type as title_type,contents_title as title,contents_value as value from contents where contents_type='PAGE' ${visible}`
+    )) as MainContents[] | null;
   }
   public async getChildContents(pid: number) {
     const remoteDB = this.remoteDB;
@@ -302,47 +330,53 @@ export class Contents extends amf.Module {
     this.updatePriority(pid);
     return { pid: pid, id: cid };
   }
-  public async deleteContents(id:number){
+  public async deleteContents(id: number) {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
-		const ids = await remoteDB.all("select contents_id from contents where contents_parent=$1",id);
-    if(!ids)
-      return null;
-		for(const cid of ids)
-			await this.deleteContents(cid.contents_id);
-		if(id === 1)
-			return true;
-		//関連ファイルの削除
+    const ids = await remoteDB.all(
+      "select contents_id from contents where contents_parent=$1",
+      id
+    );
+    if (!ids) return null;
+    for (const cid of ids) await this.deleteContents(cid.contents_id);
+    if (id === 1) return true;
+    //関連ファイルの削除
     const files = await this.getSessionModule(Files);
-    if(files){
-  		const path = this.getDirPath(id);
-  		const fileId = await files.getDirId(1, path);
-      if(fileId)
-    		await files.deleteFile(fileId);
+    if (files) {
+      const path = this.getDirPath(id);
+      const fileId = await files.getDirId(1, path);
+      if (fileId) await files.deleteFile(fileId);
     }
-		//コンテンツの削除
-		return await remoteDB.run("delete from contents where contents_id=$1",id);
-	}
-	public getDirPath(id:number){
-		return sprintf("/Contents/%04d/%02d", (Math.floor(id / 100)) * 100, id % 100);
-	}
-  public updateContents(contents:MainContents){
+    //コンテンツの削除
+    return await remoteDB.run("delete from contents where contents_id=$1", id);
+  }
+  public getDirPath(id: number) {
+    return sprintf("/Contents/%04d/%02d", Math.floor(id / 100) * 100, id % 100);
+  }
+  public updateContents(contents: MainContents) {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
-		return remoteDB.run(
-			`update contents SET contents_stat=$1,contents_date=$2,contents_type=$3,contents_update=current_timestamp,
+    return remoteDB.run(
+      `update contents SET contents_stat=$1,contents_date=$2,contents_type=$3,contents_update=current_timestamp,
 			contents_title_type=$4,contents_title=$5,contents_value=$6 where contents_id=$7`,
-			contents.stat,contents.date,contents.type,contents.title_type,contents.title,contents.value,contents.id);
-	}
+      contents.stat,
+      contents.date,
+      contents.type,
+      contents.title_type,
+      contents.title,
+      contents.value,
+      contents.id
+    );
+  }
 
   public async JS_createContents(id: number, vector: number, type: string) {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     return this.createContents(id, vector, type);
   }
-  public async JS_getTree(id: number) {
-    const users = await this.getSessionModule(Users);
-    const visible = !users || !users.isAdmin() ? "where contents_stat=1" : "";
+
+  public async getTree(id: number, admin: boolean) {
+    const visible = admin ? "where contents_stat=1" : "";
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     const values = await remoteDB.all(`select contents_id as id,contents_parent as pid,contents_stat as stat,
@@ -367,6 +401,11 @@ export class Contents extends amf.Module {
     //最上位データを返す
     return items.get(id);
   }
+  public async JS_getTree(id: number) {
+    const users = await this.getSessionModule(Users);
+    const admin = !users || !users.isAdmin();
+    return this.getTree(id, admin);
+  }
   public async JS_getPage(id: number) {
     const pid = await this.getParentPage(id);
     if (pid === 0) return null;
@@ -381,17 +420,16 @@ export class Contents extends amf.Module {
 
     return contents;
   }
-  public JS_getContents(id: number,child?:boolean) {
-    return this.getContents(id,child);
+  public JS_getContents(id: number, child?: boolean) {
+    return this.getContents(id, child);
   }
-  public async JS_deleteContents(id:number){
+  public async JS_deleteContents(id: number) {
     const users = await this.getSessionModule(Users);
     if (!users || !users.isAdmin()) return null;
     return this.deleteContents(id);
   }
 
-
-  public async JS_updateContents(contents:MainContents){
+  public async JS_updateContents(contents: MainContents) {
     const users = await this.getSessionModule(Users);
     if (!users || !users.isAdmin()) return null;
     return this.updateContents(contents);

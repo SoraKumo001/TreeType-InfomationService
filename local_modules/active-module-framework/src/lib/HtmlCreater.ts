@@ -56,12 +56,12 @@ export class HtmlCreater {
     this.addScript(jsFiles);
     this.addCSS(cssFiles);
 
-    this.addLink(jsFiles.map(v => v.name));
-    this.addLink(cssFiles.map(v => v.name));
+    this.addLink(jsFiles.map(v => v.dir+"/"+ v.name),'script');
+    this.addLink(cssFiles.map(v => v.dir+"/"+ v.name),'style');
 
     for(const module of modules){
       if(module.onCreateHtml){
-        module.onCreateHtml(this);
+        await module.onCreateHtml(this);
       }
     }
 
@@ -84,12 +84,11 @@ export class HtmlCreater {
       return false;
     }
   }
-  addLink(files:string[]){
+  addLink(files:string[],style:string){
     const links = this.links;
     const baseUrl = this.baseUrl;
     for (const file of files) {
-      const dir = (file as any).dir;
-      links.push(`<${baseUrl}${dir}/${file}>;rel=preload;as=style;`);
+      links.push(`<${baseUrl}${file}>;rel=preload;as=${style};`);
     }
   }
   addScript(files: FileInfo[]) {
@@ -132,6 +131,7 @@ export class HtmlCreater {
         // continue
       }
     }
+    this.addDateParam(fileInfos);
     return fileInfos;
   }
   //ファイル名に日付情報を追加

@@ -27,12 +27,28 @@ export class Params extends Module {
     const result = await remoteDB.run("insert into params values($1,$2) ON CONFLICT ON CONSTRAINT params_pkey do update set params_value=$2", name,value);
     return result;
   }
-  public JS_getGlobal(name: string) {
+  public getGlobalParam(name: string) {
     return this.getParam("Global_" + name);
   }
-  public async JS_setGlobal(name:string,value:unknown){
+  public setGlobalParam(name: string,value:unknown) {
+    return this.setParam("Global_" + name,value);
+  }
+  public JS_getGlobalParam(name: string) {
+    return this.getGlobalParam(name);
+  }
+  public async JS_setGlobalParam(name:string,value:unknown){
     const users = await this.getSessionModule(Users);
     if (!users || !users.isAdmin()) return null;
-    return this.setParam("Global_" + name,value);
+    return this.setGlobalParam(name,value);
+  }
+  public async JS_getParam(name: string) {
+    const users = await this.getSessionModule(Users);
+    if (!users || !users.isAdmin()) return null;
+    return this.getParam(name);
+  }
+  public async JS_setParam(name:string,value:unknown){
+    const users = await this.getSessionModule(Users);
+    if (!users || !users.isAdmin()) return null;
+    return this.setParam(name,value);
   }
 }

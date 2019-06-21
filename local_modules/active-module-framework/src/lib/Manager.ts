@@ -268,7 +268,9 @@ export class Manager {
             res.json({ error: "リクエストエラー" });
           }
         } else {
-          const path = (req.header("location_path") || "") + params.remotePath;
+          const path =
+            (req.header("location_path") || `${req.protocol}://${req.host}`) +
+            params.remotePath;
           const htmlNode = new HtmlCreater();
           if (
             !htmlNode.output(

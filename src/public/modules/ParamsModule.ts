@@ -1,12 +1,20 @@
 import { AppModule} from "../AppModule";
 
 export class ParamsModule extends AppModule {
-  public getGlobal(name:string){
+  public getGlobalParam(name:string){
     const adapter = this.getAdapter();
-    return adapter.exec("Params.getGlobal",name) as Promise<unknown|null>;
+    return adapter.exec("Params.getGlobalParam",name) as Promise<unknown|null>;
   }
-  public setGlobal(name:string,value:unknown){
+  public setGlobalParam(name:string,value:unknown){
     const adapter = this.getAdapter();
-    return adapter.exec("Params.setGlobal",name,value) as Promise<boolean|null>;
+    return adapter.exec("Params.setGlobalParam",name,value) as Promise<boolean|null>;
+  }
+  public getParam(name:string){
+    const adapter = this.getAdapter();
+    return adapter.exec("Params.getParam",name) as Promise<unknown|null>;
+  }
+  public setParam(name:string,value:unknown){
+    const adapter = this.getAdapter();
+    return adapter.exec("Params.setParam",name,value) as Promise<boolean|null>;
   }
 }

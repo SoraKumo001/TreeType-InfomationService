@@ -6,8 +6,9 @@ import { ContentsModule } from "../../modules/ContentsModule";
 import { InfoContentsView } from "./InfoContentsView";
 import { RouterModule } from "../../modules/RouterModule";
 import { UserModule, UserInfo } from "../../modules/UserModule";
-import { SeoModule } from "../../modules/SeoModule";
 import { TreeItem } from "javascript-window-framework";
+
+
 
 export class MainView extends JWF.Window {
   contentsModule: ContentsModule;
@@ -26,7 +27,6 @@ export class MainView extends JWF.Window {
     const infoContentsView = new InfoContentsView(manager);
     splitter.addChild(0, infoTreeView, "client");
     splitter.addChild(1, infoContentsView, "client");
-    const seoModule = manager.getModule(SeoModule);
     const contentsModule = manager.getModule(ContentsModule);
     this.contentsModule = contentsModule;
     const routerModule = manager.getModule(RouterModule);
@@ -38,7 +38,7 @@ export class MainView extends JWF.Window {
     contentsModule.addEventListener("selectPage", id => {
       let item: TreeItem | null = infoTreeView.findItemFromValue(id);
       if (!item) return;
-      let title = '';
+      let title = "";
       const values: { name: string; value: number }[] = [];
       do {
         const name = item.getItemText();
@@ -46,12 +46,19 @@ export class MainView extends JWF.Window {
           name,
           value: item.getItemValue() as number
         });
-        if(title.length)
-          title += " - ";
+        if (title.length) title += " - ";
         title += name;
       } while ((item = item.getParentItem()));
-      seoModule.setBreadcrumb(values);
       document.title = title;
+
+      //トラッカーに通知
+      try {
+        const AnalyticsUA = (global as NodeJS.Global&{AnalyticsUA:string})["AnalyticsUA"];
+        gtag("config", AnalyticsUA, {
+          page_title: title,
+          page_path: "/?p=" + id
+        });
+      } catch (e) {}
     });
 
     const userModule = manager.getModule(UserModule);
