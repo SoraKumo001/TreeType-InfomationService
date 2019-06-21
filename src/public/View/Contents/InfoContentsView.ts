@@ -5,7 +5,6 @@ import "./scss/InfoContentsView.scss";
 import "highlight.js/styles/dark.css";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
-import { AppModule } from "../../AppModule";
 import { UserModule } from "../../modules/UserModule";
 
 const highlight = require("highlight.js/lib/highlight");
