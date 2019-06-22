@@ -91,7 +91,7 @@ export class DirView extends JWF.Window {
         this.loadDirs();
     });
     fileModule.addEventListener("update_dir", (parentId, dirId) => {
-      this.loadDirs(dirId);
+      this.loadDirs(parentId);
     });
     fileModule.addEventListener("update_file", fileId => {
       this.loadDirs();

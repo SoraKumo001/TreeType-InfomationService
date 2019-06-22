@@ -1,13 +1,15 @@
 import * as JWF from "javascript-window-framework";
 import { TextInputWindow } from "./TextInputWindow";
-import { PanelControl } from "./PanelControl";
+import { PanelControl, PanelCreateParam } from "./PanelControl";
 
 export interface CustomEvent extends JWF.WINDOW_EVENT_MAP {
   updateText: [];
+  insertFile:[{fileList:FileList,enter:boolean}]
 }
 
 export class EditableView extends JWF.Window<CustomEvent> {
   htmlArea: HTMLDivElement;
+  panel?:HTMLElement;
   constructor() {
     super();
     this.setJwfStyle("EditableView");
@@ -22,7 +24,10 @@ export class EditableView extends JWF.Window<CustomEvent> {
       if (!e.clipboardData)
         return;
       if (e.clipboardData.files.length) {
-        this.insertImage(e.clipboardData.files);
+        const params = {fileList:e.clipboardData.files,enter:false};
+        this.callEvent("insertFile",params);
+        if(!params.enter)
+          this.insertImage(e.clipboardData.files);
       }
       else {
         var text = e.clipboardData.getData("text/plain");
@@ -47,8 +52,19 @@ export class EditableView extends JWF.Window<CustomEvent> {
     htmlArea.addEventListener("input", e => {
       this.callEvent("updateText");
     });
+        //ドラッグドロップの許可
+    htmlArea.ondragover = function(e) {
+      e.preventDefault();
+    };
+    htmlArea.addEventListener("drop", e => {
+      if(e.dataTransfer){
+        const params = {fileList:e.dataTransfer.files,enter:false};
+        this.callEvent("insertFile",params);
+      }
+      e.preventDefault();
+    });
   }
-  insertImage(files: FileList) {
+  public insertImage(files: FileList) {
     //画像ファイルならDataURLに変換して貼り付ける
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
@@ -62,6 +78,9 @@ export class EditableView extends JWF.Window<CustomEvent> {
       }
     }
   }
+  public insertNode(node:HTMLElement){
+    document.execCommand("insertHTML", false,node.outerHTML);
+  }
   public getHtml() {
     return this.htmlArea.innerHTML;
   }
@@ -71,6 +90,7 @@ export class EditableView extends JWF.Window<CustomEvent> {
   private addPanel() {
     const client = this.getClient();
     const panel = document.createElement("div");
+    this.panel = panel;
     client.appendChild(panel);
     PanelControl.createControl(panel, {
       label: "解除",
@@ -147,7 +167,11 @@ export class EditableView extends JWF.Window<CustomEvent> {
         this.setPGCode(true);
       }
     });
-    PanelControl.createControl(panel, { label: "FILE", event: () => { } });
+
+  }
+  public createControl(param:PanelCreateParam){
+    if(this.panel)
+      PanelControl.createControl(this.panel, param);
   }
   setPGCode(plain?: boolean) {
     const select = document.getSelection();

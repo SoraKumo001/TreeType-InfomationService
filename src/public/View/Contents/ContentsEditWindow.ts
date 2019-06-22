@@ -1,8 +1,10 @@
 import * as JWF from "javascript-window-framework";
-import { TextEditWindow } from "../TextEdit/TextEditWindow";
-import { PanelControl } from "../TextEdit/PanelControl";
+import { TextEditWindow } from "../TextEditor/TextEditWindow";
+import { PanelControl } from "../TextEditor/PanelControl";
 import { AppManager } from "../../AppManager";
 import { ContentsModule, MainContents } from "../../modules/ContentsModule";
+import { FileWindow } from "../FileWindow/FileWindow";
+import { FileModule } from "../../modules/FileModule";
 
 /**
  *コンテンツ編集用ウインドウ
@@ -12,6 +14,7 @@ import { ContentsModule, MainContents } from "../../modules/ContentsModule";
  * @extends {TextEditWindow}
  */
 export class ContentsEditWindow extends TextEditWindow {
+  manager: AppManager;
   contents?: MainContents;
   panel: JWF.Panel[] = [];
   contentsModule: ContentsModule;
@@ -23,6 +26,7 @@ export class ContentsEditWindow extends TextEditWindow {
    */
   public constructor(manager: AppManager, id?: number) {
     super();
+    this.manager = manager;
     this.contentsModule = manager.getModule(ContentsModule);
 
     for (let i = 0; i < 2; i++) {
@@ -30,16 +34,88 @@ export class ContentsEditWindow extends TextEditWindow {
       this.panel[i] = panel;
       this.addChild(panel, "top");
     }
+    this.getEditableView().addEventListener("insertFile", param => {
+      param.enter = true;
+      this.insertFile(param.fileList);
+    });
+    this.createPanel();
 
+    this.createControl({
+      label: "FILE",
+      event: () => {
+        const fileWindow = new FileWindow(manager);
+        this.addChild(fileWindow);
+        fileWindow.setPos();
+        fileWindow.addEventListener("enterFile", param => {
+          param.enter = true;
+          const fileInfo = param.fileInfo;
+          this.insertFileContents(fileInfo.id, fileInfo.name);
+        });
+      }
+    });
+    this.foreground();
+    if (id) {
+      this.loadContents(id);
+    }
+  }
+  public insertFileContents(id: number, fileName: string) {
+    const ext = fileName.split(".").pop();
+    let imageFlag = false;
+    if (ext) {
+      if (["jpg", "jpeg", "png", "svg"].indexOf(ext.toLowerCase()) >= 0)
+        imageFlag = true;
+    }
+    const fileId = id.toString();
+    if (imageFlag) {
+      const img = document.createElement("img");
+      img.src = `?cmd=download&id=${fileId}`;
+      img.dataset.fileId = fileId;
+      this.insertNode(img);
+    } else {
+      const link = document.createElement("a");
+      link.target = "_blank";
+      link.href = `?cmd=download&id=${fileId}`;
+      link.dataset.fileId = fileId;
+      link.innerText = fileName;
+      this.insertNode(link);
+    }
+  }
+  public async insertFile(fileList: FileList) {
+    const contents = this.contents;
+    if (!contents) return;
+    const id = contents.id;
+    const fileModule = this.manager.getModule(FileModule);
+    const path = JWF.sprintf(
+      "/Contents/%04d/%02d",
+      Math.floor(id / 100) * 100,
+      id % 100
+    );
+    const dirId = await fileModule.createDir(1, path);
+    if (dirId) {
+      const result = await fileModule.uploadFile(dirId, fileList);
+      for (const r of result) {
+        this.insertFileContents(r.id,r.file.name);
+      }
+    }
+  }
+  insertNode(node: HTMLElement) {
+    this.editableView.insertNode(node);
+  }
+  createPanel() {
     //パネル作成
     const that = this;
     let target = this.panel[0].getClient();
-    PanelControl.createControl(target, { label: "保存", event: () => {this.updateContents()} });
+    PanelControl.createControl(target, {
+      label: "保存",
+      event: () => {
+        this.updateContents();
+      }
+    });
     PanelControl.createControl(target, { label: "確認", event: () => {} });
     PanelControl.createControl(target, {
       name: "stat",
       type: "check",
-      label: "表示",
+      label: "表示"
     });
     PanelControl.createControl(target, {
       name: "date",
@@ -102,12 +178,7 @@ export class ContentsEditWindow extends TextEditWindow {
       label: "",
       size: 40
     });
-    this.foreground();
-    if (id) {
-      this.loadContents(id);
-    }
   }
-
   /**
    *dateを文字列に変換
    *
@@ -179,11 +250,11 @@ export class ContentsEditWindow extends TextEditWindow {
     const newContents: MainContents = {
       id: contents.id,
       pid: contents.pid,
-      stat: PanelControl.getControlValue(client, "stat")?1:0,
-      type: PanelControl.getControlValue(client, "type") as string|| "",
-      title: PanelControl.getControlValue(client, "title") as string || "",
+      stat: PanelControl.getControlValue(client, "stat") ? 1 : 0,
+      type: (PanelControl.getControlValue(client, "type") as string) || "",
+      title: (PanelControl.getControlValue(client, "title") as string) || "",
       title_type: parseInt(
-        PanelControl.getControlValue(client, "title_type")as string || "0"
+        (PanelControl.getControlValue(client, "title_type") as string) || "0"
       ),
       date,
       value: this.getHtml()

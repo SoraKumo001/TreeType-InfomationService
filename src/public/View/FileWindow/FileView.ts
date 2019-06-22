@@ -1,13 +1,13 @@
 import * as JWF from "javascript-window-framework";
 import { FileModule, FileInfo } from "../../modules/FileModule";
 import { FileEditWindow } from "./FileEditWindow";
-import { ModuleMap } from "../../AppModule";
 import { WINDOW_EVENT_MAP } from "javascript-window-framework";
 const IMAGE_FILE = require("./images/file.svg");
 const IMAGE_FOLDER = require("./images/folder.svg");
 
 export interface CustomMap extends WINDOW_EVENT_MAP {
-  selectDir: [number ]; //parameter
+  selectDir: [number]; //parameter
+  enterFile: [{ fileInfo: FileInfo; enter: boolean }];
 }
 
 /**
@@ -60,10 +60,18 @@ export class FileView extends JWF.Window {
     ]);
     const fileClinet = fileList.getClient();
     fileList.addEventListener("itemDblClick", e => {
-      const file = fileList.getItemValue(e.itemIndex) as FileInfo;
-      const id = file.id;
-      if (file.kind === 0) this.callEvent("selectDir", id);
-      else window.open("?cmd=download&id=" + id);
+      const files = this.fileList.getSelectValues() as FileInfo[];
+      if (files.length) {
+        const file = files[0];
+        if (file.kind === 1) {
+          const param = { fileInfo: file, enter: false };
+          this.callEvent("enterFile", param);
+          if (param.enter) return;
+        }
+
+      }
+
+      this.previewFile();
     });
     //ドラッグドロップの許可
     fileClinet.ondragover = function(e) {
@@ -124,6 +132,11 @@ export class FileView extends JWF.Window {
         editWindow.setPos();
       }
     });
+    button = new JWF.Button("プレビュー");
+    treePanel.addChild(button, "left");
+    button.addEventListener("buttonClick", () => {
+      this.previewFile();
+    });
     fileModule.addEventListener("delete_file", fileId => {
       const values = this.fileList.getItemValues() as FileInfo[];
       let flag = false;
@@ -135,7 +148,7 @@ export class FileView extends JWF.Window {
       if (flag) this.loadFiles();
     });
     fileModule.addEventListener("update_dir", (parentId, dirId) => {
-      if (this.parentId === parentId) this.loadFiles();
+      //if (this.parentId === parentId) this.loadFiles();
     });
     fileModule.addEventListener("upload_file", parentId => {
       if (this.parentId === parentId) this.loadFiles();
@@ -150,6 +163,15 @@ export class FileView extends JWF.Window {
       }
       if (flag) this.loadFiles();
     });
+  }
+  public previewFile() {
+    const files = this.fileList.getSelectValues() as FileInfo[];
+    if (files.length) {
+      const file = files[0];
+      const id = file.id;
+      if (file.kind === 0) this.callEvent("selectDir", id);
+      else window.open("?cmd=download&id=" + id);
+    }
   }
   public async loadFiles(parentId?: number) {
     if (parentId) this.parentId = parentId;

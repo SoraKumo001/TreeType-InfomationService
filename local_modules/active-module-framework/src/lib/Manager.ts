@@ -242,6 +242,9 @@ export class Manager {
     this.express.use(
       bodyParser.raw({ type: "application/octet-stream", limit: "300mb" })
     );
+    this.express.use(
+      bodyParser.json({ type: "application/json", limit: "3mb" })
+    );
     //一般コンテンツの対応付け
     this.express.use(params.remotePath, express.static(params.rootPath));
     //クライアント接続時の処理
@@ -332,17 +335,21 @@ export class Manager {
    * @memberof Manager
    */
   private exec(req: express.Request, res: express.Response): void {
-    let postData = "";
-    req
-      .on("data", function(v: string): void {
-        postData += v;
-      })
-      .on(
-        "end",
-        (): Promise<void> => {
-          return this.excute(res, JSON.parse(postData));
-        }
-      );
+    if (req.header("content-type") == "application/json") {
+      this.excute(res, req.body);
+    } else {
+      let postData = "";
+      req
+        .on("data", function(v: string): void {
+          postData += v;
+        })
+        .on(
+          "end",
+          (): Promise<void> => {
+            return this.excute(res, JSON.parse(postData));
+          }
+        );
+    }
   }
   private async excute(
     res: express.Response,

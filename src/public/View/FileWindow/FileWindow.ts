@@ -1,10 +1,11 @@
 import * as JWF from "javascript-window-framework";
-import { FileModule } from "../../modules/FileModule";
+import { FileModule, FileInfo } from "../../modules/FileModule";
 import { AppManager } from "../../AppManager";
 import { DirView } from "./DirView";
 import { FileView } from "./FileView";
-
-
+interface CustomMap extends JWF.WINDOW_EVENT_MAP {
+  enterFile: [{fileInfo:FileInfo, enter:boolean}];
+}
 /**
  *
  *
@@ -12,7 +13,7 @@ import { FileView } from "./FileView";
  * @class FileWindow
  * @extends {JWF.FrameWindow}
  */
-export class FileWindow extends JWF.FrameWindow {
+export class FileWindow extends JWF.FrameWindow<CustomMap> {
   dirTree: DirView;
   manager: AppManager;
   fileView: FileView;
@@ -47,6 +48,12 @@ export class FileWindow extends JWF.FrameWindow {
       "selectDir",
       (parentId): void => {
         dirTree.selectDir(parentId as number);
+      }
+    );
+    fileView.addEventListener(
+      "enterFile",
+      (param): void => {
+        this.callEvent("enterFile",param);
       }
     );
   }
