@@ -8,7 +8,7 @@ import { FileEditWindow } from "./FileEditWindow";
  * @extends {JWF.Window}
  */
 export class DirView extends JWF.Window {
-  dirTree: JWF.TreeView;
+  private dirTree: JWF.TreeView;
   private fileModule: FileModule;
   public constructor(fileModule: FileModule) {
     super();
@@ -90,10 +90,10 @@ export class DirView extends JWF.Window {
       else
         this.loadDirs();
     });
-    fileModule.addEventListener("update_dir", (parentId, dirId) => {
+    fileModule.addEventListener("update_dir", (parentId) => {
       this.loadDirs(parentId);
     });
-    fileModule.addEventListener("update_file", fileId => {
+    fileModule.addEventListener("update_file", () => {
       this.loadDirs();
     });
     //初回ロード

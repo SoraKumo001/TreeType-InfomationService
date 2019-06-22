@@ -6,7 +6,14 @@ import "./scss/TableForm.scss";
 
 export interface ITEM_OPTION {
   label?: string;
-  type?: "date" | "string" |"password"| "number" | "checkbox" | "select" | "submit";
+  type?:
+    | "date"
+    | "string"
+    | "password"
+    | "number"
+    | "checkbox"
+    | "select"
+    | "submit";
   name?: string;
   value?: string | number | boolean | Date;
   link?: string;
@@ -101,24 +108,18 @@ export class TableFormView extends Window<TableFormViewMap> {
           input.value = params.value ? date.toLocaleDateString() : "-";
           input.value2 = date;
           data.appendChild(input);
-          input.addEventListener(
-            "click",
-            (): void => {
-              const calendar = new CalendarView({ frame: true });
-              calendar.setPos();
-              if (input instanceof HTMLInputElement && input.value2)
-                calendar.setSelect(input.value2, true);
-              calendar.addEventListener(
-                "date",
-                (e): void => {
-                  input.value = e.date.toLocaleDateString();
-                  if (input instanceof HTMLInputElement) input.value2 = e.date;
-                  calendar.close();
-                  this.callEvent("itemChange", input);
-                }
-              );
-            }
-          );
+          input.addEventListener("click", (): void => {
+            const calendar = new CalendarView({ frame: true });
+            calendar.setPos();
+            if (input instanceof HTMLInputElement && input.value2)
+              calendar.setSelect(input.value2, true);
+            calendar.addEventListener("date", (e): void => {
+              input.value = e.date.toLocaleDateString();
+              if (input instanceof HTMLInputElement) input.value2 = e.date;
+              calendar.close();
+              this.callEvent("itemChange", input);
+            });
+          });
           break;
         case "number":
           input = document.createElement("input");
@@ -134,7 +135,7 @@ export class TableFormView extends Window<TableFormViewMap> {
         case "password":
           input = document.createElement("input");
           input.type2 = params.type;
-          input.type = params.type==="string"?"text":"password";
+          input.type = params.type === "string" ? "text" : "password";
           input.name = params.name || "";
           input.value = (params.value as string) || "";
           data.appendChild(input);

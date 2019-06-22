@@ -23,7 +23,7 @@ export class ContentsImportWindow extends JWF.FrameWindow {
       if (file) {
         const reader = new FileReader();
         reader.readAsText(file);
-        reader.addEventListener("load", e => {
+        reader.addEventListener("load", () => {
           const contentsModule = manager.getModule(ContentsModule);
           if (reader.result)
             contentsModule.import(

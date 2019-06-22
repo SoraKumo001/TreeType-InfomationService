@@ -92,12 +92,10 @@ export class Adapter {
       };
     }
 
-    const promise = new Promise(
-      (resolve, reject): void => {
-        functionSet.promise.resolve = resolve;
-        functionSet.promise.reject = reject;
-      }
-    );
+    const promise = new Promise((resolve, reject): void => {
+      functionSet.promise.resolve = resolve;
+      functionSet.promise.reject = reject;
+    });
     this.functionSet.push(functionSet);
     this.callSend();
     return promise as Promise<never>;
@@ -179,18 +177,16 @@ export class Adapter {
     data?: unknown,
     headers?: { [key: string]: string }
   ): Promise<unknown> {
-    return new Promise(
-      (resolve): void => {
-        Adapter.sendJson(
-          url,
-          data,
-          (value: unknown): void => {
-            resolve(value);
-          },
-          headers
-        );
-      }
-    );
+    return new Promise((resolve): void => {
+      Adapter.sendJson(
+        url,
+        data,
+        (value: unknown): void => {
+          resolve(value);
+        },
+        headers
+      );
+    });
   }
   private static sendJson(
     url: string,
@@ -268,10 +264,8 @@ export class Adapter {
             sessionStorage.setItem(this.keyName, res.sessionHash);
           if (res.results && res.results.length) {
             const result = res.results[0];
-            if(result.error)
-              reject(result.error);
-            else
-              resolve(result.value);
+            if (result.error) reject(result.error);
+            else resolve(result.value);
           } else {
             resolve(null);
           }

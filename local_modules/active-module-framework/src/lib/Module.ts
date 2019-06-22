@@ -11,8 +11,8 @@ export interface ModuleInfo {
   author: string;
   info: string;
 }
-export interface ModuleMap{
-  [key:string]:unknown[]
+export interface ModuleMap {
+  [key: string]: unknown[];
 }
 /**
  *モジュール作成用基本クラス
@@ -20,7 +20,7 @@ export interface ModuleMap{
  * @export
  * @class Module
  */
-export class Module<T extends ModuleMap=ModuleMap> {
+export class Module<T extends ModuleMap = ModuleMap> {
   public static getModuleInfo(): ModuleInfo {
     return {
       className: this.name,
@@ -30,31 +30,35 @@ export class Module<T extends ModuleMap=ModuleMap> {
       info: ""
     };
   }
-    private listeners: {
+  private listeners: {
     [key: string]: unknown[];
   } = {};
-  addEventListener<K extends keyof T>(name: K&string, proc: (...params: T[K]) => void): void {
+  public addEventListener<K extends keyof T>(
+    name: K & string,
+    proc: (...params: T[K]) => void
+  ): void {
     const listener = this.listeners[name];
     if (!listener) {
       this.listeners[name as string] = [proc];
       return;
     }
-    if (listener.indexOf(proc) >= 0)
-      return;
+    if (listener.indexOf(proc) >= 0) return;
     listener.push(proc);
   }
-  removeEventListener<K extends keyof T>(name: K&string, proc:(...params: T[K]) => void): void {
+  public removeEventListener<K extends keyof T>(
+    name: K & string,
+    proc: (...params: T[K]) => void
+  ): void {
     const listener = this.listeners[name];
     if (!listener) {
       this.listeners[name as string] = [proc];
       return;
     }
     const index = listener.indexOf(proc);
-    if (index < 0)
-      return;
+    if (index < 0) return;
     listener.splice(index, 1);
   }
-  callEvent<K extends keyof T>(name: K&string, ...params: T[K]) {
+  public callEvent<K extends keyof T>(name: K & string, ...params: T[K]): void {
     const listener = this.listeners[name];
     if (listener) {
       for (const proc of listener) {
@@ -62,7 +66,7 @@ export class Module<T extends ModuleMap=ModuleMap> {
       }
     }
   }
-  public async onCreateHtml?(creater:HtmlCreater): Promise<void>;
+  public async onCreateHtml?(creater: HtmlCreater): Promise<void>;
   public async onStartSession?(): Promise<void>;
   public async onEndSession?(): Promise<void>;
   public static Module: boolean = true;
@@ -71,7 +75,7 @@ export class Module<T extends ModuleMap=ModuleMap> {
   public constructor(manager: Manager) {
     this.manager = manager;
   }
-  public getManager(){
+  public getManager(): Manager {
     return this.manager;
   }
   public setSession(session: Session): void {
@@ -117,8 +121,10 @@ export class Module<T extends ModuleMap=ModuleMap> {
     if (!this.session) return null;
     return this.session.getModule(constructor);
   }
-  addCommand(name: string, proc: (req: express.Request, res: express.Response) => void): void{
-    this.getManager().addCommand(name,proc);
+  public addCommand(
+    name: string,
+    proc: (req: express.Request, res: express.Response) => void
+  ): void {
+    this.getManager().addCommand(name, proc);
   }
-
 }

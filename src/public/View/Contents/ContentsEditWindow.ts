@@ -14,10 +14,10 @@ import { FileModule } from "../../modules/FileModule";
  * @extends {TextEditWindow}
  */
 export class ContentsEditWindow extends TextEditWindow {
-  manager: AppManager;
-  contents?: MainContents;
-  panel: JWF.Panel[] = [];
-  contentsModule: ContentsModule;
+  private manager: AppManager;
+  private contents?: MainContents;
+  private panel: JWF.Panel[] = [];
+  private contentsModule: ContentsModule;
   /**
    *Creates an instance of ContentsEditWindow.
    * @param {AppManager} manager
@@ -98,10 +98,10 @@ export class ContentsEditWindow extends TextEditWindow {
       }
     }
   }
-  insertNode(node: HTMLElement) {
+  public insertNode(node: HTMLElement) {
     this.editableView.insertNode(node);
   }
-  createPanel() {
+  private createPanel() {
     //パネル作成
     const that = this;
     let target = this.panel[0].getClient();

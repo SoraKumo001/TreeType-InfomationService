@@ -57,86 +57,70 @@ export class TreeItem {
     let row1 = document.createElement("div");
     row1.dataset.kind = "TreeRow";
     hNode.appendChild(row1);
-    row1.addEventListener(
-      "click",
-      (): void => {
-        this.selectItem(false, true);
-      }
-    );
-    row1.addEventListener(
-      "dblclick",
-      (): void => {
-        const treeView = this.getTreeView();
-        if (treeView)
-          treeView.callEvent("itemDblClick", { item: this, user: true });
-      }
-    );
-    row1.addEventListener(
-      "dragstart",
-      (e): void => {
-        const treeView = this.getTreeView();
-        if (treeView){
-          if(e.dataTransfer){
-            e.dataTransfer.setData("text/plain",JSON.stringify({itemValue:this.getItemValue()}));
-          }
-          treeView.callEvent("itemDragStart", { item: this, event: e });
+    row1.addEventListener("click", (): void => {
+      this.selectItem(false, true);
+    });
+    row1.addEventListener("dblclick", (): void => {
+      const treeView = this.getTreeView();
+      if (treeView)
+        treeView.callEvent("itemDblClick", { item: this, user: true });
+    });
+    row1.addEventListener("dragstart", (e): void => {
+      const treeView = this.getTreeView();
+      if (treeView) {
+        if (e.dataTransfer) {
+          e.dataTransfer.setData(
+            "text/plain",
+            JSON.stringify({ itemValue: this.getItemValue() })
+          );
         }
+        treeView.callEvent("itemDragStart", { item: this, event: e });
       }
-    );
-    row1.addEventListener(
-      "dragleave",
-      (): void => {
-        row1.dataset.drag = "";
-      }
-    );
-    row1.addEventListener(
-      "dragenter",
-      (e): void => {
-        row1.dataset.drag = "over";
-        e.preventDefault();
-      }
-    );
-    row1.addEventListener("mouseover", e => {
+    });
+    row1.addEventListener("dragleave", (): void => {
+      row1.dataset.drag = "";
+    });
+    row1.addEventListener("dragenter", (e): void => {
+      row1.dataset.drag = "over";
+      e.preventDefault();
+    });
+    row1.addEventListener("mouseover", (e): void => {
       const treeView = this.getTreeView();
       if (treeView) treeView.callEvent("itemOver", { event: e, item: this });
     });
-    row1.addEventListener(
-      "dragover",
-      (e): void => {
-        e.preventDefault();
-      }
-    );
-    row1.addEventListener(
-      "drop",
-      (e): void => {
-        const treeView = this.getTreeView();
-        if (treeView) {
-          let value:unknown = undefined;
-          if(e.dataTransfer){
-            try{
+    row1.addEventListener("dragover", (e): void => {
+      e.preventDefault();
+    });
+    row1.addEventListener("drop", (e): void => {
+      const treeView = this.getTreeView();
+      if (treeView) {
+        let value: unknown = undefined;
+        if (e.dataTransfer) {
+          try {
             const v = JSON.parse(e.dataTransfer.getData("text/plain"));
-            if(v && v.itemValue)
-              value = v.itemValue;
-            }catch(e){}
+            if (v && v.itemValue) value = v.itemValue;
+          } catch (e) {
+            //
           }
-
-          treeView.callEvent("itemDrop", { event: e, item: this, srcValue:value });
         }
-        row1.dataset.drag = "";
-        e.preventDefault();
+
+        treeView.callEvent("itemDrop", {
+          event: e,
+          item: this,
+          srcValue: value
+        });
       }
-    );
+      row1.dataset.drag = "";
+      e.preventDefault();
+    });
     let icon = document.createElement("div");
     icon.dataset.kind = "TreeIcon";
     row1.appendChild(icon);
-    icon.addEventListener(
-      "click",
-      (e): void => {
-        this.openItem(!this.opened, true);
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    );
+    icon.addEventListener("click", (e): void => {
+      this.openItem(!this.opened, true);
+      e.preventDefault();
+      e.stopPropagation();
+    });
 
     let body = document.createElement("div");
     body.dataset.kind = "TreeBody";
@@ -564,9 +548,11 @@ export class TreeView<
     if (!this.mSelectItem) return null;
     return this.mSelectItem.getItemValue();
   }
-  public getTreeStat() {
+  public getTreeStat(): {
+    [key: string]: boolean;
+  } {
     const treeStat: { [key: string]: boolean } = {};
-    const getStat = (item: TreeItem) => {
+    const getStat = (item: TreeItem): void => {
       if (item.getItemValue() != null)
         treeStat[
           (item.getItemValue() as string | number | object).toString()
@@ -579,7 +565,7 @@ export class TreeView<
     getStat(this.getRootItem());
     return treeStat;
   }
-  public setTreeStat(treeStat: { [key: string]: boolean }) {
+  public setTreeStat(treeStat: { [key: string]: boolean }): void {
     for (const value of Object.keys(treeStat)) {
       const item = this.findItemFromValue(value);
       if (item) {

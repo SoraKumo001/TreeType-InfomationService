@@ -56,7 +56,7 @@ export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
     return true;
   }
   public async connect(){
-    while (true) {
+    for (;;) {
       if (await this.open()) {
         this.output("DBの接続完了");
         //関連テーブルの初期化用

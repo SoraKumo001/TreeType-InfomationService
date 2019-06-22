@@ -5,8 +5,8 @@ import { AppManager } from "../../AppManager";
 import { ParamsModule } from "../../modules/ParamsModule";
 import { TableFormView } from "javascript-window-framework";
 export class BasicView extends SettingView {
-  paramsModule:ParamsModule
-  form:TableFormView
+  private paramsModule:ParamsModule
+  private form:TableFormView
   public constructor(manager: AppManager) {
     super(manager);
     this.setJwfStyle("BasicView");

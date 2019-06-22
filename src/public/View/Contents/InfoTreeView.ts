@@ -54,7 +54,7 @@ export class InfoTreeView extends JWF.TreeView {
     contentsModule.addEventListener("createContents", (pid, id) => {
       this.loadSubTree(pid, id);
     });
-    contentsModule.addEventListener("moveContents", (fromId,toId) => {
+    contentsModule.addEventListener("moveContents", (fromId) => {
       this.loadTree(fromId,true);
     });
     contentsModule.addEventListener("deleteContents", id => {

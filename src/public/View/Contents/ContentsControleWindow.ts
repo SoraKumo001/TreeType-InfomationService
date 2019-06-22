@@ -1,7 +1,7 @@
 import { FrameWindow } from "javascript-window-framework";
 import "./scss/ContentsControleWindow.scss";
 export class ContentsControleWindow extends FrameWindow {
-  constructor() {
+  public constructor() {
     super();
     this.setTitle("コンテンツ設定");
     this.setJwfStyle("ContentsControleWindow");
@@ -13,7 +13,7 @@ export class ContentsControleWindow extends FrameWindow {
         this.close();
     })
   }
-  addMenu(name: string,event?:()=>void) {
+  public addMenu(name: string,event?:()=>void) {
     const div = document.createElement("div");
     div.innerText = name;
     if(event)

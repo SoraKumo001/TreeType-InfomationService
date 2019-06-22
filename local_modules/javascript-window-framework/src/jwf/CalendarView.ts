@@ -29,24 +29,18 @@ export class CalendarView extends Window<CalendarViewEventMap> {
     const titleLine = table.insertRow(-1);
     const prev = titleLine.insertCell(-1);
     prev.innerText = "←";
-    prev.addEventListener(
-      "click",
-      (): void => {
-        this.moveMonth(-1);
-      }
-    );
+    prev.addEventListener("click", (): void => {
+      this.moveMonth(-1);
+    });
     const titleCell = titleLine.insertCell(-1);
     this.titleCell = titleCell;
     titleCell.colSpan = 5;
 
     const next = titleLine.insertCell(-1);
     next.innerText = "→";
-    next.addEventListener(
-      "click",
-      (): void => {
-        this.moveMonth(1);
-      }
-    );
+    next.addEventListener("click", (): void => {
+      this.moveMonth(1);
+    });
     this.dateCells = [];
 
     const that = this;
@@ -132,5 +126,4 @@ export class CalendarView extends Window<CalendarViewEventMap> {
   private onCellClick(cell: HTMLDivElement & { date?: Date }): void {
     if (cell.date) this.callEvent("date", { date: cell.date });
   }
-
 }

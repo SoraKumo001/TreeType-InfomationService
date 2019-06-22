@@ -5,8 +5,8 @@ import "./scss/InfoContentsView.scss";
 import "highlight.js/styles/dark.css";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
-import { UserModule } from "../../modules/UserModule";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const highlight = require("highlight.js/lib/highlight");
 highlight.registerLanguage(
   "javascript",
@@ -30,26 +30,25 @@ export interface ContentsArea extends HTMLDivElement {
  * @extends {JWF.Window}
  */
 export class InfoContentsView extends JWF.Window {
-  userModule: UserModule;
-  contentsModule: ContentsModule;
-  contentsPage: HTMLDivElement;
-  contentsNode: { [key: number]: ContentsArea } = {};
-  timerHandle?: number;
-  selectId: number = 0;
-  manager: AppManager;
-  scrollFlag: boolean = false;
-  pageId: number = 0;
+
+  private contentsModule: ContentsModule;
+  private contentsPage: HTMLDivElement;
+  private contentsNode: { [key: number]: ContentsArea } = {};
+  private timerHandle?: number;
+  private selectId: number = 0;
+  private manager: AppManager;
+  private scrollFlag: boolean = false;
+ private  pageId: number = 0;
   /**
    *Creates an instance of InfoContentsView.
    * @param {AppManager} manager
    * @memberof InfoContentsView
    */
-  constructor(manager: AppManager) {
+  public constructor(manager: AppManager) {
     super();
     this.manager = manager;
     const contentsModule = manager.getModule(ContentsModule);
     this.contentsModule = contentsModule;
-    this.userModule = manager.getModule(UserModule);
 
     contentsModule.addEventListener("selectContents", (id, tree) => {
       if (!tree) this.loadPage(id);
@@ -176,11 +175,11 @@ export class InfoContentsView extends JWF.Window {
           var node = nodes[index];
           highlight.highlightBlock(node);
         }
-        var nodes = body.querySelectorAll(".update");
-        for (var index = 0; nodes[index]; index++) {
-          var node = nodes[index];
-          //checkUpdate(node);
-        }
+        // var nodes = body.querySelectorAll(".update");
+        // for (var index = 0; nodes[index]; index++) {
+        //   var node = nodes[index];
+        //   //checkUpdate(node);
+        // }
       }
     };
     contentsArea.update(contents);
@@ -201,7 +200,7 @@ export class InfoContentsView extends JWF.Window {
       contentsControle.setPos(x, 30);
 
       contentsControle.addMenu("編集", () => {
-        const editWindow = new ContentsEditWindow(this.manager, contents.id);
+        new ContentsEditWindow(this.manager, contents.id);
       });
       if (contents.type !== "PAGE") {
         contentsControle.addMenu("新規(上)", () => {

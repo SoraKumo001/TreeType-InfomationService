@@ -18,7 +18,16 @@ export class FileEditWindow extends JWF.FrameWindow {
     this.setPos();
     this.setPadding(10);
     this.setTitle(params.parentId ? "新規ディレクトリ作成" : "名前の変更");
-    const enter = async () => {
+
+    const fileModule = params.fileModule;
+    const label = new JWF.Label(params.parentId ? "ディレクトリ名を入力" : "新しい名前を入力");
+    this.addChild(label, "top");
+    const text = new JWF.TextBox({
+      label: "名前",
+      text: params.name ? params.name : ""
+    });
+
+        const enter = async () => {
       if (params.parentId) {
         const id = await fileModule.createDir(params.parentId, text.getText());
         if (!id)
@@ -38,17 +47,12 @@ export class FileEditWindow extends JWF.FrameWindow {
         }
       }
     };
-    const label = new JWF.Label(params.parentId ? "ディレクトリ名を入力" : "新しい名前を入力");
-    this.addChild(label, "top");
-    const text = new JWF.TextBox({
-      label: "名前",
-      text: params.name ? params.name : ""
-    });
+
     text.addEventListener("enter", () => {
       enter();
     });
     this.addChild(text, "top");
-    const fileModule = params.fileModule;
+
     const okButton = new JWF.Button("OK");
     this.addChild(okButton, "top");
     okButton.addEventListener("buttonClick", async () => {
