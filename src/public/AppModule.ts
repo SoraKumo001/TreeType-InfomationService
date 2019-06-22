@@ -19,7 +19,7 @@ export class AppModule<T extends ModuleMap=ModuleMap> {
   public getAdapter() {
     return this.manager.getAdapter();
   }
-  addEventListener<K extends keyof T>(name: K&string, proc: (...params: T[K]) => void): void {
+  public addEventListener<K extends keyof T>(name: K&string, proc: (...params: T[K]) => void): void {
     const listener = this.listeners[name];
     if (!listener) {
       this.listeners[name as string] = [proc];
@@ -29,7 +29,7 @@ export class AppModule<T extends ModuleMap=ModuleMap> {
       return;
     listener.push(proc);
   }
-  removeEventListener<K extends keyof T>(name: K&string, proc:(...params: T[K]) => void): void {
+  public removeEventListener<K extends keyof T>(name: K&string, proc:(...params: T[K]) => void): void {
     const listener = this.listeners[name];
     if (!listener) {
       this.listeners[name as string] = [proc];
@@ -40,7 +40,7 @@ export class AppModule<T extends ModuleMap=ModuleMap> {
       return;
     listener.splice(index, 1);
   }
-  callEvent<K extends keyof T>(name: K&string, ...params: T[K]) {
+  public callEvent<K extends keyof T>(name: K&string, ...params: T[K]) {
     const listener = this.listeners[name];
     if (listener) {
       for (const proc of listener) {

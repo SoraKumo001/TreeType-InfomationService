@@ -2,7 +2,9 @@ import * as JWF from "javascript-window-framework";
 import { FileModule, FileInfo } from "../../modules/FileModule";
 import { FileEditWindow } from "./FileEditWindow";
 import { WINDOW_EVENT_MAP } from "javascript-window-framework";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const IMAGE_FILE = require("./images/file.svg");
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const IMAGE_FOLDER = require("./images/folder.svg");
 
 export interface CustomMap extends WINDOW_EVENT_MAP {
@@ -17,6 +19,12 @@ export interface CustomMap extends WINDOW_EVENT_MAP {
  * @extends {JWF.Window}
  */
 export class FileView extends JWF.Window {
+  private fileModule: FileModule;
+  private fileList: JWF.ListView;
+  private parentId: number;
+  private imageFile: HTMLImageElement;
+  private imageFolder: HTMLImageElement;
+
   public addEventListener<K extends keyof CustomMap>(
     name: K,
     proc: (...params: CustomMap[K]) => unknown
@@ -29,12 +37,6 @@ export class FileView extends JWF.Window {
   ): void {
     super.callEvent(name, ...params);
   }
-
-  fileModule: FileModule;
-  fileList: JWF.ListView;
-  parentId: number;
-  imageFile: HTMLImageElement;
-  imageFolder: HTMLImageElement;
 
   public constructor(fileModule: FileModule) {
     super();
@@ -59,7 +61,7 @@ export class FileView extends JWF.Window {
       "更新"
     ]);
     const fileClinet = fileList.getClient();
-    fileList.addEventListener("itemDblClick", e => {
+    fileList.addEventListener("itemDblClick", () => {
       const files = this.fileList.getSelectValues() as FileInfo[];
       if (files.length) {
         const file = files[0];
@@ -147,9 +149,7 @@ export class FileView extends JWF.Window {
       }
       if (flag) this.loadFiles();
     });
-    fileModule.addEventListener("update_dir", (parentId, dirId) => {
-      //if (this.parentId === parentId) this.loadFiles();
-    });
+
     fileModule.addEventListener("upload_file", parentId => {
       if (this.parentId === parentId) this.loadFiles();
     });
@@ -195,12 +195,12 @@ export class FileView extends JWF.Window {
       }
     }
   }
-  uploadFile() {
+  public uploadFile() {
     let input = document.createElement("input");
     input.type = "file";
     input.multiple = true;
     const that = this;
-    input.addEventListener("change", function(e) {
+    input.addEventListener("change", function() {
       const files = this.files;
       const parentId = that.parentId;
       if (parentId && files) that.fileModule.uploadFile(parentId, files);

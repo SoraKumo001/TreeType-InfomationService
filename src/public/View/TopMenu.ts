@@ -6,9 +6,10 @@ import { AppManager } from "../AppManager";
 import { LoginWindow } from "./User/LoginWindow";
 import { SettingWindow } from "./Setting/SettingWindow";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const LogoImage = require("./images/sorakumo_logo.svg");
 export class TopMenu extends JWF.Window {
-  constructor(manager: AppManager) {
+  public constructor(manager: AppManager) {
     super();
     this.setJwfStyle("TopMenu");
     this.setHeight(64);

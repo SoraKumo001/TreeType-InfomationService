@@ -11,13 +11,13 @@ export interface UserInfo {
 
 export interface CustomMap extends ModuleMap {
   loginUser: [UserInfo];
-  updateUser: [UserInfo];
+  updateUser: [{no:number}];
 }
 
 export class UserModule extends AppModule<CustomMap> {
-  userInfo?: UserInfo;
+  private userInfo?: UserInfo;
 
-  constructor(manager: AppManager) {
+  public constructor(manager: AppManager) {
     super(manager);
     const adapter = this.getAdapter();
     const value = sessionStorage.getItem(adapter.getKeyName() + "UserInfo");
@@ -38,7 +38,7 @@ export class UserModule extends AppModule<CustomMap> {
    * @returns
    * @memberof AppManager
    */
-  async request() {
+  public async request() {
     const adapter = this.getAdapter();
     //ユーザ情報の要求
     const user = (await adapter.exec("Users.request")) as UserInfo;
@@ -48,7 +48,7 @@ export class UserModule extends AppModule<CustomMap> {
     this.callEvent("loginUser", user);
     return user;
   }
-  async login(userId: string, userPass: string, local: boolean, keep: boolean) {
+  public async login(userId: string, userPass: string, local: boolean, keep: boolean) {
     const adapter = this.getAdapter();
     const user = (await adapter.exec(
       "Users.login",
@@ -67,13 +67,13 @@ export class UserModule extends AppModule<CustomMap> {
     this.callEvent("loginUser", user);
     return user;
   }
-  async logout() {
+  public async logout() {
     const adapter = this.getAdapter();
     const user = (await adapter.exec("Users.logout")) as UserInfo;
     this.callEvent("loginUser", user);
     return user;
   }
-  async setUser(
+  public async setUser(
     no: number,
     userId: string,
     userName: string,
@@ -97,16 +97,16 @@ export class UserModule extends AppModule<CustomMap> {
     }
     return info;
   }
-  delUser(userNo: number, local: boolean) {
+  public delUser(userNo: number, local: boolean) {
     const adapter = this.getAdapter();
     return (adapter.exec("Users.delUser", userNo, local) as Promise<
       boolean | null
     >).then(result => {
-      this.callEvent("updateUser", { no: userNo } as UserInfo);
+      this.callEvent("updateUser", { no: userNo });
       return result;
     });
   }
-  getUsers(local: boolean) {
+  public getUsers(local: boolean) {
     const adapter = this.getAdapter();
     return adapter.exec("Users.getUsers", local) as Promise<UserInfo[]>;
   }

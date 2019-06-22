@@ -5,15 +5,15 @@ import { InfoTreeView } from "./InfoTreeView";
 import { ContentsModule } from "../../modules/ContentsModule";
 import { InfoContentsView } from "./InfoContentsView";
 import { RouterModule } from "../../modules/RouterModule";
-import { UserModule, UserInfo } from "../../modules/UserModule";
+import { UserModule } from "../../modules/UserModule";
 import { TreeItem } from "javascript-window-framework";
 
 
 
 export class MainView extends JWF.Window {
-  contentsModule: ContentsModule;
-  routerModule: RouterModule;
-  constructor(manager: AppManager) {
+  private contentsModule: ContentsModule;
+  private routerModule: RouterModule;
+  public constructor(manager: AppManager) {
     super({ overlap: true });
     this.setMaximize(true);
 
@@ -54,11 +54,13 @@ export class MainView extends JWF.Window {
       //トラッカーに通知
       try {
         const AnalyticsUA = (global as NodeJS.Global&{AnalyticsUA:string})["AnalyticsUA"];
+        // eslint-disable-next-line no-undef
         gtag("config", AnalyticsUA, {
           page_title: title,
           page_path: "/?p=" + id
         });
-      } catch (e) {}
+      } catch (e) {// empty
+      }
     });
 
     const userModule = manager.getModule(UserModule);
@@ -71,7 +73,7 @@ export class MainView extends JWF.Window {
       infoContentsView.loadPage(id);
     });
 
-    userModule.addEventListener("loginUser", (info: UserInfo) => {
+    userModule.addEventListener("loginUser", () => {
       //二回目以降のログインでコンテンツの更新
       if (!first) {
         const params = routerModule.getLocationParams();

@@ -21,9 +21,9 @@ export class TextArea extends Window<CustomEvent> {
     const textArea = document.createElement("textarea");
     this.textArea = textArea;
     client.appendChild(textArea);
-    textArea.addEventListener("input",()=>{
+    textArea.addEventListener("input", (): void => {
       this.callEvent("updateText");
-    })
+    });
   }
   public setText(text: string): void {
     this.textArea.value = text;

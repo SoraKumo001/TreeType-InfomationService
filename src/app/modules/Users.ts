@@ -8,13 +8,13 @@ function getSHA256(v1: string, v2?: string): string {
     .update(v1 + (v2 ? v2 : ""))
     .digest("hex");
 }
-export type UserInfo = {
+export interface UserInfo {
   no: number;
   type: string;
   id: string;
   name: string;
   admin: boolean;
-};
+}
 
 export class Users extends amf.Module {
   private userInfo?: UserInfo;
@@ -120,8 +120,8 @@ export class Users extends amf.Module {
       var result = await localDB.get(
         "select users_no as no,users_id as id,users_name as name,'local' as type,true as admin from users where users_no=? ",
         no
-      );
-      if (result) return result as UserInfo;
+      ) as unknown as UserInfo | null;
+      if (result) return result;
     } else {
       //リモートユーザ
       const remoteDB = await this.getModule(RemoteDB);
@@ -130,8 +130,8 @@ export class Users extends amf.Module {
       const result = await remoteDB.get(
         "select users_no as no,users_id as id,users_name as name,'remote' as type,true as admin from users where users_no=$1 ",
         no
-      );
-      if (result) return result as UserInfo;
+      ) as unknown as UserInfo | null;
+      if (result) return result;
     }
     return null;
   }
@@ -143,14 +143,14 @@ export class Users extends amf.Module {
     }
     return userInfo.no;
   }
-  async getUserInfo(userId: string, local: boolean) {
+  public async getUserInfo(userId: string, local: boolean) {
     if (local) {
       const localDB = this.getLocalDB();
       var result = await localDB.get(
         "select users_no as no,users_id as id,users_name as name,'local' as type,true as admin from users where users_id=? ",
         userId
-      );
-      if (result) return result as UserInfo;
+      ) as unknown as UserInfo | null;
+      if (result) return result;
     } else {
       //リモートユーザ
       const remoteDB = await this.getModule(RemoteDB);
@@ -159,12 +159,12 @@ export class Users extends amf.Module {
       const result = await remoteDB.get(
         "select users_no as no,users_id as id,users_name as name,'remote' as type,true as admin from users where users_id=$1",
         userId
-      );
-      if (result) return result as UserInfo;
+      )as unknown as UserInfo | null;
+      if (result) return result;
     }
     return null;
   }
-  logout() {
+  public logout() {
     const user = {
       no: -1,
       id: "GUEST",
@@ -177,16 +177,16 @@ export class Users extends amf.Module {
     this.userInfo = user;
     return user;
   }
-  isAdmin() {
+  public isAdmin() {
     return this.userInfo ? this.userInfo.admin : false;
   }
-  async JS_request() {
+  public async JS_request() {
     return this.userInfo;
   }
-  async JS_logout() {
+  public async JS_logout() {
     return this.logout();
   }
-  async JS_login(
+  public async JS_login(
     userId: string,
     userPass: string,
     local: boolean,
@@ -203,7 +203,7 @@ export class Users extends amf.Module {
     }
     return false;
   }
-  async JS_setUser(
+  public async JS_setUser(
     userNo: number,
     userId: string,
     userName: string,
@@ -273,7 +273,7 @@ export class Users extends amf.Module {
       return result;
     }
   }
-  async JS_delUser(userNo: number, local: boolean) {
+  public async JS_delUser(userNo: number, local: boolean) {
     if (!this.isAdmin()) return false;
     if (local) {
       const localDB = this.getLocalDB();
@@ -295,7 +295,7 @@ export class Users extends amf.Module {
     }
   }
 
-  async JS_getUsers(local: boolean) {
+  public async JS_getUsers(local: boolean) {
     if (!this.isAdmin()) return false;
     if (local) {
       let localDB = this.getLocalDB();

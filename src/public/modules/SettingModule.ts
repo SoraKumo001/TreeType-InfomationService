@@ -4,7 +4,7 @@ import { AppManager } from "../AppManager";
 
 
 export class SettingView extends Window{
-  manager:AppManager;
+  private manager:AppManager;
   public constructor(manager:AppManager){
     super();
     this.manager = manager;

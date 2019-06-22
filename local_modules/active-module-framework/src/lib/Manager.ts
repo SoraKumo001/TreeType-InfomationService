@@ -77,15 +77,14 @@ export class Manager {
     this.express = express();
     this.output("--- Start Manager");
     //エラーメッセージをキャプチャ
-    capcon.startCapture(
-      process.stderr,
-      (stderr: unknown): void => {
-        this.stderr += stderr;
-      }
-    );
+    capcon.startCapture(process.stderr, (stderr: unknown): void => {
+      this.stderr += stderr;
+    });
     this.init(params);
   }
-  public getModuleTypes() {
+  public getModuleTypes(): {
+    [key: string]: typeof Module;
+  } {
     return this.modulesType;
   }
   /**
@@ -221,7 +220,7 @@ export class Manager {
   public addCommand(
     name: string,
     proc: (req: express.Request, res: express.Response) => void
-  ) {
+  ): void {
     this.commands[name] = proc;
   }
   /**
@@ -355,7 +354,7 @@ export class Manager {
     res: express.Response,
     params: AdapterFormat,
     buffer?: Buffer
-  ) {
+  ): Promise<void> {
     //マネージャ機能をセッション用にコピー
     const session = new Session(this);
     await session.init(
@@ -458,29 +457,23 @@ export class Manager {
 
     if (port) {
       //ソケットの待ち受け設定
-      this.express.listen(
-        port,
-        (): void => {
-          this.output("localhost:%d", port);
-          if (params.listened) params.listened(port);
-        }
-      );
+      this.express.listen(port, (): void => {
+        this.output("localhost:%d", port);
+        if (params.listened) params.listened(port);
+      });
     } else {
       //ソケットファイルの削除
       this.removeSock(path);
       //ソケットの待ち受け設定
-      this.express.listen(
-        path,
-        (): void => {
-          this.output(path);
-          try {
-            fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
-            if (params.listened) params.listened(path);
-          } catch (e) {
-            //
-          }
+      this.express.listen(path, (): void => {
+        this.output(path);
+        try {
+          fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
+          if (params.listened) params.listened(path);
+        } catch (e) {
+          //
         }
-      ); //ソケットの待ち受け設定
+      }); //ソケットの待ち受け設定
     }
   }
   /**

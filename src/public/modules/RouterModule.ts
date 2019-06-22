@@ -6,8 +6,8 @@ export interface CustomMap extends ModuleMap {
 }
 
 export class RouterModule extends AppModule<CustomMap> {
-  lastParams: string;
-  constructor(manager: AppManager) {
+  private lastParams: string;
+  public constructor(manager: AppManager) {
     super(manager);
     this.lastParams = "";
     window.addEventListener(
@@ -18,7 +18,7 @@ export class RouterModule extends AppModule<CustomMap> {
       false
     );
   }
-  setLocationParams(params: { [key: string]: string|number }) {
+  public setLocationParams(params: { [key: string]: string|number }) {
     const p = Object.assign(this.getLocationParams(), params);
     let search = "";
     for (let key of Object.keys(p)) {
@@ -30,7 +30,7 @@ export class RouterModule extends AppModule<CustomMap> {
       this.lastParams = search;
     }
   }
-  getLocationParams() {
+  public getLocationParams() {
     //パラメータの読み出し
     var p: { [key: string]: string } = {};
     window.location.search
@@ -42,7 +42,7 @@ export class RouterModule extends AppModule<CustomMap> {
       });
     return p;
   }
-  goLocation() {
+  public goLocation() {
     const p = this.getLocationParams();
     this.lastParams = window.location.search.substring(1);
     this.callEvent("goLocation", p);

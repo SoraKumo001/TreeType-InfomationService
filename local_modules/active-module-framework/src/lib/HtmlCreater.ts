@@ -14,20 +14,20 @@ interface FileInfo {
 
 export class HtmlCreater {
   private jsdom?: JSDOM;
-  private links:string[] = [];
-  private baseUrl?:string
-  private req?:express.Request
-  public getDom(){
+  private links: string[] = [];
+  private baseUrl?: string;
+  private req?: express.Request;
+  public getDom(): JSDOM {
     return this.jsdom as JSDOM;
   }
-  public getDocument(){
+  public getDocument(): Document {
     return this.getDom().window.document;
   }
-  public getRequest(){
+  public getRequest(): express.Request {
     return this.req as express.Request;
   }
   public async output(
-    req:express.Request,
+    req: express.Request,
     res: express.Response,
     baseUrl: string,
     rootPath: string,
@@ -35,32 +35,29 @@ export class HtmlCreater {
     cssPath: string[],
     jsPath: string[],
     priorityJs: string[],
-    modules:Module[],
-
+    modules: Module[]
   ): Promise<boolean> {
-    if (!await this.openTemplate(indexPath)) return false;
+    if (!(await this.openTemplate(indexPath))) return false;
     this.req = req;
     this.baseUrl = baseUrl;
-    const cssFiles = this.getFileInfo(rootPath, cssPath,".css");
-    const jsFiles = this.getFileInfo(rootPath, jsPath,".js");
+    const cssFiles = this.getFileInfo(rootPath, cssPath, ".css");
+    const jsFiles = this.getFileInfo(rootPath, jsPath, ".js");
 
     //JSを優先順位に従って並び替え
-    jsFiles.sort(
-      (a, b): number => {
-        const v1 = priorityJs.indexOf(a.name);
-        const v2 = priorityJs.indexOf(b.name);
-        return v2 - v1;
-      }
-    );
+    jsFiles.sort((a, b): number => {
+      const v1 = priorityJs.indexOf(a.name);
+      const v2 = priorityJs.indexOf(b.name);
+      return v2 - v1;
+    });
     //必要なファイルを追加
     this.addScript(jsFiles);
     this.addCSS(cssFiles);
 
-    this.addLink(jsFiles.map(v => v.dir+"/"+ v.name),'script');
-    this.addLink(cssFiles.map(v => v.dir+"/"+ v.name),'style');
+    this.addLink(jsFiles.map((v): string => v.dir + "/" + v.name), "script");
+    this.addLink(cssFiles.map((v): string => v.dir + "/" + v.name), "style");
 
-    for(const module of modules){
-      if(module.onCreateHtml){
+    for (const module of modules) {
+      if (module.onCreateHtml) {
         await module.onCreateHtml(this);
       }
     }
@@ -69,13 +66,13 @@ export class HtmlCreater {
       "Content-Type": "text/html; charset=UTF-8",
       link: this.links
     });
-    if(this.jsdom)
+    if (this.jsdom)
       res.end(this.jsdom.window.document.documentElement.outerHTML);
 
     return true;
   }
 
-  public async openTemplate(indexPath: string) {
+  public async openTemplate(indexPath: string): Promise<boolean> {
     try {
       const jsdom = await JSDOM.fromFile(indexPath);
       this.jsdom = jsdom;
@@ -84,14 +81,14 @@ export class HtmlCreater {
       return false;
     }
   }
-  addLink(files:string[],style:string){
+  public addLink(files: string[], style: string): void {
     const links = this.links;
     const baseUrl = this.baseUrl;
     for (const file of files) {
       links.push(`<${baseUrl}${file}>;rel=preload;as=${style};`);
     }
   }
-  addScript(files: FileInfo[]) {
+  public addScript(files: FileInfo[]): void {
     const jsdom = this.jsdom;
     if (!jsdom) return;
     const document = jsdom.window.document;
@@ -103,7 +100,7 @@ export class HtmlCreater {
       head.appendChild(node);
     }
   }
-  addCSS(files: FileInfo[]) {
+  public addCSS(files: FileInfo[]): void {
     const jsdom = this.jsdom;
     if (!jsdom) return;
     const document = jsdom.window.document;
@@ -115,7 +112,11 @@ export class HtmlCreater {
       head.appendChild(node);
     }
   }
-  getFileInfo(rootPath: string, srcPath: string[],type:string) {
+  public getFileInfo(
+    rootPath: string,
+    srcPath: string[],
+    type: string
+  ): FileInfo[] {
     const fileInfos: FileInfo[] = [];
     //CSSファイルリストの読み込み
     for (let dir of srcPath) {
@@ -135,7 +136,7 @@ export class HtmlCreater {
     return fileInfos;
   }
   //ファイル名に日付情報を追加
-  addDateParam(files: FileInfo[]): void {
+  public addDateParam(files: FileInfo[]): void {
     for (const file of files) {
       const date = file.date;
       file.name += sprintf(

@@ -12,7 +12,7 @@ export class MessageBox extends FrameWindow<MessageBoxEventMap> {
   public constructor(
     title: string,
     msg: string,
-    buttons?: [string,unknown][]
+    buttons?: [string, unknown][]
   ) {
     super();
     this.setJwfStyle("MessageBox");
@@ -29,9 +29,9 @@ export class MessageBox extends FrameWindow<MessageBoxEventMap> {
     if (msg) label.getClient().innerText = msg;
     const that = this;
     if (!buttons) {
-      buttons = [[ "OK",true ]];
+      buttons = [["OK", true]];
     }
-    for (let i=buttons.length-1;i>=0;i--) {
+    for (let i = buttons.length - 1; i >= 0; i--) {
       const buttonData = buttons[i];
       const b = new Button(buttonData[0], buttonData[1]);
       b.setAlign("center");

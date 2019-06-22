@@ -11,7 +11,7 @@ export interface FileInfo {
   size: number;
   date: string | null;
   files_date: string | null;
-  childs: FileInfo[];
+  childs?: FileInfo[];
 }
 
 export class Files extends amf.Module {
@@ -111,13 +111,13 @@ export class Files extends amf.Module {
     const remoteDB = await this.getSessionModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
     const result = await remoteDB.all(
-      "select files_id from files where files_parent=$1",
+      "select files_id as id from files where files_parent=$1",
       dirId
-    );
+    ) as {id:number}[]|null;
     if (!result) return null;
     const values: number[] = [];
     for (const r of result) {
-      values.push(r.files_id);
+      values.push(r.id);
     }
     return values;
   }
@@ -150,59 +150,32 @@ export class Files extends amf.Module {
     const remoteDB = await this.getSessionModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
 
-    const fileInfos = await remoteDB.all(
-      `select files_id,files_parent,files_kind,files_name,files_date,octet_length(files_byte) as size
+    return await remoteDB.all(
+      `select files_id as id,files_parent as parent,files_kind as kind,files_name as name,files_date as date,octet_length(files_byte) as size
 			from files where files_parent=$1 order by files_kind,files_name`,
       parentId
-    );
-
-    const files: FileInfo[] = [];
-
-    if (fileInfos) {
-      for (const file of fileInfos) {
-        files.push({
-          id: file["files_id"],
-          parent: file["files_parent"],
-          kind: file["files_kind"],
-          name: file["files_name"],
-          date: new Date(file["files_date"]).toUTCString(),
-          size: file["size"],
-          files_date: null,
-          childs: []
-        });
-      }
-    }
-    return files;
+    ) as FileInfo[]|null;
   }
   public async getDirList() {
     const remoteDB = await this.getSessionModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
 
     const dirInfos = await remoteDB.all(
-      `select files_id,files_parent,files_kind,files_name,files_date,octet_length(files_byte) as size
+      `select files_id as id,files_parent as parent ,files_kind as kind,files_name as name,files_date as date,octet_length(files_byte) as size
 			from files where files_kind=0 order by files_name`
-    );
+    ) as FileInfo[] | null;
     const hash = new Map<number, FileInfo>();
 
     if (dirInfos) {
       for (const dir of dirInfos) {
-        const id = dir.files_id as number;
-        hash.set(id, {
-          id,
-          parent: dir["files_parent"],
-          kind: dir["files_kind"],
-          name: dir["files_name"],
-          size: dir["size"],
-          date: null,
-          files_date: null,
-          childs: []
-        });
+        dir.childs = [];
+        hash.set(dir.id, dir);
       }
       for (const dir of hash.values()) {
         const parent = dir.parent as number;
         if (parent > 0) {
           const p = hash.get(parent);
-          if (p) p["childs"].push(dir);
+          if (p && p.childs) p.childs.push(dir);
         }
       }
     }

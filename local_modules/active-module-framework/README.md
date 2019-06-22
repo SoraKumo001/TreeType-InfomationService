@@ -6,6 +6,7 @@
 - フロントエンドとバックエンドの通信を最小限の記述で実現できます
 
 ## 更新履歴
+
 - 2019/06/06 0.0.16 サンプルをJWFモジュールに変更
 - 2019/05/17 0.0.09 初期化完了時のコールバックを追加
 - 2019/05/15 0.0.07 モジュールのパスの扱いを変更
@@ -13,29 +14,33 @@
 - 2019/05/02 0.0.01 初期バージョンリリース
 
 ## ソースコード
+
 - [https://github.com/ActiveModuleFramework/active-module-framework](https://github.com/ActiveModuleFramework/active-module-framework)
 
 ## 動作ブラウザ
+
 - 一般的なブラウザ(IE11でも動作可能)
 
 ## 使用技術
+
 - Node.js 10系統
 - TypeScript 3系統
   
 ## 使い方
 
 - 参考URL  
-	[https://croud.jp/?p=592](https://croud.jp/?p=592)  
-  
-  
 
+ [https://croud.jp/?p=592](https://croud.jp/?p=592)  
+  
 - 初期ファイルの設置
-```
+
+```.sh
 npx init-amf
 ```
 
 - Build-app(back-end)
-```
+
+```.sh
 npx tsc -b
 ```
 
@@ -45,18 +50,21 @@ npx webpack -b
 ```
 
 - Watch
-```
+  
+```.sh
 npx tsc -b -w
 npx webpack -b -w
 ```
 
 - 起動(起点ファイル)
-```
+
+```.sh
 node dist/app/index.js
 ```
 
 - 動作確認用初期アドレス
-```
+
+```.sh
 http://localhost:8080/
 ```
 
@@ -80,6 +88,6 @@ http://localhost:8080/
 nginxと連携させる場合、UNIXドメインソケットはsockに入っています  
 また、nginxから**dist/public**を直接参照するように設定しておけば、Node.jsの負荷が減ります
 
-
 ## ライセンス
-- MITライセンス 
+
+- MITライセンス  

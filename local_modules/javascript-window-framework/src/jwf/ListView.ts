@@ -451,7 +451,7 @@ export class ListView extends Window<ListViewEventMap> {
   public getItemValues(): unknown[] {
     const count = this.getItemCount();
     let values = [];
-    for (let i=0;i<count;i++) {
+    for (let i = 0; i < count; i++) {
       values.push(this.getCell(i, 0));
     }
     return values;
@@ -714,8 +714,7 @@ export class ListView extends Window<ListViewEventMap> {
     if (r == null) return false;
     if (!(value instanceof HTMLElement)) {
       var item = document.createElement("div");
-      if(value != null)
-        item.textContent = value.toString();
+      if (value != null) item.textContent = value.toString();
       r.appendChild(item);
     } else {
       r.appendChild(value);
@@ -761,6 +760,4 @@ export class ListView extends Window<ListViewEventMap> {
     super.onLayout(flag);
     this.resize();
   }
-
-
 }

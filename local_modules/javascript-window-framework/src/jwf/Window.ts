@@ -114,7 +114,7 @@ export interface JDATA {
 export interface WINDOW_EVENT_MAP {
   [key: string]: unknown[];
   active: [{ active: boolean }];
-  measure:[];
+  measure: [];
   closed: [];
   layout: [];
   layouted: [];
@@ -144,7 +144,7 @@ export interface WINDOW_PARAMS {
  * @export
  * @class Window
  */
-export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
+export class Window<T extends WINDOW_EVENT_MAP = WINDOW_EVENT_MAP> {
   private listeners: {
     [key: string]: unknown[];
   } = {};
@@ -231,12 +231,9 @@ export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
       }
     }
 
-    hNode.addEventListener(
-      "animationend",
-      (): void => {
-        this.layout();
-      }
-    );
+    hNode.addEventListener("animationend", (): void => {
+      this.layout();
+    });
 
     //移動に備えて、必要な情報を収集
     hNode.addEventListener("touchstart", this.onMouseDown.bind(this), {
@@ -470,14 +467,16 @@ export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
    * @memberof Window
    */
   // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
-  addEventListener<K extends keyof T>(name: K, proc: (...params: T[K]) => void): void {
+  addEventListener<K extends keyof T>(
+    name: K,
+    proc: (...params: T[K]) => void
+  ): void {
     const listener = this.listeners[name as string];
     if (!listener) {
       this.listeners[name as string] = [proc];
       return;
     }
-    if (listener.indexOf(proc) >= 0)
-      return;
+    if (listener.indexOf(proc) >= 0) return;
     listener.push(proc);
   }
 
@@ -490,15 +489,17 @@ export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
    * @memberof Window
    */
   // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
-  removeEventListener<K extends keyof T>(name: K&string, proc:(...params: T[K]) => void): void {
+  removeEventListener<K extends keyof T>(
+    name: K & string,
+    proc: (...params: T[K]) => void
+  ): void {
     const listener = this.listeners[name];
     if (!listener) {
       this.listeners[name as string] = [proc];
       return;
     }
     const index = listener.indexOf(proc);
-    if (index < 0)
-      return;
+    if (index < 0) return;
     listener.splice(index, 1);
   }
 
@@ -510,7 +511,7 @@ export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
    * @param {*} params パラメータ
    * @memberof Window
    */
-  callEvent<K extends keyof T>(name: K, ...params: T[K]) {
+  public callEvent<K extends keyof T>(name: K, ...params: T[K]): void {
     const listener = this.listeners[name as string];
     if (listener) {
       for (const proc of listener) {
@@ -923,7 +924,7 @@ export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
   public onMeasure(flag: boolean): boolean {
     const jdata = this.JData;
     //表示状態の更新
-    if (jdata.reshow) {
+    if (jdata.reshow || flag) {
       jdata.reshow = false;
       if (jdata.visible) {
         this.hNode.style.visibility = "";
@@ -1051,9 +1052,9 @@ export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
       const b = bnode.Jwf.JData.style as string;
       return priority[b] - priority[a];
     });
-    let retry;
+    //let retry;
     //do {
-    retry = false;
+    //retry = false;
     const padding = this.JData.padding;
     let width = this.getClientWidth();
     let height = this.getClientHeight();
@@ -1108,7 +1109,7 @@ export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
           break;
       }
       jdata.instructionSize = { width, height };
-      if (win.onMeasure(false)) retry = true;
+      //if (win.onMeasure(false)) retry = true;
       win.onLayout(flag);
     }
     //} while (retry);
@@ -1405,7 +1406,7 @@ export class Window<T extends WINDOW_EVENT_MAP=WINDOW_EVENT_MAP> {
   public addFrameChild(
     child: Window,
     style?: "left" | "right" | "top" | "bottom" | "client" | null
-  ) {
+  ): void {
     const frame = this.getNearFrame();
     if (frame) frame.addChild(child, style);
   }

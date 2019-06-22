@@ -2,8 +2,15 @@ import * as amf from "active-module-framework";
 import { HtmlCreater } from "active-module-framework";
 import { Params } from "./Params";
 
+/**
+ *アナリティクス初期設定用クラス
+ *
+ * @export
+ * @class Analytics
+ * @extends {amf.Module}
+ */
 export class Analytics extends amf.Module {
-  public async onCreateHtml(creater: HtmlCreater) {
+  public async onCreateHtml(creater: HtmlCreater): Promise<void> {
     const paramsModule = await this.getModule(Params);
 
     if (!paramsModule) return;
@@ -13,7 +20,7 @@ export class Analytics extends amf.Module {
     if (basicData && basicData.analytics) {
       const document = creater.getDocument();
       const script1 = document.createElement("script");
-      script1.defer  = true;
+      script1.defer = true;
       script1.src =
         "https://www.googletagmanager.com/gtag/js?id=" + basicData.analytics;
       document.head.appendChild(script1);
@@ -22,7 +29,7 @@ export class Analytics extends amf.Module {
 		window.dataLayer = window.dataLayer || [];
 		function gtag() { dataLayer.push(arguments); }
 		gtag('js', new Date());
-	//	gtag('config', AnalyticsUA);`;
+	  //gtag('config', AnalyticsUA);`;
       document.head.appendChild(script2);
     }
   }

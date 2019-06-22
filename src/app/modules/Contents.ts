@@ -1,7 +1,7 @@
 import * as amf from "active-module-framework";
 import { Users } from "./Users";
 import { RemoteDB } from "./RemoteDB";
-import { Files, FileInfo } from "./Files";
+import { Files } from "./Files";
 import { sprintf } from "sprintf";
 
 interface TreeContents {
@@ -32,15 +32,17 @@ export interface ConvertContents extends MainContents {
 }
 
 export class Contents extends amf.Module {
-  remoteDB?: RemoteDB;
+  private remoteDB?: RemoteDB;
   public async onCreateModule(): Promise<boolean> {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
     if (remoteDB) {
-      remoteDB.addEventListener("connect", async () => {
-        if (!(await remoteDB.isTable("contents"))) {
-          remoteDB.run(
-            `create table contents(
+      remoteDB.addEventListener(
+        "connect",
+        async (): Promise<void> => {
+          if (!(await remoteDB.isTable("contents"))) {
+            remoteDB.run(
+              `create table contents(
 					contents_id SERIAL primary key,
 					contents_parent INTEGER references contents(contents_id),
 					contents_priority INTEGER,
@@ -48,11 +50,12 @@ export class Contents extends amf.Module {
 					contents_date timestamp with time zone,contents_update timestamp with time zone,
 					contents_title_type integer,contents_title TEXT,contents_value TEXT);
           insert into contents values(default,null,1000,1,'PAGE',current_timestamp,current_timestamp,1,'Top','')`
-          );
+            );
+          }
+          const files = await this.getModule(Files);
+          if (files) files.createDir(1, "Contents");
         }
-        const files = await this.getModule(Files);
-        if (files) files.createDir(1, "Contents");
-      });
+      );
       this.remoteDB = remoteDB;
     }
 
@@ -66,11 +69,11 @@ export class Contents extends amf.Module {
     return true;
   }
 
-  public async getParentPage(id: number) {
+  public async getParentPage(id: number): Promise<number> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return 0;
     //PAGEタイプを持つ親を探す
-    while (true) {
+    for (;;) {
       const value = await remoteDB.get(
         "select contents_parent as pid,contents_type as type from contents where contents_id=$1",
         id
@@ -81,7 +84,7 @@ export class Contents extends amf.Module {
     }
     return id;
   }
-  public async getParent(id: number) {
+  public async getParent(id: number): Promise<number | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     return (await remoteDB.get2(
@@ -89,7 +92,7 @@ export class Contents extends amf.Module {
       id
     )) as number | null;
   }
-  public async isParent(id: number, checkId: number) {
+  public async isParent(id: number, checkId: number): Promise<boolean> {
     let cid: number | null = id;
     if (cid === checkId) return true;
     while ((cid = await this.getParent(cid))) {
@@ -112,15 +115,15 @@ export class Contents extends amf.Module {
     }
     return date;
   }
-  public async getPage(id: number) {
+  public async getPage(): Promise<MainContents[] | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
 
     //ページを構成するのにに必要なデータを抽出
     const values = (await remoteDB.all(
       `select contents_id as id,contents_parent as pid,contents_stat as stat,
-			to_char(contents_date at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as date,
-			to_char(contents_update at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as update,
+			to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,
+			to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,
 			contents_type as type,contents_title as title,contents_value as value from contents where contents_stat=1`
     )) as MainContents[];
     if (values === null) return null;
@@ -157,13 +160,15 @@ export class Contents extends amf.Module {
     }
 
     //日付でソート
-    pages.sort((a, b) => {
+    pages.sort((a, b): number => {
       return a.date.getTime() - b.date.getTime();
     });
 
     return pages;
   }
-  public async getBreadcrumb(id: number) {
+  public async getBreadcrumb(
+    id: number
+  ): Promise<{ id: number; title: string }[] | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     const bread = [];
@@ -180,7 +185,10 @@ export class Contents extends amf.Module {
     }
     return bread;
   }
-  public async getContents(id: number, child?: boolean) {
+  public async getContents(
+    id: number,
+    child?: boolean
+  ): Promise<MainContents | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
 
@@ -188,7 +196,7 @@ export class Contents extends amf.Module {
     const visible = users && users.isAdmin() ? "" : "and contents_stat=1";
 
     const value = (await remoteDB.get(
-      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as update,contents_title_type as title_type,contents_title as title,contents_value as value from contents where contents_id=$1 ${visible}`,
+      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value as value from contents where contents_id=$1 ${visible}`,
       id
     )) as MainContents | null;
     if (value && child) {
@@ -197,16 +205,16 @@ export class Contents extends amf.Module {
     }
     return value;
   }
-  public async getPages(admin: boolean) {
+  public async getPages(admin: boolean): Promise<MainContents[] | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     const visible = admin ? "" : "and contents_stat=1";
 
     return (await remoteDB.all(
-      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as update,contents_title_type as title_type,contents_title as title,contents_value as value from contents where contents_type='PAGE' ${visible}`
+      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value as value from contents where contents_type='PAGE' ${visible}`
     )) as MainContents[] | null;
   }
-  public async getChildContents(pid: number) {
+  public async getChildContents(pid: number): Promise<MainContents[]> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return [];
     const users = await this.getSessionModule(Users);
@@ -214,7 +222,7 @@ export class Contents extends amf.Module {
 
     //親Idを元にコンテンツを抽出
     const values = (await remoteDB.all(
-      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as update,contents_title_type as title_type,contents_title as title,contents_value as value from contents where contents_parent=$1 and contents_type != 'PAGE' ${visible} order by contents_priority`,
+      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value as value from contents where contents_parent=$1 and contents_type != 'PAGE' ${visible} order by contents_priority`,
       pid
     )) as MainContents[];
     //子コンテンツを抽出
@@ -223,7 +231,7 @@ export class Contents extends amf.Module {
     }
     return values;
   }
-  public getImages(contents: MainContents, images: string[]) {
+  public getImages(contents: MainContents, images: string[]): string[] {
     const value = contents.value;
     const regexp = /<img src="\?command=Files\.download&amp;id=(\d+?)"/gi;
     let ids;
@@ -235,28 +243,28 @@ export class Contents extends amf.Module {
     }
     return images;
   }
-  public getContentsParent(id: number) {
+  public async getContentsParent(id: number): Promise<number | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
-    return remoteDB.get2(
+    return (await remoteDB.get2(
       "select contents_parent from contents where contents_id=$1",
       id
-    );
+    )) as number | null;
   }
-  public getContentsPriority(id: number) {
+  public async getContentsPriority(id: number): Promise<number | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     return remoteDB.get2(
       "select contents_priority from contents where contents_id=$1",
       id
-    );
+    ) as Promise<number>;
   }
-  public async getDeeps(id: number) {
+  public async getDeeps(id: number): Promise<number | null> {
     //PAGEタイプまでの深さを探索
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     let count = 0;
-    while (true) {
+    for (;;) {
       id = (await remoteDB.get2(
         "select contents_parent as type from contents where contents_id=$1 and contents_type!='PAGE'",
         id
@@ -266,14 +274,14 @@ export class Contents extends amf.Module {
     }
     return count;
   }
-  public async updatePriority(id: number) {
+  public async updatePriority(id: number): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
 
-    const values = await remoteDB.all(
+    const values = (await remoteDB.all(
       "select contents_id from contents where contents_parent=$1 order by contents_type='PAGE',contents_priority",
       id
-    );
+    )) as { contents_id: number }[];
     let sql = "";
     if (!values) return null;
     let key = 0;
@@ -285,9 +293,17 @@ export class Contents extends amf.Module {
       );
     }
     if (sql !== "") remoteDB.run(sql);
+    return true;
   }
 
-  public async createContents(id: number, vector: number, type: string) {
+  public async createContents(
+    id: number,
+    vector: number,
+    type: string
+  ): Promise<{
+    pid: number;
+    id: number;
+  } | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     const users = await this.getSessionModule(Users);
@@ -332,13 +348,13 @@ export class Contents extends amf.Module {
     this.updatePriority(pid);
     return { pid: pid, id: cid };
   }
-  public async deleteContents(id: number) {
+  public async deleteContents(id: number): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
-    const ids = await remoteDB.all(
+    const ids = (await remoteDB.all(
       "select contents_id from contents where contents_parent=$1",
       id
-    );
+    )) as { contents_id: number }[] | null;
     if (!ids) return null;
     for (const cid of ids) await this.deleteContents(cid.contents_id);
     if (id === 1) return true;
@@ -352,10 +368,10 @@ export class Contents extends amf.Module {
     //コンテンツの削除
     return await remoteDB.run("delete from contents where contents_id=$1", id);
   }
-  public getDirPath(id: number) {
+  public getDirPath(id: number): string {
     return sprintf("/Contents/%04d/%02d", Math.floor(id / 100) * 100, id % 100);
   }
-  public updateContents(contents: MainContents) {
+  public async updateContents(contents: MainContents): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
 
@@ -380,7 +396,7 @@ export class Contents extends amf.Module {
       contents.id
     );
   }
-  public async updatePriorityFromChild(id: number) {
+  public async updatePriorityFromChild(id: number): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     const values = (await remoteDB.all(
@@ -399,12 +415,12 @@ export class Contents extends amf.Module {
     if (sql.length) return remoteDB.run(sql);
     return false;
   }
-  public async moveVector(id: number, vector: number) {
+  public async moveVector(id: number, vector: number): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     const priority = (await this.getContentsPriority(id)) as number;
     if (!priority) return false;
-    const count = await remoteDB.run(
+    await remoteDB.run(
       "update contents set contents_priority = $1 where contents_id=$2",
       priority + (vector < 0 ? -15 : 15),
       id
@@ -414,12 +430,17 @@ export class Contents extends amf.Module {
     return priority !== priority2;
   }
 
-  public async getTree(id: number, admin: boolean) {
+  public async getTree(
+    id: number,
+    admin: boolean
+  ): Promise<TreeContents | null> {
     const visible = admin ? "" : "where contents_stat=1";
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
-    const values = await remoteDB.all(`select contents_id as id,contents_parent as pid,contents_stat as stat,
-			contents_type as type,contents_title as title from contents ${visible} order by contents_type='PAGE',contents_priority`);
+    const values = (await remoteDB.all(`select contents_id as id,contents_parent as pid,contents_stat as stat,
+			contents_type as type,contents_title as title from contents ${visible} order by contents_type='PAGE',contents_priority`)) as
+      | TreeContents[]
+      | null;
     if (!values) return null;
     //ID参照データの作成
     const items = new Map<number, TreeContents>();
@@ -438,9 +459,12 @@ export class Contents extends amf.Module {
       }
     }
     //最上位データを返す
-    return items.get(id);
+    return items.get(id) || null;
   }
-  public async moveContents(fromId: number, toId: number) {
+  public async moveContents(
+    fromId: number,
+    toId: number
+  ): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     //移動先が子だったら処理を行わない
@@ -455,7 +479,10 @@ export class Contents extends amf.Module {
     this.updatePriority(toId);
     return flag;
   }
-  public async importChild(pid: number | null, value: ConvertContents) {
+  public async importChild(
+    pid: number | null,
+    value: ConvertContents
+  ): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     const fileModule = await this.getSessionModule(Files);
@@ -483,11 +510,7 @@ export class Contents extends amf.Module {
       const dirId = await fileModule.createDir(1, path);
       if (dirId) {
         for (const file of files) {
-          if (file && file.name) console.log(file.name);
-          else {
-            console.error(file);
-            continue;
-          }
+          if (!file) continue;
           const id = (await fileModule.setFile(
             dirId,
             file.name,
@@ -497,6 +520,7 @@ export class Contents extends amf.Module {
           if (id) ids[file.id] = id;
         }
         let v = value.value;
+        //リンクの変換
         for (const srcId of Object.keys(ids)) {
           const destId = ids[(srcId as unknown) as number];
           v = v.replace(
@@ -507,11 +531,9 @@ export class Contents extends amf.Module {
             sprintf('src="?cmd=download&amp;id=%d"', destId)
           );
         }
-        console.log(v);
-        value.value = v;
         await remoteDB.run(
           "update contents set contents_value=$1 where contents_id=$2",
-          value.value,
+          v,
           cid
         );
       }
@@ -526,7 +548,11 @@ export class Contents extends amf.Module {
     return true;
   }
 
-  public async import(id: number, mode: number, src: string) {
+  public async import(
+    id: number,
+    mode: number,
+    src: string
+  ): Promise<boolean | null> {
     if (!id) return false;
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
@@ -557,7 +583,7 @@ export class Contents extends amf.Module {
         const pid = contents.pid;
         //上書き元のデータを削除
         this.deleteContents(id);
-        contents.priority = contents.priority;
+        value.priority = contents.priority;
         await remoteDB.run("begin");
         await this.importChild(pid, value);
         await remoteDB.run("commit");
@@ -569,51 +595,64 @@ export class Contents extends amf.Module {
     }
     return true;
   }
-  public async JS_import(id: number, mode: number) {
+  public async JS_import(id: number, mode: number): Promise<boolean | null> {
     const users = await this.getSessionModule(Users);
     if (!users || !users.isAdmin()) return null;
     const buffer = this.getSession().getBuffer();
     if (!buffer) return null;
     return this.import(id, mode, buffer.toString());
   }
-  public async JS_moveContents(fromId: number, toId: number) {
+  public async JS_moveContents(
+    fromId: number,
+    toId: number
+  ): Promise<boolean | null> {
     const users = await this.getSessionModule(Users);
     if (users && users.isAdmin()) return this.moveContents(fromId, toId);
     return false;
   }
-  public async JS_moveVector(id: number, vector: number) {
+  public async JS_moveVector(
+    id: number,
+    vector: number
+  ): Promise<boolean | null> {
     const users = await this.getSessionModule(Users);
     if (!users || !users.isAdmin()) return null;
     return this.moveVector(id, vector);
   }
-  public async JS_createContents(id: number, vector: number, type: string) {
+  public async JS_createContents(
+    id: number,
+    vector: number,
+    type: string
+  ): Promise<{
+    pid: number;
+    id: number;
+  } | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     return this.createContents(id, vector, type);
   }
-  public async JS_getTree(id: number) {
+  public async JS_getTree(id: number): Promise<TreeContents | null> {
     const users = await this.getSessionModule(Users);
     const admin = (users && users.isAdmin()) as boolean;
     return this.getTree(id, admin);
   }
-  public async JS_getPage(id: number) {
+  public async JS_getPage(id: number): Promise<MainContents | null> {
     const pid = await this.getParentPage(id);
     if (pid === 0) return null;
     const contents = await this.getContents(pid);
     if (contents === null) return null;
     contents.childs = await this.getChildContents(pid);
 
-    const images = this.getImages(contents, []);
-    for (const id of images) {
-      //header("link: <?command=Files.download&id=$id>;rel=preload;as=image;",false);
-    }
+    // const images = this.getImages(contents, []);
+    // for (const id of images) {
+    //   header("link: <?command=Files.download&id=$id>;rel=preload;as=image;",false);
+    // }
 
     return contents;
   }
-  public JS_getContents(id: number, child?: boolean) {
+  public JS_getContents(id: number, child?: boolean): Promise<MainContents | null> {
     return this.getContents(id, child);
   }
-  public async JS_deleteContents(id: number) {
+  public async JS_deleteContents(id: number): Promise<boolean | null> {
     const users = await this.getSessionModule(Users);
     if (!users || !users.isAdmin()) return null;
     return this.deleteContents(id);

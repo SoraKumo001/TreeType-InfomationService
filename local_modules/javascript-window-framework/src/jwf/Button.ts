@@ -4,7 +4,7 @@ import "./scss/Button.scss";
 
 export interface BUTTON_EVENT_ITEM_CLICK {
   event: Event;
-  button: Button|ImageButton;
+  button: Button | ImageButton;
 }
 export interface ButtonEventMap extends WINDOW_EVENT_MAP {
   buttonClick: [BUTTON_EVENT_ITEM_CLICK];
@@ -29,7 +29,7 @@ export class Button extends Window<ButtonEventMap> {
     ...params:
       | [string]
       | [string, unknown]
-      | [{ label?: string; value?: unknown; event?: () =>void }]
+      | [{ label?: string; value?: unknown; event?: () => void }]
   ) {
     super();
     this.setAutoSize(true);
@@ -49,50 +49,41 @@ export class Button extends Window<ButtonEventMap> {
       if (typeof params[0] === "string") {
         this.setText(params[0] as string);
         this.nodeValue = params[1];
-      }else{
+      } else {
         const p = params[0];
-        if(p.label){
+        if (p.label) {
           this.setText(p.label);
         }
         this.nodeValue = p.value;
-        if(p.event){
-          button.addEventListener("click",p.event);
+        if (p.event) {
+          button.addEventListener("click", p.event);
         }
       }
     }
 
-    button.addEventListener(
-      "keypress",
-      (e): void => {
-        if (e.keyCode !== 13)
-          this.callEvent("submit", {
-            event: e,
-            button: this
-          });
-      }
-    );
-    button.addEventListener(
-      "click",
-      (e): void => {
-        this.callEvent("buttonClick", {
-          event: e,
-          button: this
-        });
+    button.addEventListener("keypress", (e): void => {
+      if (e.keyCode !== 13)
         this.callEvent("submit", {
           event: e,
           button: this
         });
-      }
-    );
-    button.addEventListener(
-      "dblclick",
-      (e): void => {
-        this.callEvent("buttonDblClick", {
-          event: e,
-          button: this
-        });
-      }
-    );
+    });
+    button.addEventListener("click", (e): void => {
+      this.callEvent("buttonClick", {
+        event: e,
+        button: this
+      });
+      this.callEvent("submit", {
+        event: e,
+        button: this
+      });
+    });
+    button.addEventListener("dblclick", (e): void => {
+      this.callEvent("buttonDblClick", {
+        event: e,
+        button: this
+      });
+    });
   }
   /**
    *ボタンに対してテキストを設定する
@@ -144,35 +135,24 @@ export class ImageButton extends Window<ButtonEventMap> {
     button.appendChild(nodeImg);
     this.nodeImg = nodeImg;
     if (alt) nodeImg.alt = alt;
-    nodeImg.addEventListener(
-      "load",
-      (): void => {
-        this.layout();
-      }
-    );
+    nodeImg.addEventListener("load", (): void => {
+      this.layout();
+    });
     nodeImg.src = image;
 
-    button.addEventListener(
-      "keypress",
-      (e): void => {
-        if (e.keyCode !== 13) this.callEvent("submit", { event: e });
-      }
-    );
-    button.addEventListener(
-      "click",
-      (e): void => {
-        this.callEvent("buttonClick", { event: e,button:this });
-        this.callEvent("submit", { event: e });
-      }
-    );
-    button.addEventListener(
-      "dblclick",
-      (e): void => {
-        this.callEvent("buttonDblClick", {
-          event: e,button:this
-        });
-      }
-    );
+    button.addEventListener("keypress", (e): void => {
+      if (e.keyCode !== 13) this.callEvent("submit", { event: e });
+    });
+    button.addEventListener("click", (e): void => {
+      this.callEvent("buttonClick", { event: e, button: this });
+      this.callEvent("submit", { event: e });
+    });
+    button.addEventListener("dblclick", (e): void => {
+      this.callEvent("buttonDblClick", {
+        event: e,
+        button: this
+      });
+    });
   }
   /**
    *ボタンに対してテキストを設定する
@@ -197,5 +177,4 @@ export class ImageButton extends Window<ButtonEventMap> {
     let node = this.getClient();
     node.style.justifyContent = style;
   }
-
 }

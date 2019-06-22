@@ -1,21 +1,18 @@
 import * as pg from "pg";
 
 export default class Postgres {
-  client: pg.Client;
-  connectStat: boolean;
-  lastError?: unknown;
-  config?: pg.ClientConfig;
-  constructor() {
+  private client: pg.Client;
+  private connectStat: boolean;
+  private lastError?: unknown;
+  private config?: pg.ClientConfig;
+  public constructor() {
     this.client = new pg.Client();
-    this.client.addListener("end", () => {
-      console.log("end");
-    });
     this.connectStat = false;
   }
-  public getClient(){
+  public getClient(): pg.Client {
     return this.client;
   }
-  public async open(config?: pg.ClientConfig) {
+  public async open(config?: pg.ClientConfig): Promise<boolean> {
     this.connectStat = false;
     if (config) this.config = config;
     else if (this.config) config = this.config;
@@ -26,26 +23,27 @@ export default class Postgres {
     this.client = client;
     return client
       .connect()
-      .then(() => {
+      .then((): boolean => {
         this.connectStat = true;
         return true;
       })
-      .catch(e => {
+      .catch((e): boolean => {
         this.outputError(e);
         return false;
       });
   }
-  public outputError(e: Error) {
+  public outputError(e: Error): void {
+    // eslint-disable-next-line no-console
     console.error(e);
     this.lastError = e;
   }
-  public getLastError() {
+  public getLastError(): unknown {
     return this.lastError;
   }
-  public isConnect() {
+  public isConnect(): boolean {
     return this.connectStat;
   }
-  public async isTable(name: string) {
+  public async isTable(name: string): Promise<boolean> {
     const result = await this.get(
       "select 1 as value from pg_tables where tablename=$1",
       name
@@ -53,36 +51,39 @@ export default class Postgres {
     if (result && result.value === 1) return true;
     return false;
   }
-  public async close() {
+  public async close(): Promise<void> {
     await this.client.end();
     this.connectStat = false;
   }
-  public async run(sql: string, ...params: unknown[]) {
-    if (!this.isConnect())
-      return null;
+  public async run(sql: string, ...params: unknown[]): Promise<boolean | null> {
+    if (!this.isConnect()) return null;
     const client = this.client;
     return await client
       .query(sql, params)
-      .then(() => {
+      .then((): boolean => {
         return true;
       })
-      .catch(e => {
+      .catch((e): boolean => {
+        // eslint-disable-next-line no-console
         console.error(sql);
         this.outputError(e);
         return false;
       });
   }
-  public async all(sql: string, ...params: unknown[]) {
-    if (!this.isConnect())
-      return null;
+  public async all(
+    sql: string,
+    ...params: unknown[]
+  ): Promise<unknown[] | null> {
+    if (!this.isConnect()) return null;
     const client = this.client;
     return await client
       .query(sql, params)
-      .then(result => {
+      .then((result): unknown[] => {
         return result.rows;
       })
-      .catch(e => {
-        console.error(sql);
+      .catch((e): null => {
+        // eslint-disable-next-line no-console
+        console.error("%s\n%s", sql, JSON.stringify(params));
         this.outputError(e);
         return null;
       });
@@ -91,16 +92,16 @@ export default class Postgres {
     sql: string,
     ...params: unknown[]
   ): Promise<({ [key: string]: unknown }) | null> {
-    if (!this.isConnect())
-      return null;
+    if (!this.isConnect()) return null;
 
     const client = this.client;
     return await client
       .query(sql, params)
-      .then(result => {
+      .then((result): { [key: string]: unknown } | null => {
         return result.rows ? result.rows[0] : null;
       })
-      .catch(e => {
+      .catch((e): null => {
+        // eslint-disable-next-line no-console
         console.error(sql);
         this.outputError(e);
         return null;
