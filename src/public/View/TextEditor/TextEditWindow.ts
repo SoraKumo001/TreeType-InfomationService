@@ -2,7 +2,7 @@ import * as JWF from "javascript-window-framework";
 import "./scss/TextEditWindow.scss";
 import { EditableView } from "./EditableView";
 import { TextArea } from "javascript-window-framework";
-import { text } from "body-parser";
+import { PanelCreateParam } from "./PanelControl";
 
 /**
  *
@@ -54,5 +54,11 @@ export class TextEditWindow extends JWF.FrameWindow {
   }
   public getHtml(){
     return this.textArea.getText();
+  }
+  public createControl(param:PanelCreateParam){
+     this.editableView.createControl(param);
+  }
+  public getEditableView(){
+    return this.editableView;
   }
 }

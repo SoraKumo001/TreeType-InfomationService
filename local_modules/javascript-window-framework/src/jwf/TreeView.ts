@@ -4,10 +4,11 @@ import "./scss/TreeView.scss";
 
 export interface TREEVIEW_EVENT_SELECT {
   item: TreeItem;
-  user:boolean;
+  user: boolean;
 }
 export interface TREEVIEW_EVENT_DROP {
   item: TreeItem;
+  srcValue?: unknown;
   event: DragEvent;
 }
 export interface TREEVIEW_EVENT_DRAG_START {
@@ -19,6 +20,7 @@ export interface TREEVIEW_EVENT_OPEN {
   opened: boolean;
 }
 export interface TreeViewEventMap extends WINDOW_EVENT_MAP {
+  itemOver: [{ event: MouseEvent; item: TreeItem }];
   itemOpen: [TREEVIEW_EVENT_OPEN];
   itemSelect: [TREEVIEW_EVENT_SELECT];
   itemDblClick: [TREEVIEW_EVENT_SELECT];
@@ -58,22 +60,27 @@ export class TreeItem {
     row1.addEventListener(
       "click",
       (): void => {
-        this.selectItem(false,true);
+        this.selectItem(false, true);
       }
     );
     row1.addEventListener(
       "dblclick",
       (): void => {
         const treeView = this.getTreeView();
-        if (treeView) treeView.callEvent("itemDblClick", { item: this,user:true });
+        if (treeView)
+          treeView.callEvent("itemDblClick", { item: this, user: true });
       }
     );
     row1.addEventListener(
       "dragstart",
       (e): void => {
         const treeView = this.getTreeView();
-        if (treeView)
+        if (treeView){
+          if(e.dataTransfer){
+            e.dataTransfer.setData("text/plain",JSON.stringify({itemValue:this.getItemValue()}));
+          }
           treeView.callEvent("itemDragStart", { item: this, event: e });
+        }
       }
     );
     row1.addEventListener(
@@ -89,10 +96,13 @@ export class TreeItem {
         e.preventDefault();
       }
     );
+    row1.addEventListener("mouseover", e => {
+      const treeView = this.getTreeView();
+      if (treeView) treeView.callEvent("itemOver", { event: e, item: this });
+    });
     row1.addEventListener(
       "dragover",
       (e): void => {
-        //row1.dataset.drag = 'over'
         e.preventDefault();
       }
     );
@@ -100,7 +110,18 @@ export class TreeItem {
       "drop",
       (e): void => {
         const treeView = this.getTreeView();
-        if (treeView) treeView.callEvent("itemDrop", { event: e, item: this });
+        if (treeView) {
+          let value:unknown = undefined;
+          if(e.dataTransfer){
+            try{
+            const v = JSON.parse(e.dataTransfer.getData("text/plain"));
+            if(v && v.itemValue)
+              value = v.itemValue;
+            }catch(e){}
+          }
+
+          treeView.callEvent("itemDrop", { event: e, item: this, srcValue:value });
+        }
         row1.dataset.drag = "";
         e.preventDefault();
       }
@@ -132,7 +153,7 @@ export class TreeItem {
     child.dataset.kind = "TreeChild";
     row2.appendChild(child);
 
-    this.openItem(opened?true:false);
+    this.openItem(opened ? true : false);
   }
   public isOpened(): boolean {
     return this.opened;
@@ -222,6 +243,25 @@ export class TreeItem {
     let treeView = this.getTreeView();
     if (treeView && this !== treeView.getRootItem() && this.hNode.parentNode)
       this.hNode.parentNode.removeChild(this.hNode);
+  }
+  public moveItem(vector: number): boolean {
+    const parent = this.getParentItem();
+    if (parent === null) return false;
+    const childs = parent.childNode.childNodes as NodeListOf<TreeItemElement>;
+    var count = childs.length;
+    for (var i = 0; i < count; i++) {
+      if (childs[i].treeItem === this) {
+        if (vector < 0) {
+          if (i === 0) return false;
+          parent.childNode.insertBefore(this.getNode(), childs[i - 1]);
+        } else {
+          if (i === childs.length - 1) return false;
+          parent.childNode.insertBefore(childs[i + 1], this.getNode());
+        }
+        break;
+      }
+    }
+    return true;
   }
   /**
    *子アイテムの数を返す
@@ -365,9 +405,9 @@ export class TreeItem {
    *
    * @memberof TreeItem
    */
-  public selectItem(scroll?: boolean,user?:boolean): void {
+  public selectItem(scroll?: boolean, user?: boolean): void {
     let treeView = this.getTreeView();
-    if (treeView) treeView.selectItem(this, scroll,user);
+    if (treeView) treeView.selectItem(this, scroll, user);
   }
   /**
    *所属先のTreeViewを返す
@@ -394,7 +434,9 @@ export class TreeItem {
  * @class TreeView
  * @extends {Window}
  */
-export class TreeView<T extends TreeViewEventMap=TreeViewEventMap> extends Window<T> {
+export class TreeView<
+  T extends TreeViewEventMap = TreeViewEventMap
+> extends Window<T> {
   private mRootItem: TreeItem;
   private mSelectItem: TreeItem | null = null;
   /**
@@ -463,7 +505,7 @@ export class TreeView<T extends TreeViewEventMap=TreeViewEventMap> extends Windo
    * @param {TreeItem} item 選択するアイテム
    * @memberof TreeView
    */
-  public selectItem(item: TreeItem, scroll?: boolean,user?:boolean): void {
+  public selectItem(item: TreeItem, scroll?: boolean, user?: boolean): void {
     const that = this;
     function animationEnd(this: HTMLElement): void {
       this.removeEventListener("animationend", animationEnd);
@@ -491,7 +533,7 @@ export class TreeView<T extends TreeViewEventMap=TreeViewEventMap> extends Windo
         item.getNode().addEventListener("animationend", animationEnd);
       }
     }
-    this.callEvent("itemSelect", { item,user:user?true:false });
+    this.callEvent("itemSelect", { item, user: user ? true : false });
   }
   /**
    * 設定されている値を条件にアイテムを選択
@@ -545,5 +587,4 @@ export class TreeView<T extends TreeViewEventMap=TreeViewEventMap> extends Windo
       }
     }
   }
-
 }

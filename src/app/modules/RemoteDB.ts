@@ -24,7 +24,7 @@ export interface CustomMap extends ModuleMap {
   connect: [];
   disconnect: [];
 }
-export class RemoteDB extends amf.Module<CustomMap> {
+export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
   public constructor(manager: amf.Manager) {
     super(manager);
     const db = new Postgres();
@@ -38,6 +38,13 @@ export class RemoteDB extends amf.Module<CustomMap> {
       author: "空雲",
       info: "メインデータベースアクセス用"
     };
+  }
+  public addEventListener<K extends keyof T>(name: K & string, proc: (...params: T[K]) => void): void{
+    if(name === "connect"){
+      if(!this.first)
+        (proc as ()=>void)();
+    }
+    super.addEventListener(name,proc);
   }
 
   private items: { [key: string]: unknown } = {};
@@ -63,6 +70,7 @@ export class RemoteDB extends amf.Module<CustomMap> {
       await Sleep(1000);
     }
   }
+
   public async open() {
     const localDB = this.getLocalDB();
     const host = localDB.getItem("REMOTEDB_HOST", "localhost");

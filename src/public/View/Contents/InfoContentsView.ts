@@ -19,6 +19,7 @@ highlight.registerLanguage("php", require("highlight.js/lib/languages/php"));
 
 export interface ContentsArea extends HTMLDivElement {
   contents: MainContents;
+  contentsNode:HTMLElement;
   update: (value: MainContents) => void;
 }
 /**
@@ -36,6 +37,8 @@ export class InfoContentsView extends JWF.Window {
   timerHandle?: number;
   selectId: number = 0;
   manager: AppManager;
+  scrollFlag: boolean = false;
+  pageId: number = 0;
   /**
    *Creates an instance of InfoContentsView.
    * @param {AppManager} manager
@@ -61,6 +64,19 @@ export class InfoContentsView extends JWF.Window {
         contents.parentNode.removeChild(contents);
       }
     });
+    contentsModule.addEventListener("updateContents", contents => {
+      const contentsNode = this.contentsNode[contents.id];
+      if (contentsNode) {
+        contentsNode.update(contents);
+      }
+    });
+    contentsModule.addEventListener("moveVector", (id, vector) => {
+      this.moveVector(id, vector);
+    });
+    contentsModule.addEventListener("moveContents", (fromId,toId) => {
+      if(this.contentsNode[fromId] || this.contentsNode[toId])
+        this.loadPage(this.pageId,true);
+    });
 
     this.setJwfStyle("InfoContentsView");
     const contentsPage = document.createElement("div");
@@ -70,12 +86,15 @@ export class InfoContentsView extends JWF.Window {
     const client = this.getClient();
     //スクロール時にツリービューの選択を変更
     client.addEventListener("scroll", () => {
-      const scrollTop = client.scrollTop-20;
+      //強制スクロール中なら終了
+      if (this.scrollFlag) return;
+
+      const scrollTop = client.scrollTop - 10;
       let nearNode: ContentsArea | null = null;
       let near = 0;
       for (const node of Object.values(this.contentsNode)) {
         const p = Math.abs(node.offsetTop - scrollTop);
-        if (p > 0 &&  (nearNode === null || p < near)) {
+        if (p > 0 && (nearNode === null || p < near)) {
           nearNode = node;
           near = p;
         }
@@ -98,71 +117,39 @@ export class InfoContentsView extends JWF.Window {
    * @returns
    * @memberof InfoContentsView
    */
-  private createContents(value: MainContents) {
+  private createContents(contents: MainContents) {
     var contentsArea = document.createElement("div") as ContentsArea;
-    contentsArea.contents = value;
+    contentsArea.contents = contents;
     contentsArea.className = "ContentsArea";
-    contentsArea.dataset.contentsType = value.type;
-    var contents = document.createElement("div");
-    contents.className = "Contents";
-    contentsArea.appendChild(contents);
+    contentsArea.dataset.contentsType = contents.type;
+    var contentsNode = document.createElement("div");
+    contentsNode.className = "Contents";
+    contentsArea.appendChild(contentsNode);
+    contentsArea.contentsNode = contentsNode;
 
-    //管理者用編集メニュー
-    //if (SESSION.isAuthority("SYSTEM_ADMIN"))
-    const edit = document.createElement("div");
-    edit.className = "ContentsEdit";
-    edit.innerText = "🖹";
-    contents.appendChild(edit);
-    edit.addEventListener("click", () => {
-      const contentsControle = new ContentsControleWindow();
-      const x =
-        this.getAbsX() + this.getWidth() - contentsControle.getWidth() - 30;
-      contentsControle.setPos(x, 30);
-
-      contentsControle.addMenu("編集", () => {
-        const editWindow = new ContentsEditWindow(this.manager, value.id);
-      });
-      if (value.type !== "PAGE") {
-        contentsControle.addMenu("新規(上)", () => {
-          this.contentsModule.createContents(value.id, 0, "TEXT");
-        });
-        contentsControle.addMenu("新規(下)", () => {
-          this.contentsModule.createContents(value.id, 1, "TEXT");
-        });
-      }
-      contentsControle.addMenu("新規(子上)", () => {
-        this.contentsModule.createContents(value.id, 2, "TEXT");
-      });
-      contentsControle.addMenu("新規(子下)", () => {
-        this.contentsModule.createContents(value.id, 3, "TEXT");
-      });
-      if (value.type !== "PAGE") {
-        contentsControle.addMenu("移動(上)");
-        contentsControle.addMenu("移動(下)");
-      }
-    });
+    this.createEditMenu(contentsArea);
 
     var title = document.createElement("div") as HTMLElement;
-    contents.appendChild(title);
+    contentsNode.appendChild(title);
     var date = document.createElement("div");
     date.className = "Date";
-    contents.appendChild(date);
+    contentsNode.appendChild(date);
     var body = document.createElement("div");
     body.className = "Body";
-    contents.appendChild(body);
+    contentsNode.appendChild(body);
     var childs = document.createElement("div");
     childs.className = "Childs";
     contentsArea.appendChild(childs);
-    if (value.childs) {
-      for (const child of value.childs) {
+    if (contents.childs) {
+      for (const child of contents.childs) {
         childs.appendChild(this.createContents(child));
       }
     }
-    contentsArea.update = value => {
-      contentsArea.contents = value;
-      this.contentsNode[value.id] = contentsArea;
-      if (contentsArea.dataset.contentsType === value["type"]) {
-        var titleTag = "H" + value["title_type"];
+    contentsArea.update = contents => {
+      contentsArea.contents = contents;
+      this.contentsNode[contents.id] = contentsArea;
+      if (contentsArea.dataset.contentsType === contents["type"]) {
+        var titleTag = "H" + contents["title_type"];
         if (titleTag != title.nodeName) {
           var newTitle = document.createElement(titleTag);
           if (title.parentNode) {
@@ -171,11 +158,11 @@ export class InfoContentsView extends JWF.Window {
           }
           title = newTitle;
         }
-        contentsArea.dataset.contentsStat = value.stat.toString();
-        title.dataset.nodeName = "H" + value.title_type;
-        title.textContent = value.title;
-        date.textContent = new Date(value["date"]).toLocaleString();
-        body.innerHTML = value["value"];
+        contentsArea.dataset.contentsStat = contents.stat.toString();
+        title.dataset.nodeName = "H" + contents.title_type;
+        title.textContent = contents.title;
+        date.textContent = new Date(contents["date"]).toLocaleString();
+        body.innerHTML = contents["value"];
         const imageNodes = body.querySelectorAll("img");
         for (var i = 0; i < imageNodes.length; i++) {
           const node = imageNodes[i];
@@ -196,24 +183,49 @@ export class InfoContentsView extends JWF.Window {
         }
       }
     };
-    contentsArea.update(value);
-    /*
-    //ツリービューの選択を変更する処理
-    const changeActiveId = (e: MouseEvent) => {
-      const id = value.id;
-      if (this.selectId !== id) {
-        this.contentsModule.selectPage(id, true);
-        this.selectId = id;
-      }
-      e.cancelBubble = true;
-    };
-    body.addEventListener("mouseover", changeActiveId);
-    title.addEventListener("mouseover", changeActiveId);
-    body.addEventListener("click", changeActiveId);
-    title.addEventListener("click", changeActiveId);
-*/
-
+    contentsArea.update(contents);
     return contentsArea;
+  }
+  public createEditMenu(contentsArea:ContentsArea){
+        //管理者用編集メニュー
+    //if (SESSION.isAuthority("SYSTEM_ADMIN"))
+    const edit = document.createElement("div");
+    edit.className = "ContentsEdit";
+    edit.innerText = "🖹";
+    contentsArea.contentsNode.appendChild(edit);
+    edit.addEventListener("click", () => {
+      const contents = contentsArea.contents;
+      const contentsControle = new ContentsControleWindow();
+      const x =
+        this.getAbsX() + this.getWidth() - contentsControle.getWidth() - 30;
+      contentsControle.setPos(x, 30);
+
+      contentsControle.addMenu("編集", () => {
+        const editWindow = new ContentsEditWindow(this.manager, contents.id);
+      });
+      if (contents.type !== "PAGE") {
+        contentsControle.addMenu("新規(上)", () => {
+          this.contentsModule.createContents(contents.id, 0, "TEXT");
+        });
+        contentsControle.addMenu("新規(下)", () => {
+          this.contentsModule.createContents(contents.id, 1, "TEXT");
+        });
+      }
+      contentsControle.addMenu("新規(子上)", () => {
+        this.contentsModule.createContents(contents.id, 2, "TEXT");
+      });
+      contentsControle.addMenu("新規(子下)", () => {
+        this.contentsModule.createContents(contents.id, 3, "TEXT");
+      });
+      if (contents.type !== "PAGE") {
+        contentsControle.addMenu("移動(上)", () => {
+          this.contentsModule.moveVector(contents.id, -1);
+        });
+        contentsControle.addMenu("移動(下)", () => {
+          this.contentsModule.moveVector(contents.id, 1);
+        });
+      }
+    });
   }
   /**
    *
@@ -237,9 +249,29 @@ export class InfoContentsView extends JWF.Window {
     const contentsModule = this.contentsModule;
     const page = await contentsModule.getPage(id);
     if (!page) return;
+    this.pageId = page.id;
     const node = this.createContents(page);
     contentsPage.appendChild(node);
     this.jumpContents(id);
+  }
+  public moveVector(id: number, vector: number) {
+    var node = this.contentsNode[id];
+    if (node == null) return;
+    var parent = node.parentNode;
+    if (!parent) return;
+    var childs = parent.childNodes;
+    for (var i = 0; i < childs.length; i++) {
+      if (childs[i] === node) {
+        if (vector < 0) {
+          if (i === 0) return false;
+          parent.insertBefore(node, childs[i - 1]);
+        } else {
+          if (i === childs.length - 1) return false;
+          parent.insertBefore(childs[i + 1], node);
+        }
+        break;
+      }
+    }
   }
   public async loadSubPage(pid: number, id: number) {
     //対象が存在しなければ全てを読み込みなおす
@@ -278,12 +310,15 @@ export class InfoContentsView extends JWF.Window {
     if (pos < 0) pos = 0;
     var limit = node.scrollHeight - node.clientHeight;
     if (pos > limit) pos = limit;
+    this.scrollFlag = true;
     this.timerHandle = window.setInterval(() => {
-      var p = pos - node.scrollTop;
-      if (Math.abs(p) < 5) {
-        node.scrollTop = pos;
+      var p = Math.floor(pos - node.scrollTop);
+      if (p === 0) {
         window.clearInterval(this.timerHandle);
         this.timerHandle = undefined;
+        this.scrollFlag = false;
+      } else if (Math.abs(p) < 1) {
+        node.scrollTop = pos;
       } else node.scrollTop += p / 5;
     }, 10);
   }

@@ -228,7 +228,7 @@ export class Adapter {
       };
     }
     req.open("POST", url, true);
-    req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    req.setRequestHeader("Content-Type", "application/json");
     if (headers) {
       for (let index in headers) {
         const value = sessionStorage.getItem(headers[index]);
@@ -267,7 +267,11 @@ export class Adapter {
           if (res.sessionHash)
             sessionStorage.setItem(this.keyName, res.sessionHash);
           if (res.results && res.results.length) {
-            resolve(res.results[0]);
+            const result = res.results[0];
+            if(result.error)
+              reject(result.error);
+            else
+              resolve(result.value);
           } else {
             resolve(null);
           }

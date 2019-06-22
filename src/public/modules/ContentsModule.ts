@@ -21,10 +21,14 @@ export interface MainContents {
   childs?: MainContents[];
 }
 export interface CustomMap extends ModuleMap {
-  selectPage:[number] //pid
+  selectPage: [number]; //pid
   selectContents: [number, boolean | undefined]; //parameter
   createContents: [number, number]; //pid,id
   deleteContents: [number]; //id
+  updateContents: [MainContents]; //id
+  moveVector: [number, number]; //id,vector
+  moveContents: [number, number]; //fromId,toId
+  importContents: [number];
 }
 
 export class ContentsModule extends AppModule<CustomMap> {
@@ -50,9 +54,12 @@ export class ContentsModule extends AppModule<CustomMap> {
   }
   public async getPage(id: number) {
     const adapter = this.getAdapter();
-    const page = await adapter.exec("Contents.getPage", id) as MainContents | null;
-    if(page){
-      this.callEvent("selectPage",page.id);
+    const page = (await adapter.exec(
+      "Contents.getPage",
+      id
+    )) as MainContents | null;
+    if (page) {
+      this.callEvent("selectPage", page.id);
     }
     return page;
   }
@@ -75,10 +82,38 @@ export class ContentsModule extends AppModule<CustomMap> {
     if (flag) this.callEvent("deleteContents", id);
     return flag;
   }
-  public updateContents(contents: MainContents) {
+  public async updateContents(contents: MainContents) {
     const adapter = this.getAdapter();
-    return adapter.exec("Contents.updateContents", contents) as Promise<
-      number | null
-    >;
+    const flag = (await adapter.exec("Contents.updateContents", contents)) as
+      | boolean
+      | null;
+    if (flag) this.callEvent("updateContents", contents);
+    return flag;
+  }
+  public async moveVector(id: number, vector: number) {
+    const adapter = this.getAdapter();
+    const flag = (await adapter.exec("Contents.moveVector", id, vector)) as
+      | boolean
+      | null;
+    if (flag) this.callEvent("moveVector", id, vector);
+    return flag;
+  }
+  public async moveContents(fromId: number, toId: number) {
+    const adapter = this.getAdapter();
+    const flag = (await adapter.exec("Contents.moveContents", fromId, toId)) as
+      | boolean
+      | null;
+    if (flag) this.callEvent("moveContents", fromId, toId);
+    return flag;
+  }
+  public async import(id: number, mode: number, src: string) {
+    const adapter = this.getAdapter();
+    const flag = (await adapter.upload(
+      new Blob([src], {type: 'text/plain'}),
+      "Contents.import",
+      id,
+      mode
+    )) as boolean;
+    if (flag) this.callEvent("importContents", id);
   }
 }

@@ -1,14 +1,20 @@
-[data-jwf-style=TreeView] {
-  [data-kind=TreeItem] {
-    &[data-content-type=TEXT] {
+[data-jwf-style="TreeView"] {
+  [data-kind="TreeItem"] {
+    &[data-content-type="TEXT"] {
       padding-left: 0.8em;
       color: #008127;
     }
-    &[data-content-stat="0"] > [data-kind=TreeRow] > [data-kind=TreeBody] {
-      text-decoration: line-through blue;
-    }
-    &[data-content-stat="-1"] > [data-kind=TreeRow] > [data-kind=TreeBody] {
+    // &[data-content-stat="true"] > [data-kind=TreeRow] > [data-kind=TreeBody] {
+    //   text-decoration: line-through blue;
+    // }
+    &[data-content-stat="false"] > [data-kind="TreeRow"] > [data-kind="TreeBody"] {
       text-decoration: line-through red;
+    }
+    div.TreeOption {
+      padding: 0.1em;
+      background-color: rgba(0,100,0,0.3);
+      position: absolute;
+      right: 0.1em;
     }
   }
 }

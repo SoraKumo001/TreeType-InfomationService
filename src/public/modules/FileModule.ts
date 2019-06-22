@@ -15,7 +15,7 @@ export interface CustomMap extends ModuleMap {
   update_dir: [number, number]; //parentId,dirId
   delete_file: [number | number[]]; //fileId
   update_file: [number]; //fileId
-  upload_file: [number]; //parentId
+  upload_file: [number,number,File]; //parentId,id,File
 }
 
 export class FileModule extends AppModule<CustomMap> {
@@ -60,12 +60,18 @@ export class FileModule extends AppModule<CustomMap> {
   public async uploadFile(parentId: number, files: FileList) {
     const adapter = this.getAdapter();
     const count = files.length;
+    const result:{pid:number,id:number,file:File}[]=[]
     for (let i = 0; i < count; i++) {
       const file = files.item(i);
       if (file) {
-        await adapter.upload(file, "Files.uploadFile", parentId, file.name);
-        this.callEvent("upload_file", parentId);
+        const r = await adapter.upload(file, "Files.uploadFile", parentId, file.name) as {id:number,size:number}|null;
+        if(r){
+          const id = r.id;
+          result.push({pid:parentId,id,file});
+          this.callEvent("upload_file", parentId,id,file);
+        }
       }
     }
+    return result;
   }
 }

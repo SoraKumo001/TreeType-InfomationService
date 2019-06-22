@@ -1,37 +1,40 @@
+export interface PanelCreateParam {
+  type?: string;
+  label: string;
+  value?: string | boolean;
+  name?: string;
+  option?: {
+    label: string;
+    value?: string;
+  }[];
+  size?: number;
+  event?: (value?: HTMLElement) => void;
+}
+
 export class PanelControl {
-  public static setControlValue(target:HTMLElement,name:string,value:string|number){
-    const node = target.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLSelectElement;
-    if(!node)
-      return;
-    if(node instanceof HTMLInputElement)
-      if(node.type === "checkbox")
-        node.checked = !!value;
+  public static setControlValue(
+    target: HTMLElement,
+    name: string,
+    value: string | number
+  ) {
+    const node = target.querySelector(`[name="${name}"]`) as
+      | HTMLInputElement
+      | HTMLSelectElement;
+    if (!node) return;
+    if (node instanceof HTMLInputElement)
+      if (node.type === "checkbox") node.checked = !!value;
     node.value = value.toString();
   }
-  public static getControlValue(target:HTMLElement,name:string){
-    const node = target.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLSelectElement;
-    if(!node)
-      return null;
-    if(node instanceof HTMLInputElement)
-      if(node.type === "checkbox")
-        return node.checked;
+  public static getControlValue(target: HTMLElement, name: string) {
+    const node = target.querySelector(`[name="${name}"]`) as
+      | HTMLInputElement
+      | HTMLSelectElement;
+    if (!node) return null;
+    if (node instanceof HTMLInputElement)
+      if (node.type === "checkbox") return node.checked;
     return node.value;
   }
-  public static createControl(
-    target: HTMLElement,
-    param: {
-      type?: string;
-      label: string;
-      value?: string | boolean;
-      name?: string;
-      option?: {
-        label: string;
-        value?: string;
-      }[];
-      size?: number;
-      event?: (value?: HTMLElement) => void;
-    }
-  ) {
+  public static createControl(target: HTMLElement, param: PanelCreateParam) {
     switch (param.type) {
       default: {
         let button = document.createElement("button");
@@ -61,8 +64,7 @@ export class PanelControl {
           let check = document.createElement("input");
           check.name = param.name || "";
           check.type = "checkbox";
-          if(param.value)
-            check.checked = !!param.value;
+          if (param.value) check.checked = !!param.value;
           area.appendChild(check);
         }
         break;
@@ -73,7 +75,7 @@ export class PanelControl {
         const text = document.createTextNode(param.label);
         area.appendChild(text);
         const input = document.createElement("input");
-        input.name = param.name||"";
+        input.name = param.name || "";
         if (typeof param.value === "string") input.value = param.value;
         if (param.size) input.size = param.size;
         area.appendChild(input);
@@ -84,7 +86,7 @@ export class PanelControl {
       }
       case "select": {
         const select = document.createElement("select");
-        select.name = param.name||"";
+        select.name = param.name || "";
         //area.dataset.editControl = "";
         target.appendChild(select);
         const options = param.option;

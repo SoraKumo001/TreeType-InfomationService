@@ -3,7 +3,7 @@ import { Users } from "./Users";
 import { RemoteDB } from "./RemoteDB";
 import express = require("express");
 
-interface FileInfo {
+export interface FileInfo {
   id: number;
   parent: number;
   kind: number;
@@ -19,7 +19,7 @@ export class Files extends amf.Module {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
     if (remoteDB) {
-      remoteDB.addEventListener("connect",async () => {
+      remoteDB.addEventListener("connect", async () => {
         if (!(await remoteDB.isTable("files"))) {
           remoteDB.run(
             `create table files(files_id SERIAL PRIMARY KEY,files_parent INTEGER references files(files_id),files_kind INTEGER,users_no INTEGER references users(users_no),files_name TEXT,files_date TIMESTAMP with time zone,files_byte BYTEA,UNIQUE(files_parent,files_name));
@@ -41,7 +41,7 @@ export class Files extends amf.Module {
     const remoteDB = await this.getSessionModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
 
-    const dirs = path.replace(/\/$/, "").split("/");
+    const dirs = path.replace(/(^\/)|(\/$)/g, "").split("/");
     let pid = parentId;
     let id: number | null = null;
     for (const name of dirs) {
@@ -70,31 +70,31 @@ export class Files extends amf.Module {
     const users = await this.getSessionModule(Users);
     if (!remoteDB || !remoteDB.isConnect()) return 0;
 
-    const dirs = path.replace(/\/$/, "").split("/");
+    const dirs = path.replace(/(^\/)|(\/$)/g, "").split("/");
     let pid = parentId;
-    let id = 0;
+    let id: number | null = 0;
     let i, length;
     for (i = 0, length = dirs.length; i < length; i++) {
       const name = dirs[i];
-      const id = await this.getFileId(pid, name);
+      id = await this.getFileId(pid, name);
       if (id === null) break;
       const file = await this.getFileInfo(id);
       if (file === null) break;
       if (file["files_kind"] != 0) return 0;
       pid = id;
     }
-    const remoteNo = users?users.getRemoteNo():1;
-    if (id > 0) return id;
+    const remoteNo = users ? users.getRemoteNo() : 1;
+    if (id) return id;
+    id = pid;
     for (; i < length; i++) {
       const name = dirs[i];
-      const result = await remoteDB.get(
+      id = (await remoteDB.get2(
         "insert into files values(default,$1,0,$2,$3,now(),null) on conflict do nothing returning files_id",
-        parseInt(pid as never),
+        id,
         remoteNo,
         name
-      );
-      if (!result) return 0;
-      id = result.files_id as number;
+      )) as number;
+      if (!id) return 0;
     }
     return id;
   }
@@ -182,12 +182,12 @@ export class Files extends amf.Module {
       `select files_id,files_parent,files_kind,files_name,files_date,octet_length(files_byte) as size
 			from files where files_kind=0 order by files_name`
     );
-    const hash: { [key: number]: FileInfo } = {};
+    const hash = new Map<number, FileInfo>();
 
     if (dirInfos) {
       for (const dir of dirInfos) {
         const id = dir.files_id as number;
-        hash[id] = {
+        hash.set(id, {
           id,
           parent: dir["files_parent"],
           kind: dir["files_kind"],
@@ -196,32 +196,33 @@ export class Files extends amf.Module {
           date: null,
           files_date: null,
           childs: []
-        };
+        });
       }
-      for (const dir of Object.values(hash)) {
-        const parent = dir["parent"] as number;
+      for (const dir of hash.values()) {
+        const parent = dir.parent as number;
         if (parent > 0) {
-          hash[parent]["childs"].push(dir);
+          const p = hash.get(parent);
+          if (p) p["childs"].push(dir);
         }
       }
     }
 
-    return hash[1];
+    return hash.get(1) as FileInfo;
   }
   public async getDirId(parentId: number, path: string) {
-    const remoteDB = await this.getSessionModule(RemoteDB);
+    const remoteDB = await this.getModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
 
-    const dirs = path.replace(/\/$/, "").split("/");
+    const dirs = path.replace(/(^\/)|(\/$)/g, "").split("/");
     let id = parentId;
     for (const name of dirs) {
-      const result = await remoteDB.get(
+      const result = await remoteDB.get2(
         "select files_id from files where files_parent=$1 and files_name=$2",
         id,
         name
-      );
+      )as number;
       if (!result) return null;
-      id = result.id as number;
+      id = result;
     }
     return id;
   }
@@ -233,14 +234,14 @@ export class Files extends amf.Module {
   ) {
     const remoteDB = await this.getSessionModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
-    const result = await remoteDB.get(
-      "insert into files values(default,$1,1,$2,$3,now(),$4) returning files_id,octet_length(files_byte)",
+    return (await remoteDB.get(
+      `insert into files values(default,$1,1,$2,$3,now(),$4) ON CONFLICT (files_parent,files_name)
+      DO UPDATE SET files_name=$3,files_date=now(),files_byte=$4 returning files_id as id,octet_length(files_byte) as size`,
       parentId,
       userNo,
       name,
       buffer
-    );
-    return result;
+    )) as { id: number; size: number } | null;
   }
   public async downloadFile(res: express.Response, fileId: number) {
     const remoteDB = await this.getModule(RemoteDB);
@@ -287,10 +288,25 @@ export class Files extends amf.Module {
         "Content-Disposition",
         `${httpDisposition} filename*=utf-8'jp'${encodeURI(fileName)}`
       );
-      res.send(result.value);
+      res.end(result.value);
+    }else{
+      res.status(404);
+	    res.end('notfound');
     }
 
     return result;
+  }
+  public async setFile(pid: number, name: string, date: Date, value: string) {
+    const remoteDB = await this.getModule(RemoteDB);
+    if (!remoteDB || !remoteDB.isConnect()) return null;
+    return remoteDB.get2(
+      "insert into files values(default,$1,1,$2,$3,$4,decode($5,'base64')) returning files_id",
+      pid,
+      1,
+      name,
+      date,
+      value
+    );
   }
   public async JS_createDir(parentId: number, path: string) {
     const users = await this.getSessionModule(Users);
@@ -328,7 +344,7 @@ export class Files extends amf.Module {
     if (!users || !users.isAdmin()) return null;
 
     const code = users.getRemoteNo();
-    if (code === 0) return false;
+    if (code === 0) return null;
     const buffer = this.getSession().getBuffer();
     if (buffer) return this.uploadFile(parentId, code, name, buffer);
   }
