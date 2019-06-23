@@ -14,6 +14,7 @@ export class FileEditWindow extends JWF.FrameWindow {
     name?: string;
   }) {
     super();
+    this.setJwfStyle("FileWindow");
     this.setSize(300, 180);
     this.setPos();
     this.setPadding(10);

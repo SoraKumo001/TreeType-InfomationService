@@ -18,6 +18,8 @@ export class InfoTreeView extends JWF.TreeView {
     const contentsModule = manager.getModule(ContentsModule);
     this.contentsModule = contentsModule;
 
+    this.getClient().dataset.style = "InfoTreeView";
+
     const optionNode = document.createElement("div");
     optionNode.className = "TreeOption";
     optionNode.innerText = "🔧";
@@ -116,7 +118,7 @@ export class InfoTreeView extends JWF.TreeView {
   public async loadTree(selectId?: number, reload?: boolean) {
     if (!reload && selectId && this.findItemFromValue(selectId)) {
       this.selectItemFromValue(selectId, true);
-      return;
+      return false;
     }
 
     this.clearItem();
@@ -124,6 +126,7 @@ export class InfoTreeView extends JWF.TreeView {
     if (value) this.setTreeItem(this.getRootItem(), value);
     if (selectId) this.selectItemFromValue(selectId);
     else if (this.selectId) this.selectItemFromValue(this.selectId);
+    return true;
   }
   public async loadSubTree(parentId: number, selectId?: number) {
     const item = this.findItemFromValue(parentId);

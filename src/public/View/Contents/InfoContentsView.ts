@@ -1,6 +1,10 @@
 import * as JWF from "javascript-window-framework";
 import { AppManager } from "../../AppManager";
-import { ContentsModule, MainContents } from "../../modules/ContentsModule";
+import {
+  ContentsModule,
+  MainContents,
+  TreeContents
+} from "../../modules/ContentsModule";
 import "./scss/InfoContentsView.scss";
 import "highlight.js/styles/dark.css";
 import { ContentsControleWindow } from "./ContentsControleWindow";
@@ -19,7 +23,7 @@ highlight.registerLanguage("php", require("highlight.js/lib/languages/php"));
 
 export interface ContentsArea extends HTMLDivElement {
   contents: MainContents;
-  contentsNode:HTMLElement;
+  contentsNode: HTMLElement;
   update: (value: MainContents) => void;
 }
 /**
@@ -30,7 +34,6 @@ export interface ContentsArea extends HTMLDivElement {
  * @extends {JWF.Window}
  */
 export class InfoContentsView extends JWF.Window {
-
   private contentsModule: ContentsModule;
   private contentsPage: HTMLDivElement;
   private contentsNode: { [key: number]: ContentsArea } = {};
@@ -38,7 +41,8 @@ export class InfoContentsView extends JWF.Window {
   private selectId: number = 0;
   private manager: AppManager;
   private scrollFlag: boolean = false;
- private  pageId: number = 0;
+  private pageId: number = 0;
+
   /**
    *Creates an instance of InfoContentsView.
    * @param {AppManager} manager
@@ -47,37 +51,13 @@ export class InfoContentsView extends JWF.Window {
   public constructor(manager: AppManager) {
     super();
     this.manager = manager;
+    this.setJwfStyle("InfoContentsView");
     const contentsModule = manager.getModule(ContentsModule);
     this.contentsModule = contentsModule;
 
-    contentsModule.addEventListener("selectContents", (id, tree) => {
-      if (!tree) this.loadPage(id);
-    });
-    contentsModule.addEventListener("createContents", async (pid, id) => {
-      await this.loadSubPage(pid, id);
-      this.jumpContents(id);
-    });
-    contentsModule.addEventListener("deleteContents", id => {
-      const contents = this.contentsNode[id];
-      if (contents && contents.parentNode) {
-        contents.parentNode.removeChild(contents);
-      }
-    });
-    contentsModule.addEventListener("updateContents", contents => {
-      const contentsNode = this.contentsNode[contents.id];
-      if (contentsNode) {
-        contentsNode.update(contents);
-      }
-    });
-    contentsModule.addEventListener("moveVector", (id, vector) => {
-      this.moveVector(id, vector);
-    });
-    contentsModule.addEventListener("moveContents", (fromId,toId) => {
-      if(this.contentsNode[fromId] || this.contentsNode[toId])
-        this.loadPage(this.pageId,true);
-    });
+    this.addModuleEvent();
 
-    this.setJwfStyle("InfoContentsView");
+    //ページ表示用ノードの作成
     const contentsPage = document.createElement("div");
     this.getClient().appendChild(contentsPage);
     this.contentsPage = contentsPage;
@@ -106,6 +86,35 @@ export class InfoContentsView extends JWF.Window {
           this.selectId = id;
         }
       }
+    });
+  }
+  private addModuleEvent() {
+    const contentsModule = this.contentsModule;
+    contentsModule.addEventListener("selectContents", (id, tree) => {
+      if (!tree) this.loadPage(id);
+    });
+    contentsModule.addEventListener("createContents", async (pid, id) => {
+      await this.loadSubPage(pid, id);
+      this.jumpContents(id);
+    });
+    contentsModule.addEventListener("deleteContents", id => {
+      const contents = this.contentsNode[id];
+      if (contents && contents.parentNode) {
+        contents.parentNode.removeChild(contents);
+      }
+    });
+    contentsModule.addEventListener("updateContents", contents => {
+      const contentsNode = this.contentsNode[contents.id];
+      if (contentsNode) {
+        contentsNode.update(contents);
+      }
+    });
+    contentsModule.addEventListener("moveVector", (id, vector) => {
+      this.moveVector(id, vector);
+    });
+    contentsModule.addEventListener("moveContents", (fromId, toId) => {
+      if (this.contentsNode[fromId] || this.contentsNode[toId])
+        this.loadPage(this.pageId, true);
     });
   }
   /**
@@ -185,8 +194,8 @@ export class InfoContentsView extends JWF.Window {
     contentsArea.update(contents);
     return contentsArea;
   }
-  public createEditMenu(contentsArea:ContentsArea){
-        //管理者用編集メニュー
+  public createEditMenu(contentsArea: ContentsArea) {
+    //管理者用編集メニュー
     //if (SESSION.isAuthority("SYSTEM_ADMIN"))
     const edit = document.createElement("div");
     edit.className = "ContentsEdit";
@@ -226,6 +235,86 @@ export class InfoContentsView extends JWF.Window {
       }
     });
   }
+
+  private findContents(tree: TreeContents, id: number): TreeContents | null {
+    if (tree.id === id) return tree;
+    if (tree.childs) {
+      for (const child of tree.childs) {
+        const result = this.findContents(child, id);
+        if (result) return result;
+      }
+    }
+    return null;
+  }
+  public drawBreads() {
+    const contentsModule = this.contentsModule;
+    const tree = contentsModule.getTreeCache();
+    if (!tree) return;
+
+    //パンくず領域の作成
+    const breadContents = document.createElement("div");
+    breadContents.dataset.style = "BreadContents";
+
+    let parent: TreeContents | null = this.findContents(tree, this.pageId);
+    if (!parent) return;
+    while ((parent = this.findContents(tree, parent.pid))) {
+      const div = document.createElement("div");
+      const id = parent.id;
+      div.innerText = parent.title;
+      div.addEventListener("click", () => {
+        contentsModule.selectContents(id);
+      });
+      breadContents.insertBefore(div, breadContents.firstChild);
+    }
+    this.contentsPage.insertBefore(breadContents, this.contentsPage.firstChild);
+  }
+  public drawSubContents() {
+    const contentsModule = this.contentsModule;
+
+    //サブコンテンツ領域の作成
+    const subContents = document.createElement("div");
+    subContents.dataset.style = "SubContents";
+
+    const tree = contentsModule.getTreeCache();
+    if (!tree) return;
+    const contents = this.findContents(tree, this.pageId);
+    if (contents) {
+      const childs = contents.childs;
+      if (childs) {
+        subContents.innerHTML = "";
+        const table = document.createElement("table");
+        let flag = false;
+        for (const c of childs) {
+          if (c.type !== "PAGE") continue;
+          flag = true;
+
+          const row = table.insertRow();
+          //let cell;
+          let cell: HTMLTableDataCellElement;
+
+          const date = new Date(c.update);
+          cell = row.insertCell();
+          cell.innerText = JWF.sprintf(
+            "%04d/%02d/%02d %02d:%02d",
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate(),
+            date.getHours(),
+            date.getMinutes()
+          );
+
+          cell = row.insertCell();
+          cell.innerText = c.title;
+
+          row.addEventListener("click", () => {
+            contentsModule.selectContents(c.id);
+          });
+        }
+        subContents.appendChild(table);
+        if (flag) this.contentsPage.appendChild(subContents);
+      }
+    }
+  }
   /**
    *
    *
@@ -252,6 +341,9 @@ export class InfoContentsView extends JWF.Window {
     const node = this.createContents(page);
     contentsPage.appendChild(node);
     this.jumpContents(id);
+
+    this.drawBreads();
+    this.drawSubContents();
   }
   public moveVector(id: number, vector: number) {
     var node = this.contentsNode[id];

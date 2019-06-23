@@ -390,18 +390,22 @@ export class TreeItem {
         );
         for (let i = 0; i < items.length; i++) {
           const n = items[i] as HTMLElement;
-          n.style.animation =
-            anime && flag ? "treeOpen 0.3s ease 0s 1 normal" : "";
+          if (anime) {
+            n.style.animation = flag ? "treeOpen 0.3s ease 0s 1 normal" : "";
+          } else {
+            n.style.animation = "";
+          }
           n.style.display = "block";
         }
       } else {
         const items = this.childNode.querySelectorAll("[data-kind=TreeItem]");
         for (let i = 0; i < items.length; i++) {
           const n = items[i] as HTMLElement;
-          n.style.animation =
-            anime && flag
-              ? "treeClose 0.8s ease 0s 1 forwards"
-              : "treeClose forwards";
+          if (anime) {
+            n.style.animation = flag ? "treeClose 0.8s ease 0s 1 forwards" : "";
+          } else {
+            n.style.display = "none";
+          }
         }
       }
     }
@@ -532,9 +536,9 @@ export class TreeView<
 
       let parent: TreeItem | null = item;
       while ((parent = parent.getParentItem())) {
-        parent.openItem(true, true);
+        parent.openItem(true,user);
       }
-      item.openItem(true, true);
+      item.openItem(true,user);
     }
     if (scroll) {
       this.getClient().scrollTo(
@@ -543,7 +547,7 @@ export class TreeView<
       );
       item.getNode().addEventListener("animationend", animationEnd);
     }
-    this.callEvent("itemSelect", { item, user: !!user  });
+    this.callEvent("itemSelect", { item, user: !!user });
   }
   /**
    * 設定されている値を条件にアイテムを選択

@@ -9,6 +9,8 @@ interface TreeContents {
   pid: number;
   stat: boolean;
   type: string;
+  date: string;
+  update: string;
   title: string;
   childs: TreeContents[];
 }
@@ -437,7 +439,7 @@ export class Contents extends amf.Module {
     const visible = admin ? "" : "where contents_stat=1";
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
-    const values = (await remoteDB.all(`select contents_id as id,contents_parent as pid,contents_stat as stat,
+    const values = (await remoteDB.all(`select contents_id as id,contents_parent as pid,contents_stat as stat,contents_date as date,contents_update as update,
 			contents_type as type,contents_title as title from contents ${visible} order by contents_type='PAGE',contents_priority`)) as
       | TreeContents[]
       | null;

@@ -8,8 +8,8 @@ import {
 import "./scss/SettingWindow.scss";
 
 export class SettingWindow extends JWF.FrameWindow {
-  treeView: JWF.TreeView;
-  manager: AppManager;
+  private treeView: JWF.TreeView;
+  private manager: AppManager;
   public constructor(manager: AppManager) {
     super();
     this.setJwfStyle("SettingWindow");
@@ -18,8 +18,6 @@ export class SettingWindow extends JWF.FrameWindow {
     this.setSize(640, 600);
     this.setPos();
 
-    //this.getClient().style.backgroundColor = "rgba(0,0,0,0.8)";
-    //this.getClient().style.color = "white";
     const splitter = new JWF.Splitter();
     this.addChild(splitter, "client");
     splitter.setSplitterPos(250);
