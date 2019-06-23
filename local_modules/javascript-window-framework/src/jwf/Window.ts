@@ -1121,6 +1121,7 @@ export class Window<T extends WINDOW_EVENT_MAP = WINDOW_EVENT_MAP> {
           break;
       }
       jdata.instructionSize = { width, height };
+      win.onMeasure(false);
       //if (win.onMeasure(false)) retry = true;
       win.onLayout(flag);
     }

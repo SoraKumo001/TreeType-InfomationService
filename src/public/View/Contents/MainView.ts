@@ -21,7 +21,9 @@ export class MainView extends JWF.Window {
 
     const splitter = new JWF.Splitter();
     this.addChild(splitter, "client");
-    splitter.setSplitterPos(250);
+    splitter.setSplitterPos(250,"ew");
+    splitter.setOverlay(true,600);
+
 
     const infoTreeView = new InfoTreeView(manager);
     const infoContentsView = new InfoContentsView(manager);
@@ -32,8 +34,8 @@ export class MainView extends JWF.Window {
     const routerModule = manager.getModule(RouterModule);
     this.routerModule = routerModule;
 
-    contentsModule.addEventListener("selectContents", id => {
-      this.routerModule.setLocationParams({ p: id });
+    contentsModule.addEventListener("selectContents", (id,tree) => {
+      this.routerModule.setLocationParams({ p: id },!tree);
     });
     contentsModule.addEventListener("selectPage", id => {
       let item: TreeItem | null = infoTreeView.findItemFromValue(id);

@@ -49,7 +49,7 @@ export class InfoTreeView extends JWF.TreeView {
 
     contentsModule.addEventListener("selectContents", id => {
       this.selectId = id;
-      this.selectItemFromValue(id);
+      this.selectItemFromValue(id,true);
     });
     contentsModule.addEventListener("createContents", (pid, id) => {
       this.loadSubTree(pid, id);
@@ -115,7 +115,7 @@ export class InfoTreeView extends JWF.TreeView {
 
   public async loadTree(selectId?: number, reload?: boolean) {
     if (!reload && selectId && this.findItemFromValue(selectId)) {
-      this.selectItemFromValue(selectId);
+      this.selectItemFromValue(selectId, true);
       return;
     }
 
@@ -127,14 +127,14 @@ export class InfoTreeView extends JWF.TreeView {
   }
   public async loadSubTree(parentId: number, selectId?: number) {
     const item = this.findItemFromValue(parentId);
-    if (!item) return this.loadTree(selectId, true);
+    if (!item) return this.loadTree(selectId);
 
     item.clearItem();
 
     const value = await this.contentsModule.getTree(parentId);
     if (value) this.setTreeItem(item, value);
     if (selectId) this.selectItemFromValue(selectId);
-    else if (this.selectId) this.selectItemFromValue(this.selectId);
+    else if (this.selectId) this.selectItemFromValue(this.selectId,true);
   }
   private setTreeItem(item: TreeItem, value: TreeContents) {
     const node = item.getNode();
