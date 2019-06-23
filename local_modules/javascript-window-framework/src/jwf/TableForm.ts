@@ -13,7 +13,8 @@ export interface ITEM_OPTION {
     | "number"
     | "checkbox"
     | "select"
-    | "submit";
+    | "submit"
+    | "image";
   name?: string;
   value?: string | number | boolean | Date;
   link?: string;
@@ -29,7 +30,11 @@ export interface TableFormViewMap extends WINDOW_EVENT_MAP {
   itemChange: [FormInputElement];
 }
 
-export type FormInputElement = (HTMLInputElement | HTMLSelectElement) & {
+export type FormInputElement = (
+  | HTMLInputElement
+  | HTMLSelectElement
+  | HTMLImageElement) & {
+  value?: string;
   type2?: string;
   value2?: Date | undefined;
 };
@@ -93,6 +98,13 @@ export class TableFormView extends Window<TableFormViewMap> {
       const data = document.createElement("div");
       row.appendChild(data);
 
+      if (params.events) {
+        const events = params.events;
+        for (const key in events) {
+          data.addEventListener(key, events[key]);
+        }
+      }
+
       let input: FormInputElement;
       let tag: HTMLDivElement | HTMLAnchorElement;
       let date: Date;
@@ -108,18 +120,24 @@ export class TableFormView extends Window<TableFormViewMap> {
           input.value = params.value ? date.toLocaleDateString() : "-";
           input.value2 = date;
           data.appendChild(input);
-          input.addEventListener("click", (): void => {
-            const calendar = new CalendarView({ frame: true });
-            calendar.setPos();
-            if (input instanceof HTMLInputElement && input.value2)
-              calendar.setSelect(input.value2, true);
-            calendar.addEventListener("date", (e): void => {
-              input.value = e.date.toLocaleDateString();
-              if (input instanceof HTMLInputElement) input.value2 = e.date;
-              calendar.close();
-              this.callEvent("itemChange", input);
-            });
-          });
+          input.addEventListener(
+            "click",
+            (): void => {
+              const calendar = new CalendarView({ frame: true });
+              calendar.setPos();
+              if (input instanceof HTMLInputElement && input.value2)
+                calendar.setSelect(input.value2, true);
+              calendar.addEventListener(
+                "date",
+                (e): void => {
+                  input.value = e.date.toLocaleDateString();
+                  if (input instanceof HTMLInputElement) input.value2 = e.date;
+                  calendar.close();
+                  this.callEvent("itemChange", input);
+                }
+              );
+            }
+          );
           break;
         case "number":
           input = document.createElement("input");
@@ -129,6 +147,14 @@ export class TableFormView extends Window<TableFormViewMap> {
           input.value = params.value
             ? (parseInt(params.value.toString()).toString() as string)
             : "";
+          data.appendChild(input);
+          break;
+        case "image":
+          input = document.createElement("img");
+          if (params.image) input.src = params.image;
+          input.type2 = params.type;
+          input.name = params.name || "";
+          if (params.image_width) input.style.width = params.image_width;
           data.appendChild(input);
           break;
         case "string":
@@ -199,7 +225,7 @@ export class TableFormView extends Window<TableFormViewMap> {
   }
   public getParams(): { [key: string]: string | number | boolean | undefined } {
     const values: { [key: string]: string | number | boolean | undefined } = {};
-    const nodes = this.items.querySelectorAll("select,input");
+    const nodes = this.items.querySelectorAll("select,input,img");
     for (let length = nodes.length, i = 0; i < length; ++i) {
       const v = nodes[i] as FormInputElement;
       if (v instanceof HTMLSelectElement) {
@@ -225,6 +251,8 @@ export class TableFormView extends Window<TableFormViewMap> {
             break;
         }
         values[name] = value;
+      }else if(v instanceof HTMLImageElement){
+        values[v.name] = v.value;
       }
     }
     return values;

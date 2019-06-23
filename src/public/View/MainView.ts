@@ -1,36 +1,37 @@
 import * as JWF from "javascript-window-framework";
-import { TopMenu } from "../TopMenu";
-import { AppManager } from "../../AppManager";
-import { InfoTreeView } from "./InfoTreeView";
-import { ContentsModule } from "../../modules/ContentsModule";
-import { InfoContentsView } from "./InfoContentsView";
-import { RouterModule } from "../../modules/RouterModule";
-import { UserModule } from "../../modules/UserModule";
+import { TopMenu } from "./TopMenu";
+import { AppManager } from "../AppManager";
+import { InfoTreeView } from "./Contents/InfoTreeView";
+import { ContentsModule } from "../modules/ContentsModule";
+import { InfoContentsView } from "./Contents/InfoContentsView";
+import { RouterModule } from "../modules/RouterModule";
+import { UserModule } from "../modules/UserModule";
 import { TreeItem } from "javascript-window-framework";
 
 
 
 export class MainView extends JWF.Window {
-  private contentsModule: ContentsModule;
   private routerModule: RouterModule;
+  private infoTreeView :InfoTreeView;
   public constructor(manager: AppManager) {
     super({ overlap: true });
     this.setMaximize(true);
-
-    this.addChild(new TopMenu(manager), "bottom");
+    this.setJwfStyle("MainView");
 
     const splitter = new JWF.Splitter();
     this.addChild(splitter, "client");
-    splitter.setSplitterPos(250,"ew");
+    splitter.setSplitterPos(300,"ew");
     splitter.setOverlay(true,600);
+
+    splitter.addChild(0,new TopMenu(manager), "bottom");
 
 
     const infoTreeView = new InfoTreeView(manager);
+    this.infoTreeView = infoTreeView;
     const infoContentsView = new InfoContentsView(manager);
     splitter.addChild(0, infoTreeView, "client");
     splitter.addChild(1, infoContentsView, "client");
     const contentsModule = manager.getModule(ContentsModule);
-    this.contentsModule = contentsModule;
     const routerModule = manager.getModule(RouterModule);
     this.routerModule = routerModule;
 
@@ -38,20 +39,9 @@ export class MainView extends JWF.Window {
       this.routerModule.setLocationParams({ p: id },!tree);
     });
     contentsModule.addEventListener("selectPage", id => {
-      let item: TreeItem | null = infoTreeView.findItemFromValue(id);
-      if (!item) return;
-      let title = "";
-      const values: { name: string; value: number }[] = [];
-      do {
-        const name = item.getItemText();
-        values.push({
-          name,
-          value: item.getItemValue() as number
-        });
-        if (title.length) title += " - ";
-        title += name;
-      } while ((item = item.getParentItem()));
-      document.title = title;
+      const title = this.selectPage(id);
+      if(!title)
+        return;
 
       //トラッカーに通知
       try {
@@ -71,7 +61,11 @@ export class MainView extends JWF.Window {
     routerModule.addEventListener("goLocation", params => {
       //ページの更新や戻る/進むボタンの処理
       const id = parseInt(params["p"] || "1");
-      infoTreeView.loadTree(id);
+      infoTreeView.loadTree(id).then((e)=>{
+        if(e){
+          this.selectPage(id);
+        }
+      });
       infoContentsView.loadPage(id);
     });
 
@@ -88,8 +82,22 @@ export class MainView extends JWF.Window {
 
     routerModule.goLocation();
 
-    // infoTreeView.addEventListener("selectPage", id => {
-    //   infoContentsView.loadPage(id);
-    // });
+  }
+  public selectPage(id:number){
+      let item: TreeItem | null = this.infoTreeView.findItemFromValue(id);
+      if (!item) return "";
+      let title = "";
+      const values: { name: string; value: number }[] = [];
+      do {
+        const name = item.getItemText();
+        values.push({
+          name,
+          value: item.getItemValue() as number
+        });
+        if (title.length) title += " - ";
+        title += name;
+      } while ((item = item.getParentItem()));
+      document.title = title;
+      return title;
   }
 }

@@ -5,6 +5,7 @@ import { UserInfo, UserModule } from "../modules/UserModule";
 import { AppManager } from "../AppManager";
 import { LoginWindow } from "./User/LoginWindow";
 import { SettingWindow } from "./Setting/SettingWindow";
+import { ParamsModule } from "../modules/ParamsModule";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LogoImage = require("./images/sorakumo_logo.svg");
@@ -12,7 +13,7 @@ export class TopMenu extends JWF.Window {
   public constructor(manager: AppManager) {
     super();
     this.setJwfStyle("TopMenu");
-    this.setHeight(64);
+    this.setHeight(80);
     const client = this.getClient();
 
     const titleLogo = document.createElement("img");
@@ -41,12 +42,20 @@ export class TopMenu extends JWF.Window {
       new LoginWindow(manager);
     })
 
-    // manager.addEventListener("title",(title:string)=>{
-    //   titleNode.textContent = title
-    // })
     const userModule = manager.getModule(UserModule);
     userModule.addEventListener("loginUser", (info: UserInfo) => {
         userNode.textContent = info?info.name:"GUEST";
     });
+
+    const paramsModule = manager.getModule(ParamsModule);
+    paramsModule.getGlobalParam("BASIC_DATA").then((e)=>{
+      if(e){
+        const params = e as {logo:string,title:string};
+        if(params.logo)
+          titleLogo.src = "?cmd=download&id="+params.logo;
+        //if(params.title)
+        //  titleNode.innerText = params.title;
+      }
+    })
   }
 }

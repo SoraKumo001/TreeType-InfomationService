@@ -3,6 +3,8 @@ export interface TreeContents {
   id: number;
   pid: number;
   stat: boolean;
+  date: Date;
+  update: Date;
   type: string;
   title: string;
   childs: TreeContents[];
@@ -32,6 +34,7 @@ export interface CustomMap extends ModuleMap {
 }
 
 export class ContentsModule extends AppModule<CustomMap> {
+  private treeContents?:TreeContents;
   public async createContents(pid: number, vector: number, type: string) {
     const adapter = this.getAdapter();
     const result = (await adapter.exec(
@@ -45,12 +48,20 @@ export class ContentsModule extends AppModule<CustomMap> {
     }
     return result;
   }
-  public getTree(id?: number) {
+  public getTreeCache(){
+    return this.treeContents;
+  }
+  public async getTree(id?: number) {
     const adapter = this.getAdapter();
-    return adapter.exec(
+    const treeContents =  await adapter.exec(
       "Contents.getTree",
       id ? id : 1
-    ) as Promise<TreeContents | null>;
+    ) as TreeContents|null;
+    if(treeContents){
+      if(id===undefined || id === 1)
+        this.treeContents = treeContents;
+    }
+    return treeContents;
   }
   public async getPage(id: number) {
     const adapter = this.getAdapter();

@@ -5,7 +5,8 @@
   padding: 0.2em;
 
   img {
-    height: 95%;
+    max-height: 95%;
+    width: 60px;
   }
   div[data-type="title"] {
     margin-left: 0.5em;

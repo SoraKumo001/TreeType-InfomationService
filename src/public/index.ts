@@ -1,13 +1,13 @@
 import { AppManager } from "./AppManager";
 import { UserModule, UserInfo } from "./modules/UserModule";
 import { UserEditWindow } from "./View/User/UserEditWindow";
-import { MainView } from "./View/Contents/MainView";
+import { MainView } from "./View/MainView";
 import { SettingModule } from "./modules/SettingModule";
 import { ModuleView } from "./View/Setting/ModuleView";
 import { DatabaseView } from "./View/Setting/DatabaseView";
 import { UserListView } from "./View/Setting/UserListView";
 import { BasicView } from "./View/Setting/BasicView";
-
+import "./index.scss";
 
 //ページ読み込み時に実行する処理を設定
 addEventListener("DOMContentLoaded", () => {

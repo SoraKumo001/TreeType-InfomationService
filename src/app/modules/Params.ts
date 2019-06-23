@@ -15,10 +15,7 @@ export class Params extends Module {
     const remoteDB = await this.getModule(RemoteDB);
     if (!remoteDB)
       return null;
-    const result = await remoteDB.get2("select params_value as value from params where params_name=$1", name) as string;
-    if(result)
-      return JSON.parse(result);
-    return null;
+    return await remoteDB.get2("select params_value as value from params where params_name=$1", name) as unknown;
   }
   public async setParam(name: string,value:unknown) {
     const remoteDB = await this.getModule(RemoteDB);

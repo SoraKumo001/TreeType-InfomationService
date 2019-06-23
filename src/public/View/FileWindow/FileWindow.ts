@@ -3,8 +3,9 @@ import { FileModule, FileInfo } from "../../modules/FileModule";
 import { AppManager } from "../../AppManager";
 import { DirView } from "./DirView";
 import { FileView } from "./FileView";
+import "./scss/FileWindow.scss";
 interface CustomMap extends JWF.WINDOW_EVENT_MAP {
-  enterFile: [{fileInfo:FileInfo, enter:boolean}];
+  enterFile: [{ fileInfo: FileInfo; enter: boolean }];
 }
 /**
  *
@@ -16,6 +17,7 @@ interface CustomMap extends JWF.WINDOW_EVENT_MAP {
 export class FileWindow<T extends CustomMap> extends JWF.FrameWindow<T> {
   public constructor(manager: AppManager) {
     super();
+    this.setJwfStyle("FileWindow");
 
     const fileModule = manager.getModule(FileModule);
 
@@ -42,13 +44,12 @@ export class FileWindow<T extends CustomMap> extends JWF.FrameWindow<T> {
     fileView.addEventListener(
       "enterFile",
       (param): void => {
-        this.callEvent("enterFile",param);
+        this.callEvent("enterFile", param);
       }
     );
 
     dirTree.getTree().addEventListener("itemSelect", () => {
       fileView.loadFiles(dirTree.getDirId());
     });
-
   }
 }
