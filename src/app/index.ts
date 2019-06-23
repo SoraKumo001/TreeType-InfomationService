@@ -12,6 +12,6 @@ new amf.Manager({
   modulePath: path.resolve(__dirname, "./modules"), //モジュール配置パス
   jsPriority: [], //優先JSファイル設定
   debug: true, //デバッグ用メッセージ出力
-  listen: 8080 //受付ポート/UNIXドメインソケット
-  //listen:'dist/sock/app.sock'
+  //listen: 8080 //受付ポート/UNIXドメインソケット
+  listen:'dist/sock/app.sock'
 });
