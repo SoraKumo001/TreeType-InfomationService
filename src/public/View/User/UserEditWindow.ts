@@ -11,8 +11,8 @@ const LOGIN_PASS_SVG = require("../images/login_pass.svg");
  * @extends {JWF.FrameWindow}
  */
 export class UserEditWindow extends JWF.FrameWindow {
-  textUserID?: JWF.TextBox;
-  textUserPass?: JWF.TextBox;
+  private textUserID?: JWF.TextBox;
+  private textUserPass?: JWF.TextBox;
   public constructor(manager: AppManager, no?: number, id?: string, name?: string, pass?: string, local?: boolean) {
     super();
 

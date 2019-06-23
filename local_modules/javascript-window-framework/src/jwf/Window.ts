@@ -137,7 +137,9 @@ export interface WINDOW_PARAMS {
   overlap?: boolean;
   visible?: boolean;
 }
-
+export interface WindowRemover{
+  remove:()=>void;
+}
 /**
  *ウインドウ基本クラス
  *
@@ -145,6 +147,7 @@ export interface WINDOW_PARAMS {
  * @class Window
  */
 export class Window<T extends WINDOW_EVENT_MAP = WINDOW_EVENT_MAP> {
+  private removers:WindowRemover[] = [];
   private listeners: {
     [key: string]: unknown[];
   } = {};
@@ -457,6 +460,15 @@ export class Window<T extends WINDOW_EVENT_MAP = WINDOW_EVENT_MAP> {
       } catch (e) {
         //
       }
+    }
+  }
+  public addRemover(...remover:WindowRemover[]):void{
+    if(!remover)
+      return;
+    const removers = this.removers;
+    for(const r of remover){
+      if(removers.indexOf(r) === -1)
+        removers.push(r);
     }
   }
   /**
@@ -1237,6 +1249,11 @@ export class Window<T extends WINDOW_EVENT_MAP = WINDOW_EVENT_MAP> {
       }
       if (this.parentNode) this.parentNode.removeChild(this);
       this.removeEventListener("animationend", animationEnd);
+      //終了処理のコールバック
+      const remoers = that.removers;
+      for(const remover of remoers){
+        remover.remove();
+      }
       that.callEvent("closed");
     }
     const animation = this.JData.animationEnable
