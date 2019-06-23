@@ -13,7 +13,7 @@ const LOGIN_PASS_SVG = require("../images/login_pass.svg");
  * @extends {JWF.FrameWindow}
  */
 export class LoginWindow extends JWF.FrameWindow {
-  constructor(
+  public constructor(
     manager: AppManager,
     userId?: string,
     userPass?: string,

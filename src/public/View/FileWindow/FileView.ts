@@ -70,7 +70,6 @@ export class FileView extends JWF.Window {
           this.callEvent("enterFile", param);
           if (param.enter) return;
         }
-
       }
 
       this.previewFile();
@@ -139,30 +138,32 @@ export class FileView extends JWF.Window {
     button.addEventListener("buttonClick", () => {
       this.previewFile();
     });
-    fileModule.addEventListener("delete_file", fileId => {
-      const values = this.fileList.getItemValues() as FileInfo[];
-      let flag = false;
-      for (const file of values) {
-        if (file.id === fileId) {
-          flag = true;
-        }
-      }
-      if (flag) this.loadFiles();
-    });
 
-    fileModule.addEventListener("upload_file", parentId => {
-      if (this.parentId === parentId) this.loadFiles();
-    });
-    fileModule.addEventListener("update_file", fileId => {
-      const values = this.fileList.getItemValues() as FileInfo[];
-      let flag = false;
-      for (const file of values) {
-        if (file.id === fileId) {
-          flag = true;
+    this.addRemover(
+      fileModule.addEventListener("delete_file", fileId => {
+        const values = this.fileList.getItemValues() as FileInfo[];
+        let flag = false;
+        for (const file of values) {
+          if (file.id === fileId) {
+            flag = true;
+          }
         }
-      }
-      if (flag) this.loadFiles();
-    });
+        if (flag) this.loadFiles();
+      }),
+      fileModule.addEventListener("upload_file", parentId => {
+        if (this.parentId === parentId) this.loadFiles();
+      }),
+      fileModule.addEventListener("update_file", fileId => {
+        const values = this.fileList.getItemValues() as FileInfo[];
+        let flag = false;
+        for (const file of values) {
+          if (file.id === fileId) {
+            flag = true;
+          }
+        }
+        if (flag) this.loadFiles();
+      })
+    );
   }
   public previewFile() {
     const files = this.fileList.getSelectValues() as FileInfo[];

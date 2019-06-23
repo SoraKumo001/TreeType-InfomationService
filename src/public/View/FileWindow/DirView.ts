@@ -51,8 +51,7 @@ export class DirView extends JWF.Window {
         ]);
         this.addFrameChild(messageBox);
         messageBox.addEventListener("buttonClick", e => {
-          if (e)
-            this.fileModule.deleteFile(dirId);
+          if (e) this.fileModule.deleteFile(dirId);
         });
         messageBox.setPos();
       }
@@ -72,30 +71,30 @@ export class DirView extends JWF.Window {
         dirEdit.setPos();
       }
     });
-    fileModule.addEventListener("delete_file", dirId => {
-      //削除対象が選択中かどうか
-      const selectId = this.dirTree.getSelectItemValue();
-      if (dirId === selectId) {
-        let id = 0;
-        const item = this.dirTree.findItemFromValue(dirId);
-        if (item) {
-          const parent = item.getParentItem();
-          if (parent) {
-            id = parent.getItemValue() as number;
+    this.addRemover(
+      fileModule.addEventListener("delete_file", dirId => {
+        //削除対象が選択中かどうか
+        const selectId = this.dirTree.getSelectItemValue();
+        if (dirId === selectId) {
+          let id = 0;
+          const item = this.dirTree.findItemFromValue(dirId);
+          if (item) {
+            const parent = item.getParentItem();
+            if (parent) {
+              id = parent.getItemValue() as number;
+            }
           }
-        }
-        //親ディレクトリを選択
-        this.loadDirs(id);
-      }
-      else
+          //親ディレクトリを選択
+          this.loadDirs(id);
+        } else this.loadDirs();
+      }),
+      fileModule.addEventListener("update_dir", parentId => {
+        this.loadDirs(parentId);
+      }),
+      fileModule.addEventListener("update_file", () => {
         this.loadDirs();
-    });
-    fileModule.addEventListener("update_dir", (parentId) => {
-      this.loadDirs(parentId);
-    });
-    fileModule.addEventListener("update_file", () => {
-      this.loadDirs();
-    });
+      })
+    );
     //初回ロード
     this.loadDirs();
   }
@@ -112,10 +111,8 @@ export class DirView extends JWF.Window {
       this.setTreeData(item, dir);
     }
     dirTree.setTreeStat(treeStat);
-    if (selectId)
-      dirTree.selectItemFromValue(selectId);
-    else
-      dirTree.getRootItem().selectItem();
+    if (selectId) dirTree.selectItemFromValue(selectId);
+    else dirTree.getRootItem().selectItem();
   }
   private setTreeData(item: JWF.TreeItem, dir: FileInfo) {
     item.setItemText(dir.name);
