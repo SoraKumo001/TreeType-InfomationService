@@ -316,7 +316,7 @@ export class InfoContentsView extends JWF.Window {
         window.clearInterval(this.timerHandle);
         this.timerHandle = undefined;
         this.scrollFlag = false;
-      } else if (Math.abs(p) < 1) {
+      } else if (Math.abs(p) < 30) {
         node.scrollTop = pos;
       } else node.scrollTop += p / 5;
     }, 10);

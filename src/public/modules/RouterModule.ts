@@ -18,7 +18,7 @@ export class RouterModule extends AppModule<CustomMap> {
       false
     );
   }
-  public setLocationParams(params: { [key: string]: string|number }) {
+  public setLocationParams(params: { [key: string]: string|number },history?:boolean) {
     const p = Object.assign(this.getLocationParams(), params);
     let search = "";
     for (let key of Object.keys(p)) {
@@ -26,7 +26,10 @@ export class RouterModule extends AppModule<CustomMap> {
       if (p[key] !== null) search = `${encodeURI(key)}=${encodeURI(p[key])}`;
     }
     if (this.lastParams !== search) {
-      window.history.pushState(null, "", "?" + search);
+      if(history === undefined || history)
+        window.history.pushState(null, "", "?" + search);
+      else
+        window.history.replaceState(null, "", "?" + search);
       this.lastParams = search;
     }
   }

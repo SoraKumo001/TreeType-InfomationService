@@ -57,70 +57,97 @@ export class TreeItem {
     let row1 = document.createElement("div");
     row1.dataset.kind = "TreeRow";
     hNode.appendChild(row1);
-    row1.addEventListener("click", (): void => {
-      this.selectItem(false, true);
-    });
-    row1.addEventListener("dblclick", (): void => {
-      const treeView = this.getTreeView();
-      if (treeView)
-        treeView.callEvent("itemDblClick", { item: this, user: true });
-    });
-    row1.addEventListener("dragstart", (e): void => {
-      const treeView = this.getTreeView();
-      if (treeView) {
-        if (e.dataTransfer) {
-          e.dataTransfer.setData(
-            "text/plain",
-            JSON.stringify({ itemValue: this.getItemValue() })
-          );
-        }
-        treeView.callEvent("itemDragStart", { item: this, event: e });
+    row1.addEventListener(
+      "click",
+      (): void => {
+        this.selectItem(false, true);
       }
-    });
-    row1.addEventListener("dragleave", (): void => {
-      row1.dataset.drag = "";
-    });
-    row1.addEventListener("dragenter", (e): void => {
-      row1.dataset.drag = "over";
-      e.preventDefault();
-    });
-    row1.addEventListener("mouseover", (e): void => {
-      const treeView = this.getTreeView();
-      if (treeView) treeView.callEvent("itemOver", { event: e, item: this });
-    });
-    row1.addEventListener("dragover", (e): void => {
-      e.preventDefault();
-    });
-    row1.addEventListener("drop", (e): void => {
-      const treeView = this.getTreeView();
-      if (treeView) {
-        let value: unknown = undefined;
-        if (e.dataTransfer) {
-          try {
-            const v = JSON.parse(e.dataTransfer.getData("text/plain"));
-            if (v && v.itemValue) value = v.itemValue;
-          } catch (e) {
-            //
+    );
+    row1.addEventListener(
+      "dblclick",
+      (): void => {
+        const treeView = this.getTreeView();
+        if (treeView)
+          treeView.callEvent("itemDblClick", { item: this, user: true });
+      }
+    );
+    row1.addEventListener(
+      "dragstart",
+      (e): void => {
+        const treeView = this.getTreeView();
+        if (treeView) {
+          if (e.dataTransfer) {
+            e.dataTransfer.setData(
+              "text/plain",
+              JSON.stringify({ itemValue: this.getItemValue() })
+            );
           }
+          treeView.callEvent("itemDragStart", { item: this, event: e });
         }
-
-        treeView.callEvent("itemDrop", {
-          event: e,
-          item: this,
-          srcValue: value
-        });
       }
-      row1.dataset.drag = "";
-      e.preventDefault();
-    });
+    );
+    row1.addEventListener(
+      "dragleave",
+      (): void => {
+        row1.dataset.drag = "";
+      }
+    );
+    row1.addEventListener(
+      "dragenter",
+      (e): void => {
+        row1.dataset.drag = "over";
+        e.preventDefault();
+      }
+    );
+    row1.addEventListener(
+      "mouseover",
+      (e): void => {
+        const treeView = this.getTreeView();
+        if (treeView) treeView.callEvent("itemOver", { event: e, item: this });
+      }
+    );
+    row1.addEventListener(
+      "dragover",
+      (e): void => {
+        e.preventDefault();
+      }
+    );
+    row1.addEventListener(
+      "drop",
+      (e): void => {
+        const treeView = this.getTreeView();
+        if (treeView) {
+          let value: unknown = undefined;
+          if (e.dataTransfer) {
+            try {
+              const v = JSON.parse(e.dataTransfer.getData("text/plain"));
+              if (v && v.itemValue) value = v.itemValue;
+            } catch (e) {
+              //
+            }
+          }
+
+          treeView.callEvent("itemDrop", {
+            event: e,
+            item: this,
+            srcValue: value
+          });
+        }
+        row1.dataset.drag = "";
+        e.preventDefault();
+      }
+    );
     let icon = document.createElement("div");
     icon.dataset.kind = "TreeIcon";
     row1.appendChild(icon);
-    icon.addEventListener("click", (e): void => {
-      this.openItem(!this.opened, true);
-      e.preventDefault();
-      e.stopPropagation();
-    });
+    icon.addEventListener(
+      "click",
+      (e): void => {
+        this.openItem(!this.opened, true);
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    );
 
     let body = document.createElement("div");
     body.dataset.kind = "TreeBody";
@@ -508,16 +535,15 @@ export class TreeView<
         parent.openItem(true, true);
       }
       item.openItem(true, true);
-
-      if (scroll) {
-        this.getClient().scrollTo(
-          0,
-          item.getNode().offsetTop - this.getClientHeight() / 2
-        );
-        item.getNode().addEventListener("animationend", animationEnd);
-      }
     }
-    this.callEvent("itemSelect", { item, user: user ? true : false });
+    if (scroll) {
+      this.getClient().scrollTo(
+        0,
+        item.getNode().offsetTop - this.getClientHeight() / 2
+      );
+      item.getNode().addEventListener("animationend", animationEnd);
+    }
+    this.callEvent("itemSelect", { item, user: !!user  });
   }
   /**
    * 設定されている値を条件にアイテムを選択
@@ -525,9 +551,13 @@ export class TreeView<
    * @param {*} value
    * @memberof TreeView
    */
-  public selectItemFromValue(value: unknown): void {
+  public selectItemFromValue(
+    value: unknown,
+    scroll?: boolean,
+    user?: boolean
+  ): void {
     let item = this.mRootItem.findItemFromValue(value);
-    if (item) item.selectItem();
+    if (item) item.selectItem(scroll, user);
   }
   /**
    *選択されているアイテムを返す
