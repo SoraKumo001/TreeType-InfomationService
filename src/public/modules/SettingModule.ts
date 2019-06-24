@@ -26,9 +26,12 @@ export class SettingModule extends AppModule {
     let settings = this.settings;
     let data:SettingData|undefined;
     for(const key of names){
-      data = settings.find((data)=>{
-        return data.name === key
-      });
+      const count = settings.length;
+      for(let i = 0;i<count;i++){
+        if(settings[i].name === key){
+          data = settings[i];
+        }
+      }
       if(!data){
         data = {name:key,view:null,child:[]};
         settings.push(data);
