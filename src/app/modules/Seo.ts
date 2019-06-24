@@ -83,6 +83,7 @@ export class SeoModule extends amf.Module {
     this.createMeta(document, "og:type", null, id===1?"website":"article");
     this.createMeta(document, "og:url", null, normalUrl);
     this.createMeta(document, "og:title", null, title);
+    this.createMeta(document, "fb:app_id", null, "562797474252030");
     if (basicData.title) this.createMeta(document, "og:site_name", null, basicData.title);
 
     if (basicData.logo)
