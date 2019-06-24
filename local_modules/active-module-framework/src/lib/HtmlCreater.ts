@@ -13,6 +13,7 @@ interface FileInfo {
 }
 
 export class HtmlCreater {
+  private status:number = 200;
   private jsdom?: JSDOM;
   private links: string[] = [];
   private baseUrl?: string;
@@ -62,7 +63,7 @@ export class HtmlCreater {
       }
     }
 
-    res.writeHead(200, {
+    res.writeHead(this.status, {
       "Content-Type": "text/html; charset=UTF-8",
       link: this.links
     });
@@ -70,6 +71,9 @@ export class HtmlCreater {
       res.end(this.jsdom.window.document.documentElement.outerHTML);
 
     return true;
+  }
+  public setStatus(status:number){
+    this.status = status;
   }
 
   public async openTemplate(indexPath: string): Promise<boolean> {

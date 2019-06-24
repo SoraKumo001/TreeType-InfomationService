@@ -25,7 +25,12 @@ export class SeoModule extends amf.Module {
     let title = "";
     //パンくずリスト作成
     let breads = await contentsModule.getBreadcrumb(id);
-    if (!breads) return;
+    if (!breads || breads.length===0) {
+      //コンテンツが無かったらエラーコードを設定
+      creater.setStatus(404);
+      return;
+    }
+
 
     let srcUrl;
     if (basicData && basicData["url"]) srcUrl = basicData["url"];
@@ -58,6 +63,7 @@ export class SeoModule extends amf.Module {
     breadcrumbList.textContent = JSON.stringify(breadcrumbValue);
     document.head.appendChild(breadcrumbList);
 
+
     //タイトルの設定
     document.title = title;
 
@@ -77,7 +83,7 @@ export class SeoModule extends amf.Module {
     this.createMeta(document, "og:type", null, id===1?"website":"article");
     this.createMeta(document, "og:url", null, normalUrl);
     this.createMeta(document, "og:title", null, title);
-    if (basicData.title) this.createMeta(document, "og:site_name", null, title);
+    if (basicData.title) this.createMeta(document, "og:site_name", null, basicData.title);
 
     if (basicData.logo)
       this.createMeta(
@@ -86,6 +92,7 @@ export class SeoModule extends amf.Module {
         null,
         (srcUrl += "/?cmd=download&id=" + basicData.logo)
       );
+
 
   }
 
