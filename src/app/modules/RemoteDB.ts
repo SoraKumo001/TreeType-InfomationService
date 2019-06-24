@@ -79,6 +79,9 @@ export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
     const user = localDB.getItem("REMOTEDB_USER", "");
     const password = localDB.getItem("REMOTEDB_PASSWORD", "");
 
+    if(!user)
+      return false;
+
     const db = this.db;
     if (
       !(await db.open({
