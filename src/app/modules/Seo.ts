@@ -88,7 +88,7 @@ export class SeoModule extends amf.Module {
     if (basicData.logo)
       this.createMeta(
         document,
-        "og:url",
+        "og:image",
         null,
         (srcUrl += "/?cmd=download&id=" + basicData.logo)
       );
