@@ -4,9 +4,4 @@ node_modules
 /dist/db/*.db
 package-lock.json
 *.tsbuildinfo
-*.d.ts
-*.js
-*.map
-!webpack.config.js
-!/src/public/@types/*.d.ts
 /temp/
