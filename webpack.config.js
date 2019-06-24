@@ -16,7 +16,7 @@ module.exports = {
       use: ['ts-loader']
     }, {
       test: /\.js$/,
-      use: ["source-map-loader"],
+      use: ['babel-loader', 'source-map-loader'],
       enforce: "pre"
     }, {
       test: /\.(scss|css)$/,
