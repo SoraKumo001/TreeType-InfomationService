@@ -1,9 +1,10 @@
 const path = require('path');
 
 module.exports = {
-  //mode: 'production',
-  mode: 'development',
+  mode: 'production',
+  //mode: 'development',
   entry: [
+    '@babel/polyfill',
     path.resolve(__dirname, 'src/public/index.ts')
   ],
   output: {
@@ -16,7 +17,7 @@ module.exports = {
       use: ['ts-loader']
     }, {
       test: /\.js$/,
-      use: ["source-map-loader"],
+      use: ['source-map-loader'],
       enforce: "pre"
     }, {
       test: /\.(scss|css)$/,
