@@ -67,9 +67,10 @@ export class HtmlCreater {
       "Content-Type": "text/html; charset=UTF-8",
       link: this.links
     });
-    if (this.jsdom)
+    if (this.jsdom){
+      res.write("<!DOCTYPE html>\n");
       res.end(this.jsdom.window.document.documentElement.outerHTML);
-
+    }
     return true;
   }
   public setStatus(status:number){

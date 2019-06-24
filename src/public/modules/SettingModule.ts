@@ -24,12 +24,14 @@ export class SettingModule extends AppModule {
   public addSetting(name:string,view?:typeof SettingView){
     const names = name.split('/');
     let settings = this.settings;
-    let data:SettingData|undefined;
+    let data:SettingData|null = null;
     for(const key of names){
       const count = settings.length;
+      data = null;
       for(let i = 0;i<count;i++){
         if(settings[i].name === key){
           data = settings[i];
+          break;
         }
       }
       if(!data){
