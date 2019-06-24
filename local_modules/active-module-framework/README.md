@@ -45,7 +45,8 @@ npx tsc -b
 ```
 
 - Build-public(front-end)
-```
+
+```.sh
 npx webpack -b
 ```
 

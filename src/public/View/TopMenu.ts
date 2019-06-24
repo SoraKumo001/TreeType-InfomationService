@@ -18,7 +18,7 @@ export class TopMenu extends JWF.Window {
 
     const titleLogo = document.createElement("img");
     client.appendChild(titleLogo);
-    titleLogo.src = LogoImage;
+    //titleLogo.src = LogoImage;
 
     const titleNode = document.createElement("div");
     client.appendChild(titleNode);
@@ -32,30 +32,35 @@ export class TopMenu extends JWF.Window {
     const settingNode = document.createElement("div");
     optionNode.appendChild(settingNode);
     settingNode.textContent = "設定";
-    settingNode.addEventListener("click",()=>{
+    settingNode.addEventListener("click", () => {
       new SettingWindow(manager);
-    })
+    });
 
     const userNode = document.createElement("div");
     optionNode.appendChild(userNode);
-    userNode.addEventListener("click",()=>{
+    userNode.addEventListener("click", () => {
       new LoginWindow(manager);
-    })
+    });
 
     const userModule = manager.getModule(UserModule);
     userModule.addEventListener("loginUser", (info: UserInfo) => {
-        userNode.textContent = info?info.name:"GUEST";
+      userNode.textContent = info ? info.name : "GUEST";
     });
 
     const paramsModule = manager.getModule(ParamsModule);
-    paramsModule.getGlobalParam("BASIC_DATA").then((e)=>{
-      if(e){
-        const params = e as {logo:string,title:string};
-        if(params.logo)
-          titleLogo.src = "?cmd=download&id="+params.logo;
-        //if(params.title)
-        //  titleNode.innerText = params.title;
+    paramsModule.getGlobalParam("BASIC_DATA").then(e => {
+      if (e) {
+        const params = e as { logo: string; title: string };
+        if (params.logo) titleLogo.src = "?cmd=download&id=" + params.logo;
+        else titleLogo.src = LogoImage;
       }
-    })
+    });
+    paramsModule.addEventListener("updateGlobalParam", (name, value) => {
+      if (name === "BASIC_DATA") {
+        const params = value as { logo: string; title: string };
+        if (params.logo) titleLogo.src = "?cmd=download&id=" + params.logo;
+        else titleLogo.src = LogoImage;
+      }
+    });
   }
 }

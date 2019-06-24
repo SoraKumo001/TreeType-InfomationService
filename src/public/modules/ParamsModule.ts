@@ -1,20 +1,32 @@
-import { AppModule} from "../AppModule";
+import { AppModule, ModuleMap} from "../AppModule";
 
-export class ParamsModule extends AppModule {
+export interface CustomMap extends ModuleMap {
+  updateParam: [string, unknown]; //name,value
+  updateGlobalParam: [string, unknown]; //name,value
+}
+export class ParamsModule extends AppModule<CustomMap> {
   public getGlobalParam(name:string){
     const adapter = this.getAdapter();
     return adapter.exec("Params.getGlobalParam",name) as Promise<unknown|null>;
   }
-  public setGlobalParam(name:string,value:unknown){
+  public async setGlobalParam(name:string,value:unknown){
     const adapter = this.getAdapter();
-    return adapter.exec("Params.setGlobalParam",name,value) as Promise<boolean|null>;
+    if(await adapter.exec("Params.setGlobalParam",name,value)){
+      this.callEvent("updateGlobalParam",name,value);
+      return true;
+    }
+    return false;
   }
   public getParam(name:string){
     const adapter = this.getAdapter();
     return adapter.exec("Params.getParam",name) as Promise<unknown|null>;
   }
-  public setParam(name:string,value:unknown){
+  public async setParam(name:string,value:unknown){
     const adapter = this.getAdapter();
-    return adapter.exec("Params.setParam",name,value) as Promise<boolean|null>;
+    if(await adapter.exec("Params.setParam",name,value)){
+      this.callEvent("updateParam",name,value);
+       return true;
+    }
+    return false;
   }
 }
