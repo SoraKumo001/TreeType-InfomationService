@@ -7,8 +7,7 @@ import { InfoContentsView } from "./Contents/InfoContentsView";
 import { RouterModule } from "../modules/RouterModule";
 import { UserModule } from "../modules/UserModule";
 import { TreeItem } from "javascript-window-framework";
-
-
+import "analytics-gtag"
 
 export class MainView extends JWF.Window {
   private routerModule: RouterModule;
