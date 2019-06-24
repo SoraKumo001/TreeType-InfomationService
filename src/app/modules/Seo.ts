@@ -90,7 +90,7 @@ export class SeoModule extends amf.Module {
         document,
         "og:image",
         null,
-        (srcUrl += "/?cmd=download&id=" + basicData.logo)
+        (url + "/?cmd=download&id=" + basicData.logo)
       );
 
 
