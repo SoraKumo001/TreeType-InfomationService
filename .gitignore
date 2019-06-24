@@ -8,4 +8,5 @@ package-lock.json
 *.js
 *.map
 !webpack.config.js
+!/src/public/@types/*.d.ts
 /temp/
