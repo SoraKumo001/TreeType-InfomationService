@@ -18,6 +18,8 @@ export class Files extends amf.Module {
   public async onCreateModule(): Promise<boolean> {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
+    //ユーザモジュールの初期化を優先するために空呼び出し
+    await this.getModule(Users);
     if (remoteDB) {
       remoteDB.addEventListener("connect", async () => {
         if (!(await remoteDB.isTable("files"))) {
