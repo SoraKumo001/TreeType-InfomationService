@@ -50,12 +50,12 @@
         }
         [data-node-name="H1"] {
           font-size: 250%;
-          border-bottom: solid 2px orange;
+          border-bottom: solid 2px rgb(155, 155, 155);
           padding: 0em;
         }
         [data-node-name="H2"] {
           font-size: 180%;
-          border-bottom: solid 1px orange;
+          border-bottom: solid 1px rgb(155, 155, 155);
           padding: 0em;
           margin-top: 1em;
         }
@@ -71,7 +71,6 @@
         }
         .Body {
           padding-left: 1.2em;
-          border-left: dashed #ffffff;
         }
         .Panel {
           margin: 0.1em;
@@ -97,40 +96,47 @@
 
   [data-style="BreadContents"] {
     display: flex;
-    flex-wrap:wrap;
-    div{
+    flex-wrap: wrap;
+    div {
       white-space: nowrap;
-      border: solid cadetblue;
+      border: solid rgb(211, 219, 219) 1px;
       border-radius: 0.5em;
       cursor: pointer;
       background-color: rgba(0, 0, 0, 0.05);
       padding: 0.3em;
       margin: 0.2em;
-      &:hover{
+      &:hover {
         background-color: rgba(0, 0, 0, 0.1);
       }
     }
   }
   [data-style="SubContents"] {
-    display: inline-block;
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 0.5em;
-    margin: 2em;
-    padding: 1em;
-    table {
-      border-spacing: 0 0.1em;
-      border-collapse: collapse;
-      overflow: hidden;
-    }
-    tr {
-      cursor: pointer;
-      border-bottom: 1px solid;
-    }
-    tr:hover {
-      background-color: rgba(0, 0, 0, 0.1);
-    }
-    td {
-      padding: 0.5em;
+    margin-top:3em;
+    border-top: solid rgb(196, 196, 196);
+    > div {
+      display: inline-block;
+      background-color: rgba(0, 0, 0, 0.05);
+      border-radius: 0.5em;
+      margin: 1em;
+      padding: 1em;
+      table {
+        border-spacing: 0 0.1em;
+        border-collapse: collapse;
+        overflow: hidden;
+      }
+      tr:first-child {
+        font-size: 120%;
+      }
+      tr {
+        cursor: pointer;
+        border-bottom: 1px solid;
+      }
+      tr:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+      td {
+        padding: 0.5em;
+      }
     }
   }
 }

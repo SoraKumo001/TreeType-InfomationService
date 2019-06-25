@@ -80,7 +80,7 @@ export class Contents extends amf.Module {
         "select contents_parent as pid,contents_type as type from contents where contents_id=$1",
         id
       );
-      if (value === null) return 0;
+      if (!value) return 0;
       if (value["type"] === "PAGE") break;
       id = value["pid"] as number;
     }
@@ -350,16 +350,19 @@ export class Contents extends amf.Module {
     this.updatePriority(pid);
     return { pid: pid, id: cid };
   }
-  public async deleteContents(id: number): Promise<boolean | null> {
+  public async deleteContents(id: number,flag?:boolean): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
+    if(flag || flag===undefined)
+      await remoteDB.run("begin");
     const ids = (await remoteDB.all(
       "select contents_id from contents where contents_parent=$1",
       id
     )) as { contents_id: number }[] | null;
-    if (!ids) return null;
-    for (const cid of ids) await this.deleteContents(cid.contents_id);
-    if (id === 1) return true;
+    if (ids){
+    for (const cid of ids) await this.deleteContents(cid.contents_id,false);
+    }
+    //
     //関連ファイルの削除
     const files = await this.getSessionModule(Files);
     if (files) {
@@ -367,8 +370,12 @@ export class Contents extends amf.Module {
       const fileId = await files.getDirId(1, path);
       if (fileId) await files.deleteFile(fileId);
     }
+    if (id !== 1)
+      await remoteDB.run("delete from contents where contents_id=$1", id);
+    if(flag || flag===undefined)
+      await remoteDB.run("commit");
     //コンテンツの削除
-    return await remoteDB.run("delete from contents where contents_id=$1", id);
+    return true;
   }
   public getDirPath(id: number): string {
     return sprintf("/Contents/%04d/%02d", Math.floor(id / 100) * 100, id % 100);
@@ -377,15 +384,6 @@ export class Contents extends amf.Module {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
 
-    // const document = JSDOM.fragment(contents.value);
-    // const images = document.querySelectorAll("img");
-    // images.forEach((img)=>{
-    //   const result = img.src.match(/^data:(.*?);/;
-    //   if(result){
-    //     console.log();
-
-    //   }
-    // })
     return remoteDB.run(
       `update contents SET contents_stat=$1,contents_date=$2,contents_type=$3,contents_update=current_timestamp,
 			contents_title_type=$4,contents_title=$5,contents_value=$6 where contents_id=$7`,
@@ -657,7 +655,8 @@ export class Contents extends amf.Module {
   public async JS_deleteContents(id: number): Promise<boolean | null> {
     const users = await this.getSessionModule(Users);
     if (!users || !users.isAdmin()) return null;
-    return this.deleteContents(id);
+    const flag = await this.deleteContents(id);
+    return flag;
   }
 
   public async JS_updateContents(contents: MainContents) {
