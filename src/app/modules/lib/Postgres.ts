@@ -13,6 +13,9 @@ export default class Postgres {
     return this.client;
   }
   public async open(config?: pg.ClientConfig): Promise<boolean> {
+    //既存の接続を切断
+    await this.close();
+
     this.connectStat = false;
     if (config) this.config = config;
     else if (this.config) config = this.config;
@@ -52,7 +55,13 @@ export default class Postgres {
     return false;
   }
   public async close(): Promise<void> {
-    await this.client.end();
+    const client = this.client;
+    try{
+    if(client)
+      await client.end();
+    }catch(e){
+      //
+    }
     this.connectStat = false;
   }
   public async run(sql: string, ...params: unknown[]): Promise<boolean | null> {
