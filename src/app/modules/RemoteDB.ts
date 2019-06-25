@@ -79,6 +79,9 @@ export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
     const user = localDB.getItem("REMOTEDB_USER", "");
     const password = localDB.getItem("REMOTEDB_PASSWORD", "");
 
+    //オープン前のフラグを設定
+    this.first = true;
+    //ユーザ名が設定されていなければ戻る
     if(!user)
       return false;
 

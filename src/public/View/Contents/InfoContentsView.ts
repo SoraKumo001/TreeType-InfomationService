@@ -270,19 +270,27 @@ export class InfoContentsView extends JWF.Window {
   }
   public drawSubContents() {
     const contentsModule = this.contentsModule;
+    const tree = contentsModule.getTreeCache();
+    if (!tree) return;
+
+
 
     //サブコンテンツ領域の作成
     const subContents = document.createElement("div");
     subContents.dataset.style = "SubContents";
 
-    const tree = contentsModule.getTreeCache();
-    if (!tree) return;
+    const div = document.createElement("div");
+    subContents.appendChild(div);
+
     const contents = this.findContents(tree, this.pageId);
     if (contents) {
       const childs = contents.childs;
       if (childs) {
-        subContents.innerHTML = "";
         const table = document.createElement("table");
+        const row = table.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 2;
+        cell.innerText = "目次";
         let flag = false;
         for (const c of childs) {
           if (c.type !== "PAGE") continue;
@@ -310,7 +318,7 @@ export class InfoContentsView extends JWF.Window {
             contentsModule.selectContents(c.id);
           });
         }
-        subContents.appendChild(table);
+        div.appendChild(table);
         if (flag) this.contentsPage.appendChild(subContents);
       }
     }

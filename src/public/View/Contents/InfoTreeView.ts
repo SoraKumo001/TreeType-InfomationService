@@ -23,7 +23,7 @@ export class InfoTreeView extends JWF.TreeView {
     const optionNode = document.createElement("div");
     optionNode.className = "TreeOption";
     optionNode.innerText = "🔧";
-    optionNode.addEventListener("click", (e) => {
+    optionNode.addEventListener("click", e => {
       this.showEditMenu(this.overId);
       e.cancelBubble = true;
     });
@@ -48,16 +48,18 @@ export class InfoTreeView extends JWF.TreeView {
 
       e.event.preventDefault();
     });
-
+    contentsModule.addEventListener("getTree", treeContents => {
+      this.drawTree(treeContents);
+    });
     contentsModule.addEventListener("selectContents", id => {
       this.selectId = id;
-      this.selectItemFromValue(id,true);
+      this.selectItemFromValue(id, true);
     });
-    contentsModule.addEventListener("createContents", (pid, id) => {
-      this.loadSubTree(pid, id);
+    contentsModule.addEventListener("createContents", pid => {
+      this.loadTree(pid);
     });
-    contentsModule.addEventListener("moveContents", (fromId) => {
-      this.loadTree(fromId,true);
+    contentsModule.addEventListener("moveContents", fromId => {
+      this.loadTree(fromId, true);
     });
     contentsModule.addEventListener("deleteContents", id => {
       const item = this.findItemFromValue(id);
@@ -111,33 +113,28 @@ export class InfoTreeView extends JWF.TreeView {
       this.contentsModule.moveVector(id, 1);
     });
     contentsControle.addMenu("インポート", () => {
-      new ContentsImportWindow(this.manager,id);
+      new ContentsImportWindow(this.manager, id);
     });
   }
+  public drawTree(value: TreeContents) {
+    const id = value.id;
+    let item: TreeItem | null;
+    if (id === 1) item = this.getRootItem();
+    else item = this.findItemFromValue(id);
 
+    if (!item) return;
+    item.clearItem();
+    if (value) this.setTreeItem(item, value);
+    if (this.selectId) this.selectItemFromValue(this.selectId, true);
+  }
   public async loadTree(selectId?: number, reload?: boolean) {
     if (!reload && selectId && this.findItemFromValue(selectId)) {
       this.selectItemFromValue(selectId, true);
       return false;
     }
-
-    this.clearItem();
-    const value = await this.contentsModule.getTree();
-    if (value) this.setTreeItem(this.getRootItem(), value);
-    if (selectId) this.selectItemFromValue(selectId);
-    else if (this.selectId) this.selectItemFromValue(this.selectId);
+    if (selectId) this.selectId = selectId;
+    this.contentsModule.getTree();
     return true;
-  }
-  public async loadSubTree(parentId: number, selectId?: number) {
-    const item = this.findItemFromValue(parentId);
-    if (!item) return this.loadTree(selectId);
-
-    item.clearItem();
-
-    const value = await this.contentsModule.getTree(parentId);
-    if (value) this.setTreeItem(item, value);
-    if (selectId) this.selectItemFromValue(selectId);
-    else if (this.selectId) this.selectItemFromValue(this.selectId,true);
   }
   private setTreeItem(item: TreeItem, value: TreeContents) {
     const node = item.getNode();

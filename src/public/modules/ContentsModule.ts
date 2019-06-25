@@ -23,6 +23,7 @@ export interface MainContents {
   childs?: MainContents[];
 }
 export interface CustomMap extends ModuleMap {
+  getTree: [TreeContents];
   selectPage: [number]; //pid
   selectContents: [number, boolean | undefined]; //parameter
   createContents: [number, number]; //pid,id
@@ -34,7 +35,7 @@ export interface CustomMap extends ModuleMap {
 }
 
 export class ContentsModule extends AppModule<CustomMap> {
-  private treeContents?:TreeContents;
+  private treeContents?: TreeContents;
   public async createContents(pid: number, vector: number, type: string) {
     const adapter = this.getAdapter();
     const result = (await adapter.exec(
@@ -48,19 +49,20 @@ export class ContentsModule extends AppModule<CustomMap> {
     }
     return result;
   }
-  public getTreeCache(){
+  public getTreeCache() {
     return this.treeContents;
   }
   public async getTree(id?: number) {
     const adapter = this.getAdapter();
-    const treeContents =  await adapter.exec(
+    const treeContents = (await adapter.exec(
       "Contents.getTree",
       id ? id : 1
-    ) as TreeContents|null;
-    if(treeContents){
-      if(id===undefined || id === 1)
-        this.treeContents = treeContents;
+    )) as TreeContents | null;
+    if (treeContents) {
+      if (id === undefined || id === 1) this.treeContents = treeContents;
+      this.callEvent("getTree", treeContents);
     }
+
     return treeContents;
   }
   public async getPage(id: number) {
@@ -87,7 +89,7 @@ export class ContentsModule extends AppModule<CustomMap> {
   }
   public async deleteContents(id: number) {
     const adapter = this.getAdapter();
-    const flag = adapter.exec("Contents.deleteContents", id) as Promise<
+    const flag = (await adapter.exec("Contents.deleteContents", id)) as Promise<
       boolean | null
     >;
     if (flag) this.callEvent("deleteContents", id);
@@ -120,11 +122,12 @@ export class ContentsModule extends AppModule<CustomMap> {
   public async import(id: number, mode: number, src: string) {
     const adapter = this.getAdapter();
     const flag = (await adapter.upload(
-      new Blob([src], {type: 'text/plain'}),
+      new Blob([src], { type: "text/plain" }),
       "Contents.import",
       id,
       mode
     )) as boolean;
     if (flag) this.callEvent("importContents", id);
+    return flag;
   }
 }

@@ -2,9 +2,12 @@
 [data-style="InfoTreeView"] {
   background-color: rgba(255, 255, 255, 0.8);
   [data-kind="TreeItem"] {
+    &[data-content-type="PAGE"] {
+      font-weight: bold;
+    }
     &[data-content-type="TEXT"] {
       padding-left: 0.8em;
-      color: #008127;
+      color: #005783;
     }
     // &[data-content-stat="true"] > [data-kind=TreeRow] > [data-kind=TreeBody] {
     //   text-decoration: line-through blue;

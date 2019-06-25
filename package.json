@@ -33,7 +33,6 @@
     "@typescript-eslint/parser": "^1.11.0",
     "active-module-framework": "file:local_modules/active-module-framework",
     "analytics-gtag": "^1.0.2",
-    "babel-loader": "^8.0.6",
     "css-loader": "^3.0.0",
     "dts-bundle": "^0.7.3",
     "es6-promise": "^4.2.8",
