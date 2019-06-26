@@ -1,6 +1,6 @@
 import * as JWF from "javascript-window-framework";
-import { SettingView } from "../../modules/SettingModule";
-import { AppManager } from "../../AppManager";
+import { SettingView, SettingModule } from "../../modules/SettingModule";
+import { AppManager, appManager } from "../../AppManager";
 import { AppModule } from "../../AppModule";
 import "../scss/DatabaseView.scss";
 interface DatabaseInfo {
@@ -32,8 +32,8 @@ export class DatabaseModule extends AppModule {
 }
 
 export class DatabaseView extends SettingView {
-  statusView: JWF.Window;
-  databaseModule: DatabaseModule;
+  private statusView: JWF.Window;
+  private databaseModule: DatabaseModule;
   public constructor(manager: AppManager) {
     super(manager);
 
@@ -93,7 +93,7 @@ export class DatabaseView extends SettingView {
 
     this.loadStatus();
   }
-  loadStatus() {
+  public loadStatus() {
     const client = this.statusView.getClient();
     this.databaseModule.getInfo().then((info: DatabaseInfo) => {
       if (client.childNodes.length) client.removeChild(client.childNodes[0]);
@@ -127,3 +127,6 @@ export class DatabaseView extends SettingView {
     });
   }
 }
+
+const settingModule = appManager.getModule(SettingModule);
+settingModule.addSetting("システム/データベース設定", DatabaseView);

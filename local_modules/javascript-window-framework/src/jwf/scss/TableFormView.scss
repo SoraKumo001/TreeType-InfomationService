@@ -43,6 +43,7 @@
             &:first-child {
               white-space: nowrap;
             }
+            textarea,input{min-width:95%;}
           }
         }
       }
