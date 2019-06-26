@@ -271,7 +271,7 @@ export class Manager {
           }
         } else {
           const path =
-            (req.header("location_path") || `${req.protocol}://${req.hostname}`) +
+            (req.header("location_path") || `https://${req.hostname}`) +
             params.remotePath;
           const htmlNode = new HtmlCreater();
           if (
