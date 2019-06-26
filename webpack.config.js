@@ -1,12 +1,12 @@
 const path = require('path');
-
+var glob = require("glob");
 module.exports = {
-  //mode: 'production',
-  mode: 'development',
+  mode: 'production',
+ // mode: 'development',
   entry: [
     '@babel/polyfill',
-    path.resolve(__dirname, 'src/public/index.ts')
-  ],
+    path.resolve(__dirname, 'src/public/index.ts'),
+  ].concat(glob.sync("./src/public/**/*.auto.ts")),
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist/public/js')

@@ -32,6 +32,7 @@ export interface CustomMap extends ModuleMap {
   moveVector: [number, number]; //id,vector
   moveContents: [number, number]; //fromId,toId
   importContents: [number];
+  drawContents: [HTMLElement, number];
 }
 
 export class ContentsModule extends AppModule<CustomMap> {
@@ -48,6 +49,16 @@ export class ContentsModule extends AppModule<CustomMap> {
       this.callEvent("createContents", result.pid, result.id);
     }
     return result;
+  }
+  public findTreeContents(tree: TreeContents, id: number): TreeContents | null {
+    if (tree.id === id) return tree;
+    if (tree.childs) {
+      for (const child of tree.childs) {
+        const result = this.findTreeContents(child, id);
+        if (result) return result;
+      }
+    }
+    return null;
   }
   public getTreeCache() {
     return this.treeContents;

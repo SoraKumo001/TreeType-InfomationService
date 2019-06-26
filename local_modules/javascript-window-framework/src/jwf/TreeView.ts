@@ -524,8 +524,10 @@ export class TreeView<
     const that = this;
     function animationEnd(this: HTMLElement): void {
       this.removeEventListener("animationend", animationEnd);
-      that.getClient().scrollTop =
-        item.getNode().offsetTop - that.getClientHeight() / 2;
+      const client = that.getClient();
+      const scrollTop = item.getNode().offsetTop - that.getClientHeight() / 2;
+      if (client.scrollTo) client.scrollTo({top:scrollTop,behavior: "smooth"});
+      else client.scrollTop = scrollTop;
     }
 
     if (this.mSelectItem !== item) {
@@ -540,8 +542,11 @@ export class TreeView<
       item.openItem(true, user);
     }
     if (scroll) {
-      this.getClient().scrollTop =
-        item.getNode().offsetTop - this.getClientHeight() / 2;
+      const client = that.getClient();
+      client.scrollIntoView({behavior: "smooth"});
+      const scrollTop = item.getNode().offsetTop - that.getClientHeight() / 2;
+      if (client.scrollTo) client.scrollTo({top:scrollTop,behavior: "smooth"});
+      else client.scrollTop = scrollTop;
       item.getNode().addEventListener("animationend", animationEnd);
     }
     this.callEvent("itemSelect", { item, user: !!user });

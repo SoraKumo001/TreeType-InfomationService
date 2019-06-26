@@ -12,7 +12,7 @@
     "watch-amf": "npx tsc -b -w local_modules/active-module-framework/src/",
     "build-app": "npx tsc -b ",
     "watch-app": "npx tsc -b -w ",
-    "start": "npm dist/app/index.js"
+    "start": "node dist/app/index.js"
   },
   "keywords": [],
   "author": "SoraKumo",
