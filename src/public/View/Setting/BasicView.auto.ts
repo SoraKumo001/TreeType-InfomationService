@@ -1,11 +1,12 @@
 import * as JWF from "javascript-window-framework";
 
-import { SettingView } from "../../modules/SettingModule";
-import { AppManager } from "../../AppManager";
+import { SettingView, SettingModule } from "../../modules/SettingModule";
+import { AppManager, appManager } from "../../AppManager";
 import { ParamsModule } from "../../modules/ParamsModule";
 import { FileWindow } from "../FileWindow/FileWindow";
 import { MessageBox } from "javascript-window-framework";
 const LogoImage = require("../images/sorakumo_logo.svg");
+
 export class BasicView extends SettingView {
   private paramsModule: ParamsModule;
   private form: JWF.TableFormView;
@@ -54,12 +55,12 @@ export class BasicView extends SettingView {
                   img.src = "?cmd=download&id=" + param.fileInfo.id;
                   img.value = param.fileInfo.id.toString();
                 });
-              }else{
+              } else {
                 const img = form.getItem("logo") as HTMLImageElement & {
-                    value: string;
-                  };
-                  img.src = LogoImage
-                  img.value = "";
+                  value: string;
+                };
+                img.src = LogoImage;
+                img.value = "";
               }
             });
           }
@@ -101,3 +102,6 @@ export class BasicView extends SettingView {
     }
   }
 }
+
+const settingModule = appManager.getModule(SettingModule);
+settingModule.addSetting("システム/基本設定", BasicView);

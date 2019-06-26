@@ -1,6 +1,6 @@
 import * as JWF from "javascript-window-framework";
-import { SettingView } from "../../modules/SettingModule";
-import { AppManager } from "../../AppManager";
+import { SettingView, SettingModule } from "../../modules/SettingModule";
+import { AppManager, appManager } from "../../AppManager";
 import { UserModule } from "../../modules/UserModule";
 import { UserEditWindow } from "../User/UserEditWindow";
 
@@ -20,10 +20,10 @@ export interface UserInfo {
  * @extends {JWF.Window}
  */
 export class UserListView extends SettingView {
-  listView: JWF.ListView;
-  userModule: UserModule;
-  local: boolean;
-  constructor(manager: AppManager) {
+  private listView: JWF.ListView;
+  private userModule: UserModule;
+  private local: boolean;
+  public constructor(manager: AppManager) {
     super(manager);
     this.local = true;
     this.userModule = manager.getModule(UserModule);
@@ -71,9 +71,9 @@ export class UserListView extends SettingView {
         const messageBox = new JWF.MessageBox(
           "確認",
           `[${userInfo.name}]を削除しますか？`,
-          [[ "OK", true],["Cancel", false ]]
+          [["OK", true], ["Cancel", false]]
         );
-        messageBox.addEventListener("buttonClick", (value) => {
+        messageBox.addEventListener("buttonClick", value => {
           if (value) {
             this.userModule.delUser(userInfo.no, this.local).then(result => {
               if (!result) {
@@ -109,7 +109,7 @@ export class UserListView extends SettingView {
     this.getUsers();
     this.active();
   }
-  async getUsers() {
+  public async getUsers() {
     const listView = this.listView;
     listView.clearItem();
     const users = await this.userModule.getUsers(this.local);
@@ -122,3 +122,6 @@ export class UserListView extends SettingView {
     return users;
   }
 }
+
+const settingModule = appManager.getModule(SettingModule);
+settingModule.addSetting("システム/ユーザ設定", UserListView);

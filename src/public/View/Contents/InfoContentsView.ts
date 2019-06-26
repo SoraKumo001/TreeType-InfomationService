@@ -59,6 +59,7 @@ export class InfoContentsView extends JWF.Window {
 
     //ページ表示用ノードの作成
     const contentsPage = document.createElement("div");
+    contentsPage.dataset.type = "ContentsPage";
     this.getClient().appendChild(contentsPage);
     this.contentsPage = contentsPage;
 
@@ -236,93 +237,8 @@ export class InfoContentsView extends JWF.Window {
     });
   }
 
-  private findContents(tree: TreeContents, id: number): TreeContents | null {
-    if (tree.id === id) return tree;
-    if (tree.childs) {
-      for (const child of tree.childs) {
-        const result = this.findContents(child, id);
-        if (result) return result;
-      }
-    }
-    return null;
-  }
-  public drawBreads() {
-    const contentsModule = this.contentsModule;
-    const tree = contentsModule.getTreeCache();
-    if (!tree) return;
-
-    //パンくず領域の作成
-    const breadContents = document.createElement("div");
-    breadContents.dataset.style = "BreadContents";
-
-    let parent: TreeContents | null = this.findContents(tree, this.pageId);
-    if (!parent) return;
-    while ((parent = this.findContents(tree, parent.pid))) {
-      const div = document.createElement("div");
-      const id = parent.id;
-      div.innerText = parent.title;
-      div.addEventListener("click", () => {
-        contentsModule.selectContents(id);
-      });
-      breadContents.insertBefore(div, breadContents.firstChild);
-    }
-    this.contentsPage.insertBefore(breadContents, this.contentsPage.firstChild);
-  }
-  public drawSubContents() {
-    const contentsModule = this.contentsModule;
-    const tree = contentsModule.getTreeCache();
-    if (!tree) return;
 
 
-
-    //サブコンテンツ領域の作成
-    const subContents = document.createElement("div");
-    subContents.dataset.style = "SubContents";
-
-    const div = document.createElement("div");
-    subContents.appendChild(div);
-
-    const contents = this.findContents(tree, this.pageId);
-    if (contents) {
-      const childs = contents.childs;
-      if (childs) {
-        const table = document.createElement("table");
-        const row = table.insertRow();
-        const cell = row.insertCell();
-        cell.colSpan = 2;
-        cell.innerText = "目次";
-        let flag = false;
-        for (const c of childs) {
-          if (c.type !== "PAGE") continue;
-          flag = true;
-
-          const row = table.insertRow();
-          //let cell;
-          let cell: HTMLTableDataCellElement;
-
-          const date = new Date(c.update);
-          cell = row.insertCell();
-          cell.innerText = JWF.sprintf(
-            "%04d/%02d/%02d %02d:%02d",
-            date.getFullYear(),
-            date.getMonth(),
-            date.getDate(),
-            date.getHours(),
-            date.getMinutes()
-          );
-
-          cell = row.insertCell();
-          cell.innerText = c.title;
-
-          row.addEventListener("click", () => {
-            contentsModule.selectContents(c.id);
-          });
-        }
-        div.appendChild(table);
-        if (flag) this.contentsPage.appendChild(subContents);
-      }
-    }
-  }
   /**
    *
    *
@@ -350,8 +266,7 @@ export class InfoContentsView extends JWF.Window {
     contentsPage.appendChild(node);
     this.jumpContents(id);
 
-    this.drawBreads();
-    this.drawSubContents();
+    this.contentsModule.callEvent("drawContents",this.getClient(),page.id);
   }
   public moveVector(id: number, vector: number) {
     var node = this.contentsNode[id];
