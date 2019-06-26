@@ -1,8 +1,8 @@
 const path = require('path');
 var glob = require("glob");
 module.exports = {
-  //mode: 'production',
-  mode: 'development',
+  mode: 'production',
+ // mode: 'development',
   entry: [
     '@babel/polyfill',
     path.resolve(__dirname, 'src/public/index.ts'),

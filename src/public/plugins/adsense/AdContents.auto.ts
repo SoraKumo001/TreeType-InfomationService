@@ -23,18 +23,18 @@ loadAdParam();
 const contentsModule = appManager.getModule(ContentsModule);
 contentsModule.addEventListener("drawContents", (client, id) => {
   if (adSenseValue) {
-    let flag = false;
+   // let flag = false;
     const top = adSenseValue.top;
     if (top) {
       let v = client.querySelector("[data-adsense=top]") as HTMLDivElement;
       if (!v) {
         v = document.createElement("div");
-        v.style.maxWidth = "100%";
+        v.style.overflow = "hidden";
         v.style.minHeight = "2em";
         v.dataset.adsense = "top";
         v.innerHTML = top;
         client.insertBefore(v, client.firstChild);
-        flag = true;
+        (adsbygoogle = window.adsbygoogle || []).push({});
       }
     }
     const bottom = adSenseValue.bottom;
@@ -42,23 +42,24 @@ contentsModule.addEventListener("drawContents", (client, id) => {
       let v = client.querySelector("[data-adsense=bottom]") as HTMLDivElement;
       if (!v) {
         v = document.createElement("div");
-        v.style.maxWidth = "100%";
+        v.style.overflow = "hidden";
         v.dataset.adsense = "bottom";
         v.style.minHeight = "2em";
         v.innerHTML = bottom;
         client.appendChild(v);
-        flag = true;
+        (adsbygoogle = window.adsbygoogle || []).push({});
       }
     }
 
-    if (flag) {
-      setTimeout(function() {
-        try {
-          (adsbygoogle = window.adsbygoogle || []).push({});
-        } catch (e) {
-          //empty
-        }
-      }, 0);
-    }
+    // if (flag) {
+    //   setTimeout(function() {
+    //     try {
+    //       (adsbygoogle = window.adsbygoogle || []).push({});
+    //       (adsbygoogle = window.adsbygoogle || []).push({});
+    //     } catch (e) {
+    //       //empty
+    //     }
+    //   }, 0);
+    // }
   }
 });
