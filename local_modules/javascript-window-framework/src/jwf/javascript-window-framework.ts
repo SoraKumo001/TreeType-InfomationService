@@ -12,7 +12,7 @@ export * from "./MessageBox";
 export * from "./Panel";
 export * from "./SelectBox";
 export * from "./Splitter";
-export * from "./TableForm";
+export * from "./TableFormView";
 export * from "./TextBox";
 export * from "./TextArea";
 export * from "./TreeView";
