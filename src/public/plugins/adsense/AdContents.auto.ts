@@ -26,37 +26,39 @@ contentsModule.addEventListener("drawContents", (client, id) => {
     let flag = false;
     const top = adSenseValue.top;
     if (top) {
-      const v =
-        (client.querySelector("[data-adsense=top]") as HTMLDivElement) ||
-        document.createElement("div");
-      v.style.maxWidth = "100%";
-      v.style.minHeight = "2em";
-      v.dataset.adsense = "top";
-      v.innerHTML = top;
-      client.insertBefore(v, client.firstChild);
-      flag = true;
+      let v = client.querySelector("[data-adsense=top]") as HTMLDivElement;
+      if (!v) {
+        v = document.createElement("div");
+        v.style.maxWidth = "100%";
+        v.style.minHeight = "2em";
+        v.dataset.adsense = "top";
+        v.innerHTML = top;
+        client.insertBefore(v, client.firstChild);
+        flag = true;
+      }
     }
     const bottom = adSenseValue.bottom;
     if (bottom) {
-      const v =
-        (client.querySelector("[data-adsense=bottom]") as HTMLDivElement) ||
-        document.createElement("div");
-      v.style.maxWidth = "100%";
-      v.dataset.adsense = "bottom";
-      v.style.minHeight = "2em";
-      v.innerHTML = bottom;
-      client.appendChild(v);
-      flag = true;
+      let v = client.querySelector("[data-adsense=top]") as HTMLDivElement;
+      if (!v) {
+        v = document.createElement("div");
+        v.style.maxWidth = "100%";
+        v.dataset.adsense = "bottom";
+        v.style.minHeight = "2em";
+        v.innerHTML = bottom;
+        client.appendChild(v);
+        flag = true;
+      }
     }
 
     if (flag) {
-     // setTimeout(function() {
+      setTimeout(function() {
         try {
           (adsbygoogle = window.adsbygoogle || []).push({});
         } catch (e) {
           //empty
         }
-   //   }, 0);
+      }, 0);
     }
   }
 });
