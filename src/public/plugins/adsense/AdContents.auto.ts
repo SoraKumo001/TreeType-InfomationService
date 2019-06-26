@@ -39,7 +39,7 @@ contentsModule.addEventListener("drawContents", (client, id) => {
     }
     const bottom = adSenseValue.bottom;
     if (bottom) {
-      let v = client.querySelector("[data-adsense=top]") as HTMLDivElement;
+      let v = client.querySelector("[data-adsense=bottom]") as HTMLDivElement;
       if (!v) {
         v = document.createElement("div");
         v.style.maxWidth = "100%";
