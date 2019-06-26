@@ -273,6 +273,7 @@ export class Manager {
           const path =
             (req.header("location_path") || `https://${req.hostname}`) +
             params.remotePath;
+            console.log(path);
           const htmlNode = new HtmlCreater();
           if (
             !htmlNode.output(

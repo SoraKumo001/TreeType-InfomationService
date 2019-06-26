@@ -1,6 +1,7 @@
 import * as JWF from "javascript-window-framework";
 import { AppModule } from "./AppModule";
 
+export let appManager:AppManager;
 /**
  *
  *
@@ -15,6 +16,7 @@ export class AppManager {
    * @memberof AppManager
    */
   public constructor() {
+    appManager = this;
     //通信アダプタの作成
     this.adapter = new JWF.Adapter("./","IITS");
   }

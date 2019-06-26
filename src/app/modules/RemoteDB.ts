@@ -99,6 +99,8 @@ export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
       return false;
     }
     const client = db.getClient();
+    if(!client)
+      return false;
     client.on("error", async (error: Error) => {
       console.error(error);
       await this.close();

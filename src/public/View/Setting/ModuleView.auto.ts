@@ -1,5 +1,5 @@
-import { SettingView } from "../../modules/SettingModule";
-import { AppManager } from "../../AppManager";
+import { SettingView, SettingModule } from "../../modules/SettingModule";
+import { AppManager, appManager } from "../../AppManager";
 import { InfoModule } from "../../modules/InfoModule";
 import "../scss/ModuleView.scss";
 
@@ -35,3 +35,6 @@ export class ModuleView extends SettingView {
     });
   }
 }
+
+const settingModule = appManager.getModule(SettingModule);
+settingModule.addSetting("システム/モジュール確認",ModuleView);
