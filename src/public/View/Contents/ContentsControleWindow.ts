@@ -5,7 +5,7 @@ export class ContentsControleWindow extends FrameWindow {
     super();
     this.setTitle("コンテンツ設定");
     this.setJwfStyle("ContentsControleWindow");
-    this.setSize(200, 300);
+    this.setSize(200, 350);
     this.foreground();
 
     this.addEventListener("active",(e)=>{
