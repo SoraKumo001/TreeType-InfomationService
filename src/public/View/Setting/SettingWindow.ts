@@ -5,7 +5,6 @@ import {
   SettingData,
   SettingView
 } from "../../modules/SettingModule";
-import "./scss/SettingWindow.scss";
 
 export class SettingWindow extends JWF.FrameWindow {
   private treeView: JWF.TreeView;

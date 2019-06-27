@@ -1,0 +1,31 @@
+[data-style="ContentsTable"] {
+  margin-top: 3em;
+  border-top: solid rgb(196, 196, 196);
+  > div {
+    display: inline-block;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 0.5em;
+    margin: 1em;
+    padding: 1em;
+    table {
+      border-spacing: 0 0.1em;
+      border-collapse: collapse;
+      overflow: hidden;
+    }
+    tr:first-child {
+      font-size: 120%;
+      border-bottom: 1px solid;
+    }
+    tr:nth-of-type(n + 2) {
+      cursor: pointer;
+      border-bottom: 1px dotted;
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    td {
+      padding: 0.5em;
+    }
+  }
+}

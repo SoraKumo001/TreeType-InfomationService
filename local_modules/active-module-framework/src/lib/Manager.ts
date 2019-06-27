@@ -77,9 +77,12 @@ export class Manager {
     this.express = express();
     this.output("--- Start Manager");
     //エラーメッセージをキャプチャ
-    capcon.startCapture(process.stderr, (stderr: unknown): void => {
-      this.stderr += stderr;
-    });
+    capcon.startCapture(
+      process.stderr,
+      (stderr: unknown): void => {
+        this.stderr += stderr;
+      }
+    );
     this.init(params);
   }
   public getModuleTypes(): {
@@ -237,17 +240,23 @@ export class Manager {
     commands.upload = (req: express.Request, res: express.Response): void => {
       this.upload(req, res);
     };
+    const exp = this.express;
+
+    exp.options("*", function(req, res) {
+      res.header("Access-Control-Allow-Headers","content-type");
+      res.sendStatus(200);
+    });
     //バイナリファイルの扱い設定
-    this.express.use(
+    exp.use(
       bodyParser.raw({ type: "application/octet-stream", limit: "300mb" })
     );
-    this.express.use(
+    exp.use(
       bodyParser.json({ type: "application/json", limit: "3mb" })
     );
     //一般コンテンツの対応付け
-    this.express.use(params.remotePath, express.static(params.rootPath));
+    exp.use(params.remotePath, express.static(params.rootPath));
     //クライアント接続時の処理
-    this.express.all(
+    exp.all(
       params.remotePath,
       async (
         req: express.Request,
@@ -273,7 +282,7 @@ export class Manager {
           const path =
             (req.header("location_path") || `https://${req.hostname}`) +
             params.remotePath;
-            console.log(path);
+          console.log(path);
           const htmlNode = new HtmlCreater();
           if (
             !htmlNode.output(
@@ -323,7 +332,13 @@ export class Manager {
   private upload(req: express.Request, res: express.Response): void {
     if (req.body instanceof Buffer) {
       const params = req.query.params;
-      if (params) this.excute(res, JSON.parse(params), req.body);
+      try {
+        const values = JSON.parse(params);
+        if (params) this.excute(res, values, req.body);
+      } catch (e) {
+        res.status(500);
+        res.end("500 error");
+      }
     }
   }
   /**
@@ -345,8 +360,14 @@ export class Manager {
         })
         .on(
           "end",
-          (): Promise<void> => {
-            return this.excute(res, JSON.parse(postData));
+          (): void => {
+            try {
+              const values = JSON.parse(postData);
+              this.excute(res, values);
+            } catch (e) {
+              res.status(500);
+              res.end("500 error");
+            }
           }
         );
     }
@@ -458,23 +479,29 @@ export class Manager {
 
     if (port) {
       //ソケットの待ち受け設定
-      this.express.listen(port, (): void => {
-        this.output("localhost:%d", port);
-        if (params.listened) params.listened(port);
-      });
+      this.express.listen(
+        port,
+        (): void => {
+          this.output("localhost:%d", port);
+          if (params.listened) params.listened(port);
+        }
+      );
     } else {
       //ソケットファイルの削除
       this.removeSock(path);
       //ソケットの待ち受け設定
-      this.express.listen(path, (): void => {
-        this.output(path);
-        try {
-          fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
-          if (params.listened) params.listened(path);
-        } catch (e) {
-          //
+      this.express.listen(
+        path,
+        (): void => {
+          this.output(path);
+          try {
+            fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
+            if (params.listened) params.listened(path);
+          } catch (e) {
+            //
+          }
         }
-      }); //ソケットの待ち受け設定
+      ); //ソケットの待ち受け設定
     }
   }
   /**

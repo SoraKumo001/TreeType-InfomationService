@@ -95,8 +95,6 @@ export class DirView extends JWF.Window {
         this.loadDirs();
       })
     );
-    //初回ロード
-    this.loadDirs();
   }
   public async loadDirs(selectId?: number) {
     const dirTree = this.dirTree;

@@ -273,6 +273,7 @@ export class Window<T extends WINDOW_EVENT_MAP = WINDOW_EVENT_MAP> {
   }
   //フレーム追加処理
   private addFrame(titleFlag: boolean): void {
+    this.getClient().dataset.jwfClient="true";
     this.hNode.dataset.jwfType = "Frame";
     //タイトルの設定
     this.JData.titleSize = titleFlag ? TITLE_SIZE : 0;

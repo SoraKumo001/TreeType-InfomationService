@@ -29,6 +29,8 @@ export class ContentsEditWindow extends TextEditWindow {
     this.manager = manager;
     this.contentsModule = manager.getModule(ContentsModule);
 
+    this.setTitle("コンテンツ編集")
+
     for (let i = 0; i < 2; i++) {
       const panel = new JWF.Panel();
       this.panel[i] = panel;
@@ -42,8 +44,15 @@ export class ContentsEditWindow extends TextEditWindow {
 
     this.createControl({
       label: "FILE",
-      event: () => {
-        const fileWindow = new FileWindow(manager);
+      event: async () => {
+        const contents = this.contents;
+        if(!contents)
+          return;
+        const id = contents.id;
+        const fileModule = this.manager.getModule(FileModule);
+        const dir = JWF.sprintf("/Contents/%04d/%02d", Math.floor(id / 100) * 100, id % 100);
+        const fid = await fileModule.createDir(1,dir);
+        const fileWindow = new FileWindow(manager,fid);
         this.addChild(fileWindow);
         fileWindow.setPos();
         fileWindow.addEventListener("enterFile", param => {
@@ -123,12 +132,16 @@ export class ContentsEditWindow extends TextEditWindow {
       label: "日付",
       size: 10,
       value: this.getDateString(new Date()),
-      event: function(this: HTMLInputElement) {
+      event: function(e) {
+        const input = e as HTMLInputElement;
         const calendar = new JWF.CalendarView({ frame: true });
+        calendar.setSelect(new Date(input.value));
+
         that.addFrameChild(calendar);
         calendar.setPos();
         calendar.addEventListener("date", e => {
-          this.value = that.getDateString(e.date);
+          input.value = that.getDateString(e.date);
+          calendar.close();
         });
       }
     });

@@ -87,7 +87,7 @@
   white-space: normal;
 }
 
-[data-jwf-type="Frame"] > [data-jwf-type="client"] {
+[data-jwf-client=true] {
   background: whitesmoke;
 }
 [data-jwf-type="client"] {
