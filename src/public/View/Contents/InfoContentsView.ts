@@ -197,7 +197,7 @@ export class InfoContentsView extends JWF.Window {
     return contentsArea;
   }
   public getContents(body: HTMLDivElement, contents: MainContents) {
-    switch (contents.type) {
+    switch (contents.value_type) {
       case "UPDATE":
         this.getContentsUpdate(body,contents);
         break;
@@ -249,6 +249,8 @@ export class InfoContentsView extends JWF.Window {
       cell = row.insertCell();
       let p: typeof t | undefined = t;
       do  {
+        if(p.id === id)
+          break;
         const title = document.createElement("span");
         title.innerText = p.title;
         cell.appendChild(title);
