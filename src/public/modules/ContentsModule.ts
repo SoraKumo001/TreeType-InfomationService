@@ -110,11 +110,16 @@ export class ContentsModule extends AppModule<CustomMap> {
     if (flag) this.callEvent("deleteContents", id);
     return flag;
   }
-  public async updateContents(contents: MainContents) {
+  public async updateContents(contents: MainContents,save?:boolean) {
     const adapter = this.getAdapter();
-    const flag = (await adapter.exec("Contents.updateContents", contents)) as
-      | boolean
-      | null;
+    let flag:boolean|null = false;
+    if(save){
+      flag = (await adapter.exec("Contents.updateContents", contents)) as
+        | boolean
+        | null;
+    }else
+      flag = true;
+
     if (flag) this.callEvent("updateContents", contents);
     return flag;
   }
