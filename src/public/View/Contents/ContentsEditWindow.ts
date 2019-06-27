@@ -134,6 +134,17 @@ export class ContentsEditWindow extends TextEditWindow {
       type: "check",
       label: "表示"
     });
+        PanelControl.createControl(target, {
+      label: "時刻設定",
+      event: () => {
+        const d = new Date();
+        const client = this.getClient();
+        const date = client.querySelector("[name=date]") as HTMLInputElement;
+        date.value = that.getDateString(d);
+        const time = client.querySelector("[name=time]") as HTMLInputElement;
+        time.value = that.getTimeString(d);
+      }
+    });
     PanelControl.createControl(target, {
       name: "date",
       type: "input",
@@ -173,11 +184,20 @@ export class ContentsEditWindow extends TextEditWindow {
     });
 
     target = this.panel[1].getClient();
+    PanelControl.createControl(target, { type: "text", label: "配置" });
     PanelControl.createControl(target, {
       name: "type",
       type: "select",
       label: "",
-      option: [{ label: "PAGE" }, { label: "TEXT" }, { label: "UPDATE" }],
+      option: [{ label: "PAGE" }, { label: "ITEM" }],
+      event: () => {}
+    });
+    PanelControl.createControl(target, { type: "text", label: "コンテンツ" });
+    PanelControl.createControl(target, {
+      name: "value_type",
+      type: "select",
+      label: "",
+      option: [{ label: "TEXT" }, { label: "UPDATE" }],
       event: () => {}
     });
     PanelControl.createControl(target, { type: "text", label: "題名" });
@@ -247,6 +267,7 @@ export class ContentsEditWindow extends TextEditWindow {
       PanelControl.setControlValue(client, "type", contents.type);
       PanelControl.setControlValue(client, "title", contents.title);
       PanelControl.setControlValue(client, "title_type", contents.title_type);
+      PanelControl.setControlValue(client, "value_type", contents.value_type);
       var date = new Date(contents["date"]);
       PanelControl.setControlValue(client, "date", this.getDateString(date));
       PanelControl.setControlValue(client, "time", this.getTimeString(date));
@@ -278,6 +299,7 @@ export class ContentsEditWindow extends TextEditWindow {
         (PanelControl.getControlValue(client, "title_type") as string) || "0"
       ),
       date,
+      value_type:PanelControl.getControlValue(client, "value_type") as string || "TEXT",
       value: this.getHtml()
     };
     this.contentsModule.updateContents(newContents, save);
