@@ -6,7 +6,7 @@ import {
   TreeContents
 } from "../../modules/ContentsModule";
 import "./scss/InfoContentsView.scss";
-import "highlight.js/styles/dark.css";
+import "highlight.js/styles/tomorrow-night-eighties.css";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
 import { sprintf } from "sprintf";
