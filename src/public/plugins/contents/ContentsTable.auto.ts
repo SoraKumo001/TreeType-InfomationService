@@ -1,5 +1,10 @@
-import { appManager } from "../../../AppManager";
-import { ContentsModule } from "../../../modules/ContentsModule";
+  /**
+   *目次表示用プラグイン
+   */
+
+
+import { appManager } from "../../AppManager";
+import { ContentsModule } from "../../modules/ContentsModule";
 import { sprintf } from "javascript-window-framework";
 import "./ContentsTable.scss";
 const contentsModule = appManager.getModule(ContentsModule);

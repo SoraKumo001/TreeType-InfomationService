@@ -3,13 +3,12 @@ import { AppManager } from "../../AppManager";
 import {
   ContentsModule,
   MainContents,
-  TreeContents
 } from "../../modules/ContentsModule";
 import "./scss/InfoContentsView.scss";
 import "highlight.js/styles/tomorrow-night-eighties.css";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
-import { sprintf } from "sprintf";
+
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const highlight = require("highlight.js/lib/highlight");
@@ -55,6 +54,13 @@ export class InfoContentsView extends JWF.Window {
     this.setJwfStyle("InfoContentsView");
     const contentsModule = manager.getModule(ContentsModule);
     this.contentsModule = contentsModule;
+
+    contentsModule.addContentsValueType(
+      "TEXT",
+      (body: HTMLDivElement, pageId: number, contents: MainContents) => {
+        body.innerHTML = contents["value"];
+      }
+    );
 
     this.addModuleEvent();
 
@@ -158,122 +164,45 @@ export class InfoContentsView extends JWF.Window {
     contentsArea.update = contents => {
       contentsArea.contents = contents;
       this.contentsNode[contents.id] = contentsArea;
-     // if (contentsArea.dataset.contentsType === contents["type"]) {
-        var titleTag = "H" + contents["title_type"];
-        if (titleTag != title.nodeName) {
-          var newTitle = document.createElement(titleTag);
-          if (title.parentNode) {
-            title.parentNode.insertBefore(newTitle, title);
-            title.parentNode.removeChild(title);
-          }
-          title = newTitle;
+      // if (contentsArea.dataset.contentsType === contents["type"]) {
+      var titleTag = "H" + contents["title_type"];
+      if (titleTag != title.nodeName) {
+        var newTitle = document.createElement(titleTag);
+        if (title.parentNode) {
+          title.parentNode.insertBefore(newTitle, title);
+          title.parentNode.removeChild(title);
         }
-        contentsArea.dataset.contentsStat = contents.stat.toString();
-        title.dataset.nodeName = "H" + contents.title_type;
-        title.textContent = contents.title;
-        date.textContent = new Date(contents["date"]).toLocaleString();
-        this.getContents(body, contents);
-        // const imageNodes = body.querySelectorAll("img");
-        // for (var i = 0; i < imageNodes.length; i++) {
-        //   const node = imageNodes[i];
-        //   node.src = node.src.replace("command=Files.download", "cmd=download");
-        //   node.addEventListener("click", () => {
-        //     window.open(node.src, "newtab");
-        //   });
-        // }
-        var nodes = body.querySelectorAll(".code");
-        for (var index = 0; nodes[index]; index++) {
-          var node = nodes[index];
-          highlight.highlightBlock(node);
-        }
-        // var nodes = body.querySelectorAll(".update");
-        // for (var index = 0; nodes[index]; index++) {
-        //   var node = nodes[index];
-        //   //checkUpdate(node);
-        // }
+        title = newTitle;
       }
+      contentsArea.dataset.contentsStat = contents.stat.toString();
+      title.dataset.nodeName = "H" + contents.title_type;
+      title.textContent = contents.title;
+      date.textContent = new Date(contents["date"]).toLocaleString();
+      this.contentsModule.createContentsValue(body, this.pageId, contents);
+      // const imageNodes = body.querySelectorAll("img");
+      // for (var i = 0; i < imageNodes.length; i++) {
+      //   const node = imageNodes[i];
+      //   node.src = node.src.replace("command=Files.download", "cmd=download");
+      //   node.addEventListener("click", () => {
+      //     window.open(node.src, "newtab");
+      //   });
+      // }
+      var nodes = body.querySelectorAll(".code");
+      for (var index = 0; nodes[index]; index++) {
+        var node = nodes[index];
+        highlight.highlightBlock(node);
+      }
+      // var nodes = body.querySelectorAll(".update");
+      // for (var index = 0; nodes[index]; index++) {
+      //   var node = nodes[index];
+      //   //checkUpdate(node);
+      // }
+    };
     //};
     contentsArea.update(contents);
     return contentsArea;
   }
-  public getContents(body: HTMLDivElement, contents: MainContents) {
-    switch (contents.value_type) {
-      case "UPDATE":
-        this.getContentsUpdate(body,contents);
-        break;
-      default:
-        body.innerHTML = contents["value"];
-        break;
-    }
-  }
-  public getContentsUpdate(body: HTMLDivElement, contents: MainContents) {
-    body.innerHTML = contents["value"];
-    const id = this.pageId;
-    const contentsModule = this.contentsModule;
-    const tree = contentsModule.findTreeContents(id);
-    if (!tree) {
-      return "";
-    }
-    const list = this.getContentsList(tree);
-    list.sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-    const table = document.createElement("table");
-    table.dataset.type = "UpdateTable";
-    for (let i = 0; list[i] && i < 10; i++) {
-      const t = list[i];
-      const row = table.insertRow();
 
-      //クリックイベントの作成
-      row.addEventListener("click", () => {
-        contentsModule.selectContents(t.id);
-      });
-
-      let cell:HTMLTableCellElement;
-
-      //日付の作成
-      const date = new Date(list[i].date);
-      const d = sprintf(
-        "%04d/%02d/%02d %02d:%02d",
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        date.getHours(),
-        date.getMinutes()
-      );
-      //日付の設定
-      cell = row.insertCell();
-      cell.innerText = d;
-
-      //タイトルの設定
-      cell = row.insertCell();
-      let p: typeof t | undefined = t;
-      do  {
-        if(p.id === id)
-          break;
-        const title = document.createElement("span");
-        title.innerText = p.title;
-        cell.appendChild(title);
-      }while((p = p.parent));
-
-    }
-    body.appendChild(table);
-  }
-  public getContentsList(
-    treeContents: TreeContents & { parent?: TreeContents },
-    list?: (typeof treeContents)[]
-  ) {
-    if (!list) list = [];
-    list.push(treeContents);
-    const childs = treeContents.childs;
-    if (childs) {
-      for (const child of childs) {
-        (child as typeof treeContents).parent = treeContents;
-        this.getContentsList(child, list);
-      }
-    }
-    return list;
-  }
   public createEditMenu(contentsArea: ContentsArea) {
     //管理者用編集メニュー
     //if (SESSION.isAuthority("SYSTEM_ADMIN"))

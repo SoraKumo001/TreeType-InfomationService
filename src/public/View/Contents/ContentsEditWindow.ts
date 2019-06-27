@@ -192,12 +192,16 @@ export class ContentsEditWindow extends TextEditWindow {
       option: [{ label: "PAGE" }, { label: "ITEM" }],
       event: () => {}
     });
+
+    const valueTypes = this.contentsModule.getContentsValueTypes().map((v)=>{
+      return {label:v};
+    })
     PanelControl.createControl(target, { type: "text", label: "コンテンツ" });
     PanelControl.createControl(target, {
       name: "value_type",
       type: "select",
       label: "",
-      option: [{ label: "TEXT" }, { label: "UPDATE" }],
+      option: valueTypes,
       event: () => {}
     });
     PanelControl.createControl(target, { type: "text", label: "題名" });
