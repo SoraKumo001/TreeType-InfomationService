@@ -158,7 +158,7 @@ export class InfoContentsView extends JWF.Window {
     contentsArea.update = contents => {
       contentsArea.contents = contents;
       this.contentsNode[contents.id] = contentsArea;
-      if (contentsArea.dataset.contentsType === contents["type"]) {
+     // if (contentsArea.dataset.contentsType === contents["type"]) {
         var titleTag = "H" + contents["title_type"];
         if (titleTag != title.nodeName) {
           var newTitle = document.createElement(titleTag);
@@ -192,7 +192,7 @@ export class InfoContentsView extends JWF.Window {
         //   //checkUpdate(node);
         // }
       }
-    };
+    //};
     contentsArea.update(contents);
     return contentsArea;
   }
@@ -216,7 +216,7 @@ export class InfoContentsView extends JWF.Window {
     }
     const list = this.getContentsList(tree);
     list.sort((a, b) => {
-      return new Date(b.update).getTime() - new Date(a.update).getTime();
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
     const table = document.createElement("table");
     table.dataset.type = "UpdateTable";
@@ -232,7 +232,7 @@ export class InfoContentsView extends JWF.Window {
       let cell:HTMLTableCellElement;
 
       //日付の作成
-      const date = new Date(list[i].update);
+      const date = new Date(list[i].date);
       const d = sprintf(
         "%04d/%02d/%02d %02d:%02d",
         date.getFullYear(),
