@@ -50,11 +50,15 @@ export class ContentsModule extends AppModule<CustomMap> {
     }
     return result;
   }
-  public findTreeContents(tree: TreeContents, id: number): TreeContents | null {
+  public findTreeContents(id: number,tree?: TreeContents,): TreeContents | null {
+    if(!tree)
+      tree = this.treeContents;
+    if(!tree)
+      return null;
     if (tree.id === id) return tree;
     if (tree.childs) {
       for (const child of tree.childs) {
-        const result = this.findTreeContents(child, id);
+        const result = this.findTreeContents(id,child);
         if (result) return result;
       }
     }

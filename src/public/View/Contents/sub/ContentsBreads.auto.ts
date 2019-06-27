@@ -3,18 +3,15 @@ import { ContentsModule, TreeContents } from "../../../modules/ContentsModule";
 
 const contentsModule = appManager.getModule(ContentsModule);
 contentsModule.addEventListener("drawContents", (client,id) => {
-  const tree = contentsModule.getTreeCache();
-  if (!tree) return;
-
   const contentsPage = client.querySelector("[data-type=ContentsPage]");
   if (contentsPage) {
     //パンくず領域の作成
     const breadContents = document.createElement("div");
     breadContents.dataset.style = "BreadContents";
 
-    let parent: TreeContents | null = contentsModule.findTreeContents(tree, id);
+    let parent: TreeContents | null = contentsModule.findTreeContents(id);
     if (!parent) return;
-    while ((parent = contentsModule.findTreeContents(tree, parent.pid))) {
+    while ((parent = contentsModule.findTreeContents(parent.pid))) {
       const div = document.createElement("div");
       const id = parent.id;
       div.innerText = parent.title;

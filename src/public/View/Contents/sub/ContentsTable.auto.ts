@@ -1,23 +1,20 @@
 import { appManager } from "../../../AppManager";
 import { ContentsModule } from "../../../modules/ContentsModule";
 import { sprintf } from "javascript-window-framework";
-
+import "./ContentsTable.scss";
 const contentsModule = appManager.getModule(ContentsModule);
 contentsModule.addEventListener("drawContents", (client, id) => {
-  const tree = contentsModule.getTreeCache();
-  if (!tree) return;
-
   const contentsPage = client.querySelector("[data-type=ContentsPage]");
   if (!contentsPage) return;
 
   //サブコンテンツ領域の作成
   const subContents = document.createElement("div");
-  subContents.dataset.style = "SubContents";
+  subContents.dataset.style = "ContentsTable";
 
   const div = document.createElement("div");
   subContents.appendChild(div);
 
-  const contents = contentsModule.findTreeContents(tree, id);
+  const contents = contentsModule.findTreeContents(id);
   if (contents) {
     const childs = contents.childs;
     if (childs) {
@@ -27,27 +24,15 @@ contentsModule.addEventListener("drawContents", (client, id) => {
       cell.colSpan = 2;
       cell.innerText = "目次";
       let flag = false;
+      let index = 1;
       for (const c of childs) {
         if (c.type !== "PAGE") continue;
         flag = true;
 
         const row = table.insertRow();
-        //let cell;
         let cell: HTMLTableDataCellElement;
-
-        const date = new Date(c.update);
         cell = row.insertCell();
-        cell.innerText = sprintf(
-          "%04d/%02d/%02d %02d:%02d",
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-          date.getHours(),
-          date.getMinutes()
-        );
-
-        cell = row.insertCell();
-        cell.innerText = c.title;
+        cell.innerText = sprintf("  %02d. %s",index++,c.title);
 
         row.addEventListener("click", () => {
           contentsModule.selectContents(c.id);
