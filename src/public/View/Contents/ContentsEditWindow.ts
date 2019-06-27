@@ -29,7 +29,7 @@ export class ContentsEditWindow extends TextEditWindow {
     this.manager = manager;
     this.contentsModule = manager.getModule(ContentsModule);
 
-    this.setTitle("コンテンツ編集")
+    this.setTitle("コンテンツ編集");
 
     for (let i = 0; i < 2; i++) {
       const panel = new JWF.Panel();
@@ -46,13 +46,16 @@ export class ContentsEditWindow extends TextEditWindow {
       label: "FILE",
       event: async () => {
         const contents = this.contents;
-        if(!contents)
-          return;
+        if (!contents) return;
         const id = contents.id;
         const fileModule = this.manager.getModule(FileModule);
-        const dir = JWF.sprintf("/Contents/%04d/%02d", Math.floor(id / 100) * 100, id % 100);
-        const fid = await fileModule.createDir(1,dir);
-        const fileWindow = new FileWindow(manager,fid);
+        const dir = JWF.sprintf(
+          "/Contents/%04d/%02d",
+          Math.floor(id / 100) * 100,
+          id % 100
+        );
+        const fid = await fileModule.createDir(1, dir);
+        const fileWindow = new FileWindow(manager, fid);
         this.addChild(fileWindow);
         fileWindow.setPos();
         fileWindow.addEventListener("enterFile", param => {
@@ -103,7 +106,7 @@ export class ContentsEditWindow extends TextEditWindow {
     if (dirId) {
       const result = await fileModule.uploadFile(dirId, fileList);
       for (const r of result) {
-        this.insertFileContents(r.id,r.file.name);
+        this.insertFileContents(r.id, r.file.name);
       }
     }
   }
@@ -117,10 +120,15 @@ export class ContentsEditWindow extends TextEditWindow {
     PanelControl.createControl(target, {
       label: "保存",
       event: () => {
-        this.updateContents();
+        this.updateContents(true);
       }
     });
-    PanelControl.createControl(target, { label: "確認", event: () => {} });
+    PanelControl.createControl(target, {
+      label: "確認",
+      event: () => {
+        this.updateContents(false);
+      }
+    });
     PanelControl.createControl(target, {
       name: "stat",
       type: "check",
@@ -251,7 +259,7 @@ export class ContentsEditWindow extends TextEditWindow {
    * @returns
    * @memberof ContentsEditWindow
    */
-  public async updateContents() {
+  public async updateContents(save: boolean) {
     const contents = this.contents;
     if (!contents) return;
     const client = this.getClient();
@@ -272,6 +280,6 @@ export class ContentsEditWindow extends TextEditWindow {
       date,
       value: this.getHtml()
     };
-    this.contentsModule.updateContents(newContents);
+    this.contentsModule.updateContents(newContents, save);
   }
 }
