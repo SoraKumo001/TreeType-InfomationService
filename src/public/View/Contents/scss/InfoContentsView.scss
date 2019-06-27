@@ -110,6 +110,15 @@
       }
     }
   }
+
+    .code,.code2 {
+    overflow: auto;
+    font-size: 110%;
+    padding: 0.5em !important;
+    white-space: nowrap;
+    font-family: MeiryoKe_Gothic, "Ricty Diminished", "Osaka－等幅", "Osaka-等幅", Osaka-mono, "ＭＳ ゴシック",
+      "MS Gothic", "Courier New", Courier, Monaco, Menlo, Consolas, "Lucida Console", monospace;
+  }
 }
 
 [data-type="UpdateTable"] {
@@ -132,14 +141,15 @@
   // td:nth-of-type(2) {
   //   word-wrap: keep-all;
   //}
-  span{
+  span {
     display: inline-block;
-    margin:0.3em;
-    padding:0.5em;
+    margin: 0.3em;
+    padding: 0.5em;
     border-radius: 0.3em;
-    background-color: rgba(0,0,0,0.05);
+    background-color: rgba(0, 0, 0, 0.05);
   }
   td {
     padding: 0.8em;
   }
+
 }
