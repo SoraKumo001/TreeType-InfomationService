@@ -24,6 +24,7 @@ export interface MainContents {
   update: Date;
   title_type: number;
   title: string;
+  value_type: string;
   value: string;
   childs?: MainContents[];
   title2?: string;
@@ -50,7 +51,7 @@ export class Contents extends amf.Module {
 					contents_priority INTEGER,
 					contents_stat INTEGER,contents_type TEXT,
 					contents_date timestamp with time zone,contents_update timestamp with time zone,
-					contents_title_type integer,contents_title TEXT,contents_value TEXT);
+					contents_title_type integer,contents_title TEXT,contents_value TEXT,contents_value_type TEXT);
           insert into contents values(default,null,1000,1,'PAGE',current_timestamp,current_timestamp,1,'Top','')`
             );
           }
@@ -198,7 +199,7 @@ export class Contents extends amf.Module {
     const visible = users && users.isAdmin() ? "" : "and contents_stat=1";
 
     const value = (await remoteDB.get(
-      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value as value from contents where contents_id=$1 ${visible}`,
+      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value_type as value_type,contents_value as value from contents where contents_id=$1 ${visible}`,
       id
     )) as MainContents | null;
     if (value && child) {
@@ -213,7 +214,7 @@ export class Contents extends amf.Module {
     const visible = admin ? "" : "and contents_stat=1";
 
     return (await remoteDB.all(
-      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value as value from contents where contents_type='PAGE' ${visible}`
+      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value_type as value_type,contents_value as value from contents where contents_type='PAGE' ${visible}`
     )) as MainContents[] | null;
   }
   public async getChildContents(pid: number): Promise<MainContents[]> {
@@ -224,7 +225,7 @@ export class Contents extends amf.Module {
 
     //親Idを元にコンテンツを抽出
     const values = (await remoteDB.all(
-      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value as value from contents where contents_parent=$1 and contents_type != 'PAGE' ${visible} order by contents_priority`,
+      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value_type as value_type,contents_value as value from contents where contents_parent=$1 and contents_type != 'PAGE' ${visible} order by contents_priority`,
       pid
     )) as MainContents[];
     //子コンテンツを抽出
@@ -386,12 +387,13 @@ export class Contents extends amf.Module {
 
     return remoteDB.run(
       `update contents SET contents_stat=$1,contents_date=$2,contents_type=$3,contents_update=current_timestamp,
-			contents_title_type=$4,contents_title=$5,contents_value=$6 where contents_id=$7`,
+			contents_title_type=$4,contents_title=$5,contents_value_type=$6,contents_value=$7 where contents_id=$8`,
       contents.stat,
       contents.date,
       contents.type,
       contents.title_type,
       contents.title,
+      contents.value_type,
       contents.value,
       contents.id
     );

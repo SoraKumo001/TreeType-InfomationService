@@ -19,6 +19,7 @@ export interface MainContents {
   update?: Date;
   title_type: number;
   title: string;
+  value_type:string,
   value: string;
   childs?: MainContents[];
 }

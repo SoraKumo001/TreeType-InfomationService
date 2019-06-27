@@ -85,11 +85,11 @@ server {
         return 404;
     }
 
-    //最後にスラッシュを付けない
+    #最後にスラッシュを付けない(リモートパス部分が存在しないなら、そもそも記述不要)
     location /リモートパス {
         alias /配置バス/dist/public/;
     }
-    //最後にスラッシュを付ける
+    #最後にスラッシュを付ける(location_pathを設定しないとサーバプッシュに失敗する)
     location = /リモートパス/ {
         proxy_pass http://TreeType-InfomationService/;
         proxy_set_header location_path /リモートパス;
