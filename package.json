@@ -12,6 +12,7 @@
     "watch-amf": "npx tsc -b -w local_modules/active-module-framework/src/",
     "build-app": "npx tsc -b ",
     "watch-app": "npx tsc -b -w ",
+    "build-all": "npx tsc -b & npx webpack -b --config local_modules/javascript-window-framework/src/webpack.config.js & npx webpack -b",
     "start": "node dist/app/index.js"
   },
   "keywords": [],
