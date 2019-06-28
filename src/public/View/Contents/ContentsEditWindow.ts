@@ -110,9 +110,6 @@ export class ContentsEditWindow extends TextEditWindow {
       }
     }
   }
-  public insertNode(node: HTMLElement) {
-    this.editableView.insertNode(node);
-  }
   private createPanel() {
     //パネル作成
     const that = this;
@@ -272,7 +269,7 @@ export class ContentsEditWindow extends TextEditWindow {
       PanelControl.setControlValue(client, "title", contents.title);
       PanelControl.setControlValue(client, "title_type", contents.title_type);
       PanelControl.setControlValue(client, "value_type", contents.value_type);
-      var date = new Date(contents["date"]);
+      const date = new Date(contents["date"]);
       PanelControl.setControlValue(client, "date", this.getDateString(date));
       PanelControl.setControlValue(client, "time", this.getTimeString(date));
       this.setHtml(contents.value);

@@ -1,8 +1,8 @@
 import * as JWF from "javascript-window-framework";
 
 export class TextInputWindow extends JWF.FrameWindow {
-  msg:JWF.Label
-  text:JWF.TextBox;
+  private msg:JWF.Label
+  private text:JWF.TextBox;
   public constructor(params: {
     title?: string;
     message?: string;

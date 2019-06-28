@@ -1,14 +1,17 @@
+import { ColorPickerWindow, Color } from "../ColorPicker/ColorPickerView";
+import { sprintf } from "javascript-window-framework";
+
 export interface PanelCreateParam {
   type?: string;
   label: string;
-  value?: string | boolean;
+  value?: string | boolean | Color;
   name?: string;
   option?: {
     label: string;
     value?: string;
   }[];
   size?: number;
-  event?: (value?: HTMLElement) => void;
+  event?: (node?: HTMLElement,value?:unknown) => void;
 }
 
 export class PanelControl {
@@ -66,6 +69,48 @@ export class PanelControl {
           check.type = "checkbox";
           if (param.value) check.checked = !!param.value;
           area.appendChild(check);
+        }
+        break;
+      case "color":
+        {
+          let button = document.createElement("button");
+          button.name = param.name || "";
+          button.innerText = param.label;
+          target.appendChild(button);
+          let colorArea = document.createElement("div");
+          colorArea.style.margin = "0.2em";
+          colorArea.style.width = "1.5em";
+          colorArea.style.height = "1.5em";
+          colorArea.style.userSelect = "false";
+          colorArea.style.border = "solid 1px";
+          target.appendChild(colorArea);
+
+          let value: Color = param.value as Color;
+          if (!value) value = { r: 255, g: 255, b: 255 };
+
+          const setColor = (color: Color) => {
+            colorArea.style.background = sprintf(
+              "rgb(%d,%d,%d)",
+              color.r,
+              color.g,
+              color.b
+            );
+          };
+
+          button.addEventListener("click", () => {
+            const colorPicker = new ColorPickerWindow();
+            colorPicker.setPos();
+            colorPicker.addEventListener("color", color => {
+              setColor(color);
+              value = color;
+            });
+          });
+          colorArea.addEventListener("click", (e) => {
+            if(param.event)
+              param.event(colorArea,value);
+              e.preventDefault();
+          });
+          setColor(value);
         }
         break;
       case "input": {

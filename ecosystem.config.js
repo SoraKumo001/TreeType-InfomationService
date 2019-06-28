@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "tree-type-infomation-service",
+      name: "ttis",
       script: "./dist/app/index.js",
       watch: ["./dist/app"],
       instances: 2,

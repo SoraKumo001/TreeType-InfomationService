@@ -68,12 +68,12 @@ export class UserEditWindow extends JWF.FrameWindow {
       }
     });
   }
-  getUserId() {
+  public getUserId() {
     if (!this.textUserID)
       return null;
     return this.textUserID.getText();
   }
-  getUserPass() {
+  public getUserPass() {
     if (!this.textUserPass)
       return null;
     return this.textUserPass.getText();

@@ -57,6 +57,7 @@ export class UserListView extends SettingView {
         undefined,
         this.local
       );
+      userEditWindow.setPos();
       // const flag = await userEditWindow.setUser();
       // if (flag) {
       //   this.getUsers();
