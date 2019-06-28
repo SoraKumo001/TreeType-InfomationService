@@ -36,8 +36,10 @@ export interface CustomMap extends ModuleMap {
   drawContents: [HTMLElement, number];
 }
 
+type ValueTypeProc = (body:HTMLDivElement,pageId:number,contents:MainContents)=>void;
 export class ContentsModule extends AppModule<CustomMap> {
   private treeContents?: TreeContents;
+  private contentsValueTypes:{[name:string]:ValueTypeProc} ={};
   public async createContents(pid: number, vector: number, type: string) {
     const adapter = this.getAdapter();
     const result = (await adapter.exec(
@@ -151,4 +153,18 @@ export class ContentsModule extends AppModule<CustomMap> {
     if (flag) this.callEvent("importContents", id);
     return flag;
   }
+  public getContentsValueTypes(){
+    return Object.keys(this.contentsValueTypes);
+  }
+  public addContentsValueType(name:string,proc:ValueTypeProc){
+    this.contentsValueTypes[name] = proc;
+  }
+  public createContentsValue(body:HTMLDivElement,pageId:number,contents:MainContents){
+    const proc = this.contentsValueTypes[contents.value_type];
+    if(proc){
+      proc(body,pageId,contents);
+    }
+
+  }
+
 }

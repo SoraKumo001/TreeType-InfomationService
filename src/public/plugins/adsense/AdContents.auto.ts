@@ -21,7 +21,7 @@ loadAdParam();
 
 //コンテンツモジュールに割り込み設定
 const contentsModule = appManager.getModule(ContentsModule);
-contentsModule.addEventListener("drawContents", (client, id) => {
+contentsModule.addEventListener("drawContents", (client) => {
   if (adSenseValue) {
    // let flag = false;
     const top = adSenseValue.top;

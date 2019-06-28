@@ -53,7 +53,7 @@ export class Users extends amf.Module {
   }
 
   public async onStartSession() {
-    var count = await this.getLocalCount();
+    const count = await this.getLocalCount();
     let user: UserInfo | null = null;
 
     if (count === 0) {
@@ -117,7 +117,7 @@ export class Users extends amf.Module {
   ): Promise<UserInfo | null> {
     if (local) {
       const localDB = this.getLocalDB();
-      var result = await localDB.get(
+      const result = await localDB.get(
         "select users_no as no,users_id as id,users_name as name,'local' as type,true as admin from users where users_no=? ",
         no
       ) as unknown as UserInfo | null;
@@ -146,7 +146,7 @@ export class Users extends amf.Module {
   public async getUserInfo(userId: string, local: boolean) {
     if (local) {
       const localDB = this.getLocalDB();
-      var result = await localDB.get(
+      const result = await localDB.get(
         "select users_no as no,users_id as id,users_name as name,'local' as type,true as admin from users where users_id=? ",
         userId
       ) as unknown as UserInfo | null;
@@ -214,7 +214,7 @@ export class Users extends amf.Module {
     if (local) {
       let localDB = this.getLocalDB();
       //ユーザが存在するか確認
-      var userInfo = await localDB.get(
+      const userInfo = await localDB.get(
         "select * from users where users_no=?",
         userNo
       );

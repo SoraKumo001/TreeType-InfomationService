@@ -12,19 +12,13 @@ import { PanelCreateParam } from "./PanelControl";
  * @extends {JWF.FrameWindow}
  */
 export class TextEditWindow extends JWF.FrameWindow {
-  htmlTimer: JWF.TimerProc;
-  textTimer: JWF.TimerProc;
-  editableView:EditableView;
-  textArea:TextArea;
+  private htmlTimer: JWF.TimerProc;
+  private textTimer: JWF.TimerProc;
+  private editableView:EditableView;
+  private textArea:TextArea;
 
-  constructor() {
+  public constructor() {
     super();
-    this.htmlTimer = new JWF.TimerProc(() => {
-      textArea.setText(editableView.getHtml());
-    }, 500);
-    this.textTimer = new JWF.TimerProc(() => {
-      editableView.setHtml(textArea.getText());
-    }, 500);
 
     this.setJwfStyle("TextEditWindow");
     this.setSize(800, 600);
@@ -47,6 +41,14 @@ export class TextEditWindow extends JWF.FrameWindow {
     textArea.addEventListener("updateText", () => {
       this.textTimer.call();
     });
+
+    //時間差更新処理
+    this.htmlTimer = new JWF.TimerProc(() => {
+      textArea.setText(editableView.getHtml());
+    }, 500);
+    this.textTimer = new JWF.TimerProc(() => {
+      editableView.setHtml(textArea.getText());
+    }, 500);
   }
   public setHtml(value:string){
     this.textArea.setText(value);
@@ -60,5 +62,8 @@ export class TextEditWindow extends JWF.FrameWindow {
   }
   public getEditableView(){
     return this.editableView;
+  }
+  public insertNode(node: HTMLElement) {
+    this.editableView.insertNode(node);
   }
 }

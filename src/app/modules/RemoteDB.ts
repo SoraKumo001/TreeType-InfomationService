@@ -111,7 +111,7 @@ export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
     await this.run(
       "CREATE TABLE IF NOT EXISTS app_data (name text primary key,value json)"
     );
-    var json = await this.get(
+    const json = await this.get(
       "select json_build_object(name,value) as value from app_data"
     );
     this.items = json ? (json.value as {}) : {};

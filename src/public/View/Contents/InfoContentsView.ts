@@ -3,13 +3,12 @@ import { AppManager } from "../../AppManager";
 import {
   ContentsModule,
   MainContents,
-  TreeContents
 } from "../../modules/ContentsModule";
 import "./scss/InfoContentsView.scss";
 import "highlight.js/styles/tomorrow-night-eighties.css";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
-import { sprintf } from "sprintf";
+
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const highlight = require("highlight.js/lib/highlight");
@@ -55,6 +54,13 @@ export class InfoContentsView extends JWF.Window {
     this.setJwfStyle("InfoContentsView");
     const contentsModule = manager.getModule(ContentsModule);
     this.contentsModule = contentsModule;
+
+    contentsModule.addContentsValueType(
+      "TEXT",
+      (body: HTMLDivElement, pageId: number, contents: MainContents) => {
+        body.innerHTML = contents["value"];
+      }
+    );
 
     this.addModuleEvent();
 
@@ -128,26 +134,26 @@ export class InfoContentsView extends JWF.Window {
    * @memberof InfoContentsView
    */
   private createContents(contents: MainContents) {
-    var contentsArea = document.createElement("div") as ContentsArea;
+    const contentsArea = document.createElement("div") as ContentsArea;
     contentsArea.contents = contents;
     contentsArea.className = "ContentsArea";
     contentsArea.dataset.contentsType = contents.type;
-    var contentsNode = document.createElement("div");
+    const contentsNode = document.createElement("div");
     contentsNode.className = "Contents";
     contentsArea.appendChild(contentsNode);
     contentsArea.contentsNode = contentsNode;
 
     this.createEditMenu(contentsArea);
 
-    var title = document.createElement("div") as HTMLElement;
+    let title = document.createElement("div") as HTMLElement;
     contentsNode.appendChild(title);
-    var date = document.createElement("div");
+    const date = document.createElement("div");
     date.className = "Date";
     contentsNode.appendChild(date);
-    var body = document.createElement("div");
+    const body = document.createElement("div");
     body.className = "Body";
     contentsNode.appendChild(body);
-    var childs = document.createElement("div");
+    const childs = document.createElement("div");
     childs.className = "Childs";
     contentsArea.appendChild(childs);
     if (contents.childs) {
@@ -158,122 +164,45 @@ export class InfoContentsView extends JWF.Window {
     contentsArea.update = contents => {
       contentsArea.contents = contents;
       this.contentsNode[contents.id] = contentsArea;
-     // if (contentsArea.dataset.contentsType === contents["type"]) {
-        var titleTag = "H" + contents["title_type"];
-        if (titleTag != title.nodeName) {
-          var newTitle = document.createElement(titleTag);
-          if (title.parentNode) {
-            title.parentNode.insertBefore(newTitle, title);
-            title.parentNode.removeChild(title);
-          }
-          title = newTitle;
+      // if (contentsArea.dataset.contentsType === contents["type"]) {
+      const titleTag = "H" + contents["title_type"];
+      if (titleTag != title.nodeName) {
+        const newTitle = document.createElement(titleTag);
+        if (title.parentNode) {
+          title.parentNode.insertBefore(newTitle, title);
+          title.parentNode.removeChild(title);
         }
-        contentsArea.dataset.contentsStat = contents.stat.toString();
-        title.dataset.nodeName = "H" + contents.title_type;
-        title.textContent = contents.title;
-        date.textContent = new Date(contents["date"]).toLocaleString();
-        this.getContents(body, contents);
-        // const imageNodes = body.querySelectorAll("img");
-        // for (var i = 0; i < imageNodes.length; i++) {
-        //   const node = imageNodes[i];
-        //   node.src = node.src.replace("command=Files.download", "cmd=download");
-        //   node.addEventListener("click", () => {
-        //     window.open(node.src, "newtab");
-        //   });
-        // }
-        var nodes = body.querySelectorAll(".code");
-        for (var index = 0; nodes[index]; index++) {
-          var node = nodes[index];
-          highlight.highlightBlock(node);
-        }
-        // var nodes = body.querySelectorAll(".update");
-        // for (var index = 0; nodes[index]; index++) {
-        //   var node = nodes[index];
-        //   //checkUpdate(node);
-        // }
+        title = newTitle;
       }
+      contentsArea.dataset.contentsStat = contents.stat.toString();
+      title.dataset.nodeName = "H" + contents.title_type;
+      title.textContent = contents.title;
+      date.textContent = new Date(contents["date"]).toLocaleString();
+      this.contentsModule.createContentsValue(body, this.pageId, contents);
+      // const imageNodes = body.querySelectorAll("img");
+      // for (const i = 0; i < imageNodes.length; i++) {
+      //   const node = imageNodes[i];
+      //   node.src = node.src.replace("command=Files.download", "cmd=download");
+      //   node.addEventListener("click", () => {
+      //     window.open(node.src, "newtab");
+      //   });
+      // }
+      const nodes = body.querySelectorAll(".code");
+      for (let index = 0; nodes[index]; index++) {
+        const node = nodes[index];
+        highlight.highlightBlock(node);
+      }
+      // const nodes = body.querySelectorAll(".update");
+      // for (const index = 0; nodes[index]; index++) {
+      //   const node = nodes[index];
+      //   //checkUpdate(node);
+      // }
+    };
     //};
     contentsArea.update(contents);
     return contentsArea;
   }
-  public getContents(body: HTMLDivElement, contents: MainContents) {
-    switch (contents.value_type) {
-      case "UPDATE":
-        this.getContentsUpdate(body,contents);
-        break;
-      default:
-        body.innerHTML = contents["value"];
-        break;
-    }
-  }
-  public getContentsUpdate(body: HTMLDivElement, contents: MainContents) {
-    body.innerHTML = contents["value"];
-    const id = this.pageId;
-    const contentsModule = this.contentsModule;
-    const tree = contentsModule.findTreeContents(id);
-    if (!tree) {
-      return "";
-    }
-    const list = this.getContentsList(tree);
-    list.sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-    const table = document.createElement("table");
-    table.dataset.type = "UpdateTable";
-    for (let i = 0; list[i] && i < 10; i++) {
-      const t = list[i];
-      const row = table.insertRow();
 
-      //クリックイベントの作成
-      row.addEventListener("click", () => {
-        contentsModule.selectContents(t.id);
-      });
-
-      let cell:HTMLTableCellElement;
-
-      //日付の作成
-      const date = new Date(list[i].date);
-      const d = sprintf(
-        "%04d/%02d/%02d %02d:%02d",
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        date.getHours(),
-        date.getMinutes()
-      );
-      //日付の設定
-      cell = row.insertCell();
-      cell.innerText = d;
-
-      //タイトルの設定
-      cell = row.insertCell();
-      let p: typeof t | undefined = t;
-      do  {
-        if(p.id === id)
-          break;
-        const title = document.createElement("span");
-        title.innerText = p.title;
-        cell.appendChild(title);
-      }while((p = p.parent));
-
-    }
-    body.appendChild(table);
-  }
-  public getContentsList(
-    treeContents: TreeContents & { parent?: TreeContents },
-    list?: (typeof treeContents)[]
-  ) {
-    if (!list) list = [];
-    list.push(treeContents);
-    const childs = treeContents.childs;
-    if (childs) {
-      for (const child of childs) {
-        (child as typeof treeContents).parent = treeContents;
-        this.getContentsList(child, list);
-      }
-    }
-    return list;
-  }
   public createEditMenu(contentsArea: ContentsArea) {
     //管理者用編集メニュー
     //if (SESSION.isAuthority("SYSTEM_ADMIN"))
@@ -346,12 +275,12 @@ export class InfoContentsView extends JWF.Window {
     this.contentsModule.callEvent("drawContents", this.getClient(), page.id);
   }
   public moveVector(id: number, vector: number) {
-    var node = this.contentsNode[id];
+    const node = this.contentsNode[id];
     if (node == null) return;
-    var parent = node.parentNode;
+    const parent = node.parentNode;
     if (!parent) return;
-    var childs = parent.childNodes;
-    for (var i = 0; i < childs.length; i++) {
+    const childs = parent.childNodes;
+    for (let i = 0; i < childs.length; i++) {
       if (childs[i] === node) {
         if (vector < 0) {
           if (i === 0) return false;
@@ -379,7 +308,7 @@ export class InfoContentsView extends JWF.Window {
   public jumpContents(id: number) {
     const node = this.contentsNode[id];
     if (node) {
-      var y =
+      const y =
         node.getBoundingClientRect().top -
         this.contentsPage.getBoundingClientRect().top;
       setTimeout(() => {
@@ -399,11 +328,11 @@ export class InfoContentsView extends JWF.Window {
     if (this.timerHandle) window.clearInterval(this.timerHandle);
     pos -= 20;
     if (pos < 0) pos = 0;
-    var limit = node.scrollHeight - node.clientHeight;
+    const limit = node.scrollHeight - node.clientHeight;
     if (pos > limit) pos = limit;
     this.scrollFlag = true;
     this.timerHandle = window.setInterval(() => {
-      var p = Math.floor(pos - node.scrollTop);
+      const p = Math.floor(pos - node.scrollTop);
       if (p === 0) {
         window.clearInterval(this.timerHandle);
         this.timerHandle = undefined;

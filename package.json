@@ -46,6 +46,7 @@
     "javascript-window-framework": "file:local_modules/javascript-window-framework",
     "node-sass": "^4.12.0",
     "parse5": "^5.1.0",
+    "prettier": "^1.18.2",
     "sass-loader": "^7.1.0",
     "source-map-loader": "^0.2.4",
     "sprintf": "^0.1.5",

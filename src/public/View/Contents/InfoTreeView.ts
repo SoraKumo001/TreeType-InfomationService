@@ -143,9 +143,9 @@ export class InfoTreeView extends JWF.TreeView {
     node.dataset.contentStat = value.stat ? "true" : "false";
     node.dataset.contentType = value["type"] === "PAGE" ? "PAGE" : "TEXT";
     if (value.childs) {
-      var flag = node.dataset.contentType !== "PAGE";
-      for (var i = 0; value.childs[i]; i++) {
-        var child = value.childs[i];
+      const flag = node.dataset.contentType !== "PAGE";
+      for (let i = 0; value.childs[i]; i++) {
+        const child = value.childs[i];
         // if (/*Contents.visible || */ child["stat"])
         this.setTreeItem(item.addItem("", flag), child);
       }
