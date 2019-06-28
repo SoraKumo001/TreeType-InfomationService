@@ -1,5 +1,9 @@
-import { appManager } from "../../../AppManager";
-import { ContentsModule, TreeContents } from "../../../modules/ContentsModule";
+  /**
+   *表示用パンくずリストプラグイン
+   */
+
+import { appManager } from "../../AppManager";
+import { ContentsModule, TreeContents } from "../../modules/ContentsModule";
 
 const contentsModule = appManager.getModule(ContentsModule);
 contentsModule.addEventListener("drawContents", (client,id) => {

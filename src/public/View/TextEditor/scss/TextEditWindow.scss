@@ -39,9 +39,11 @@
   //padding: 0.2em;
   > :nth-child(1) {
     display: flex;
+    flex-wrap: wrap;
     background-color: rgba(0, 0, 0, 0.2);
-    > * {
-      height: 100%;
+    * {
+      box-sizing: border-box;
+      height: 2.5em;
       border-radius: 0.3em;
       display: flex;
       align-items: center;
