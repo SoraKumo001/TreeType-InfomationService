@@ -179,7 +179,7 @@ export class Manager {
 
     //モジュールの初期化
     for (const name of Object.keys(modules)) {
-      this.getModule(name);
+      await this.getModule(name);
     }
 
     //Expressの初期化
@@ -218,7 +218,7 @@ export class Manager {
     else name = type.name;
     module = this.modulesInstance[name];
     if (module) return module as T;
-    return null;
+    throw "Module Load Error";
   }
   public addCommand(
     name: string,

@@ -266,6 +266,7 @@ export class Session {
     for (let module of this.modules) {
       if (module.onEndSession) await module.onEndSession();
     }
+    this.modules = [];
   }
   public async request(): Promise<void> {
     var p = [];

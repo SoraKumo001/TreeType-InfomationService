@@ -19,7 +19,7 @@ export interface MainContents {
   update?: Date;
   title_type: number;
   title: string;
-  value_type:string,
+  value_type: string;
   value: string;
   childs?: MainContents[];
 }
@@ -36,10 +36,14 @@ export interface CustomMap extends ModuleMap {
   drawContents: [HTMLElement, number];
 }
 
-type ValueTypeProc = (body:HTMLDivElement,pageId:number,contents:MainContents)=>void;
+type ValueTypeProc = (
+  body: HTMLDivElement,
+  pageId: number,
+  contents: MainContents
+) => void;
 export class ContentsModule extends AppModule<CustomMap> {
   private treeContents?: TreeContents;
-  private contentsValueTypes:{[name:string]:ValueTypeProc} ={};
+  private contentsValueTypes: { [name: string]: ValueTypeProc } = {};
   public async createContents(pid: number, vector: number, type: string) {
     const adapter = this.getAdapter();
     const result = (await adapter.exec(
@@ -53,15 +57,16 @@ export class ContentsModule extends AppModule<CustomMap> {
     }
     return result;
   }
-  public findTreeContents(id: number,tree?: TreeContents,): TreeContents | null {
-    if(!tree)
-      tree = this.treeContents;
-    if(!tree)
-      return null;
+  public findTreeContents(
+    id: number,
+    tree?: TreeContents
+  ): TreeContents | null {
+    if (!tree) tree = this.treeContents;
+    if (!tree) return null;
     if (tree.id === id) return tree;
     if (tree.childs) {
       for (const child of tree.childs) {
-        const result = this.findTreeContents(id,child);
+        const result = this.findTreeContents(id, child);
         if (result) return result;
       }
     }
@@ -113,15 +118,14 @@ export class ContentsModule extends AppModule<CustomMap> {
     if (flag) this.callEvent("deleteContents", id);
     return flag;
   }
-  public async updateContents(contents: MainContents,save?:boolean) {
+  public async updateContents(contents: MainContents, save?: boolean) {
     const adapter = this.getAdapter();
-    let flag:boolean|null = false;
-    if(save){
+    let flag: boolean | null = false;
+    if (save) {
       flag = (await adapter.exec("Contents.updateContents", contents)) as
         | boolean
         | null;
-    }else
-      flag = true;
+    } else flag = true;
 
     if (flag) this.callEvent("updateContents", contents);
     return flag;
@@ -153,18 +157,26 @@ export class ContentsModule extends AppModule<CustomMap> {
     if (flag) this.callEvent("importContents", id);
     return flag;
   }
-  public getContentsValueTypes(){
+  public getContentsValueTypes() {
     return Object.keys(this.contentsValueTypes);
   }
-  public addContentsValueType(name:string,proc:ValueTypeProc){
+  public addContentsValueType(name: string, proc: ValueTypeProc) {
     this.contentsValueTypes[name] = proc;
   }
-  public createContentsValue(body:HTMLDivElement,pageId:number,contents:MainContents){
+  public createContentsValue(
+    body: HTMLDivElement,
+    pageId: number,
+    contents: MainContents
+  ) {
     const proc = this.contentsValueTypes[contents.value_type];
-    if(proc){
-      proc(body,pageId,contents);
+    if (proc) {
+      proc(body, pageId, contents);
     }
-
   }
-
+  public async search(keyword: string) {
+    const adapter = this.getAdapter();
+    return adapter.exec("Contents.search", keyword) as Promise<
+      number[] | null
+    >;
+  }
 }
