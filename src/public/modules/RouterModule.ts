@@ -41,7 +41,8 @@ export class RouterModule extends AppModule<CustomMap> {
       .split("&")
       .forEach(function(v) {
         const s = v.split("=");
-        p[decodeURI(s[0])] = decodeURI(s[1]);
+        if(s[0].length)
+          p[decodeURI(s[0])] = decodeURI(s[1]);
       });
     return p;
   }
