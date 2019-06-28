@@ -34,7 +34,9 @@
       .Contents {
         position: relative;
         .ContentsEdit {
+          z-index: 5;
           margin: 0.5em;
+          margin-top:1em;
           display: none;
           position: absolute;
           right: 0.1em;
