@@ -1,7 +1,7 @@
 import * as amf from "active-module-framework";
-import { Users } from "./Users";
-import { RemoteDB } from "./RemoteDB";
-import { Files } from "./Files";
+import { Users } from "./Users.auto";
+import { RemoteDB } from "./RemoteDB.auto";
+import { Files } from "./Files.auto";
 import { sprintf } from "sprintf";
 
 interface TreeContents {

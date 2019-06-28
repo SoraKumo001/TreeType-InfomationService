@@ -1,7 +1,7 @@
 import * as amf from "active-module-framework";
 import { HtmlCreater } from "active-module-framework";
-import { Contents } from "./Contents";
-import { Params } from "./Params";
+import { Contents } from "./Contents.auto";
+import { Params } from "./Params.auto";
 
 export class SeoModule extends amf.Module {
   public async onCreateHtml(creater: HtmlCreater) {
