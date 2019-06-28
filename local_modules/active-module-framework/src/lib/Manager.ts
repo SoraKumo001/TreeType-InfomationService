@@ -77,12 +77,9 @@ export class Manager {
     this.express = express();
     this.output("--- Start Manager");
     //エラーメッセージをキャプチャ
-    capcon.startCapture(
-      process.stderr,
-      (stderr: unknown): void => {
-        this.stderr += stderr;
-      }
-    );
+    capcon.startCapture(process.stderr, (stderr: unknown): void => {
+      this.stderr += stderr;
+    });
     this.init(params);
   }
   public getModuleTypes(): {
@@ -130,51 +127,8 @@ export class Manager {
     }
 
     //モジュールを読み出す
-    let files: string[];
-    try {
-      files = fs.readdirSync(params.modulePath);
-    } catch (e) {
-      files = [];
-    }
     const modules: { [key: string]: typeof Module } = {};
-
-    for (let ent of files) {
-      const dir = fs.statSync(path.join(params.modulePath, ent)).isDirectory();
-      let r: {
-        [key: string]: typeof Module;
-      } | null = null;
-      if (!dir) {
-        let name = ent;
-        let ext = name.slice(-3);
-        let ext2 = name.slice(-5);
-        if (ext === ".js" || (ext === ".ts" && ext2 !== ".d.ts"))
-          r = require(params.modulePath + "/" + name) as {
-            [key: string]: typeof Module;
-          };
-      } else {
-        const basePath = `${params.modulePath}/${ent}/`;
-        let path: string | null = null;
-        for (const name of ["index.ts", "index.js", ent + ".ts", ent + ".js"]) {
-          if (isExistFile(basePath + name)) {
-            path = basePath + name;
-            break;
-          }
-        }
-        if (path)
-          r = require(path) as {
-            [key: string]: typeof Module;
-          };
-      }
-      if (r) {
-        for (const name of Object.keys(r)) {
-          if (name === "default") continue;
-          const module = r[name];
-          if ("Module" in module) {
-            modules[name] = module as typeof Module;
-          }
-        }
-      }
-    }
+    this.loadModule(modules, params.modulePath);
     this.modulesType = modules;
 
     //モジュールの初期化
@@ -188,6 +142,31 @@ export class Manager {
     Manager.initFlag = true;
     this.listen(params);
     return true;
+  }
+  public loadModule(
+    modules: { [key: string]: typeof Module },
+    modulePath: string
+  ) {
+    const files = fs.readdirSync(modulePath);
+    for (const file of files) {
+      const filePath = path.join(modulePath, file);
+      const dir = fs.statSync(filePath).isDirectory();
+      if (dir) {
+        this.loadModule(modules, filePath);
+      } else {
+        if (file.match(`\.auto\.(ts|js)$`)) {
+          const r = require(filePath) as { [key: string]: typeof Module };
+          if (r) {
+            for (const name of Object.keys(r)) {
+              const module = r[name];
+              if (module.prototype instanceof Module) {
+                modules[name] = module;
+              }
+            }
+          }
+        }
+      }
+    }
   }
   public async getModule<T extends Module>(
     type: string | { new (manager: Manager): T }
@@ -243,16 +222,14 @@ export class Manager {
     const exp = this.express;
 
     exp.options("*", function(req, res) {
-      res.header("Access-Control-Allow-Headers","content-type");
+      res.header("Access-Control-Allow-Headers", "content-type");
       res.sendStatus(200);
     });
     //バイナリファイルの扱い設定
     exp.use(
       bodyParser.raw({ type: "application/octet-stream", limit: "300mb" })
     );
-    exp.use(
-      bodyParser.json({ type: "application/json", limit: "3mb" })
-    );
+    exp.use(bodyParser.json({ type: "application/json", limit: "3mb" }));
     //一般コンテンツの対応付け
     exp.use(params.remotePath, express.static(params.rootPath));
     //クライアント接続時の処理
@@ -358,18 +335,15 @@ export class Manager {
         .on("data", function(v: string): void {
           postData += v;
         })
-        .on(
-          "end",
-          (): void => {
-            try {
-              const values = JSON.parse(postData);
-              this.excute(res, values);
-            } catch (e) {
-              res.status(500);
-              res.end("500 error");
-            }
+        .on("end", (): void => {
+          try {
+            const values = JSON.parse(postData);
+            this.excute(res, values);
+          } catch (e) {
+            res.status(500);
+            res.end("500 error");
           }
-        );
+        });
     }
   }
   private async excute(
@@ -479,29 +453,23 @@ export class Manager {
 
     if (port) {
       //ソケットの待ち受け設定
-      this.express.listen(
-        port,
-        (): void => {
-          this.output("localhost:%d", port);
-          if (params.listened) params.listened(port);
-        }
-      );
+      this.express.listen(port, (): void => {
+        this.output("localhost:%d", port);
+        if (params.listened) params.listened(port);
+      });
     } else {
       //ソケットファイルの削除
       this.removeSock(path);
       //ソケットの待ち受け設定
-      this.express.listen(
-        path,
-        (): void => {
-          this.output(path);
-          try {
-            fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
-            if (params.listened) params.listened(path);
-          } catch (e) {
-            //
-          }
+      this.express.listen(path, (): void => {
+        this.output(path);
+        try {
+          fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
+          if (params.listened) params.listened(path);
+        } catch (e) {
+          //
         }
-      ); //ソケットの待ち受け設定
+      }); //ソケットの待ち受け設定
     }
   }
   /**
