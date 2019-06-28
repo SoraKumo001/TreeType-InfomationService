@@ -1,6 +1,6 @@
 import * as amf from "active-module-framework";
-import { Users } from "./Users";
-import { RemoteDB } from "./RemoteDB";
+import { Users } from "./Users.auto";
+import { RemoteDB } from "./RemoteDB.auto";
 import express = require("express");
 
 export interface FileInfo {

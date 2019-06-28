@@ -1,6 +1,6 @@
 import * as crypto from "crypto";
 import * as amf from "active-module-framework";
-import { RemoteDB } from "./RemoteDB";
+import { RemoteDB } from "./RemoteDB.auto";
 
 function getSHA256(v1: string, v2?: string): string {
   return crypto
