@@ -1,5 +1,5 @@
 /**
- *表示用パンくずリストプラグイン
+ *検索ボタン表示用プラグイン
  */
 
 import { appManager } from "../../AppManager";
@@ -12,9 +12,10 @@ contentsModule.addEventListener("drawContents", (client, id) => {
     "[data-type=ContentsPage]"
   ) as HTMLElement;
   const search = document.createElement("div");
-  search.style.cursor = "pointer";
   search.style.position = "absolute";
-  search.style.right = "3em";
+  search.style.cursor = "pointer";
+  search.style.right = "2em";
+  search.style.zIndex = "100";
   search.style.padding = "0.7em";
   search.style.background = "rgba(0,0,0,0.1)";
   search.style.borderRadius = "1em";
