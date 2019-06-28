@@ -18,12 +18,12 @@ export class RouterModule extends AppModule<CustomMap> {
       false
     );
   }
-  public setLocationParams(params: { [key: string]: string|number },history?:boolean) {
+  public setLocationParams(params: { [key: string]: string|number|null },history?:boolean) {
     const p = Object.assign(this.getLocationParams(), params);
     let search = "";
     for (let key of Object.keys(p)) {
       if (search.length) search += "&";
-      if (p[key] !== null) search = `${encodeURI(key)}=${encodeURI(p[key])}`;
+      if (p[key] !== null) search += `${encodeURI(key)}=${encodeURI(p[key])}`;
     }
     if (this.lastParams !== search) {
       if(history === undefined || history)
@@ -44,6 +44,9 @@ export class RouterModule extends AppModule<CustomMap> {
         p[decodeURI(s[0])] = decodeURI(s[1]);
       });
     return p;
+  }
+  public getLocationParam(name:string){
+    return this.getLocationParams()[name];
   }
   public goLocation() {
     const p = this.getLocationParams();

@@ -1,7 +1,7 @@
 import * as amf from "active-module-framework";
 import express = require("express");
-import { Params } from "./Params";
-import { Contents } from "./Contents";
+import { Params } from "./Params.auto";
+import { Contents } from "./Contents.auto";
 import * as xml2js from "xml2js";
 import { HtmlCreater } from "active-module-framework";
 
