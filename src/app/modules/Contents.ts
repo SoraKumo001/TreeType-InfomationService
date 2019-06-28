@@ -351,17 +351,19 @@ export class Contents extends amf.Module {
     this.updatePriority(pid);
     return { pid: pid, id: cid };
   }
-  public async deleteContents(id: number,flag?:boolean): Promise<boolean | null> {
+  public async deleteContents(
+    id: number,
+    flag?: boolean
+  ): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
-    if(flag || flag===undefined)
-      await remoteDB.run("begin");
+    if (flag || flag === undefined) await remoteDB.run("begin");
     const ids = (await remoteDB.all(
       "select contents_id from contents where contents_parent=$1",
       id
     )) as { contents_id: number }[] | null;
-    if (ids){
-    for (const cid of ids) await this.deleteContents(cid.contents_id,false);
+    if (ids) {
+      for (const cid of ids) await this.deleteContents(cid.contents_id, false);
     }
     //
     //関連ファイルの削除
@@ -373,8 +375,7 @@ export class Contents extends amf.Module {
     }
     if (id !== 1)
       await remoteDB.run("delete from contents where contents_id=$1", id);
-    if(flag || flag===undefined)
-      await remoteDB.run("commit");
+    if (flag || flag === undefined) await remoteDB.run("commit");
     //コンテンツの削除
     return true;
   }
@@ -597,6 +598,54 @@ export class Contents extends amf.Module {
     }
     return true;
   }
+  public async search(keyword: string, admin?: boolean) {
+    const visible = admin ? "" : "where contents_stat=1";
+    const remoteDB = this.remoteDB;
+    if (!remoteDB) return null;
+    const results = (await remoteDB.all(
+      "select contents_id as id,contents_title || ' ' ||contents_value as value from contents " +
+        visible+" order by contents_date desc"
+    )) as { id: number; value: string }[] | null;
+    if (!results) return null;
+    const keywords = keyword
+      .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+        return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
+      })
+      .toLowerCase()
+      .split(/\s/);
+    console.log(keywords);
+    if (keywords.length === 0) return null;
+    const hits: number[] = [];
+    for (const r of results) {
+      //タグを削除、全角を半角に変換、小文字に変換
+      const msg = r.value
+        .replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, "")
+        .replace(/&nbsp;/g," ")
+        .replace(/&gt;/g,">")
+        .replace(/&lt;/g,"<")
+        .replace(/&amp;/g,"&")
+        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+          return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
+        })
+        .toLowerCase();
+      console.log(msg);
+      let flag = true;
+      for (const key of keywords) {
+        if (key.length === 0) continue;
+        if (msg.indexOf(key) === -1) {
+          flag = false;
+          break;
+        }
+      }
+      if (flag) hits.push(r.id);
+    }
+    return hits;
+  }
+  public async JS_search(keyword: string) {
+    const users = await this.getSessionModule(Users);
+    const admin = (users && users.isAdmin()) as boolean;
+    return this.search(keyword, admin);
+  }
   public async JS_import(id: number, mode: number): Promise<boolean | null> {
     const users = await this.getSessionModule(Users);
     if (!users || !users.isAdmin()) return null;
@@ -651,7 +700,10 @@ export class Contents extends amf.Module {
 
     return contents;
   }
-  public JS_getContents(id: number, child?: boolean): Promise<MainContents | null> {
+  public JS_getContents(
+    id: number,
+    child?: boolean
+  ): Promise<MainContents | null> {
     return this.getContents(id, child);
   }
   public async JS_deleteContents(id: number): Promise<boolean | null> {
