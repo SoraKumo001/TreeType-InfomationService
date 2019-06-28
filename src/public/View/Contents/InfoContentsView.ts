@@ -134,26 +134,26 @@ export class InfoContentsView extends JWF.Window {
    * @memberof InfoContentsView
    */
   private createContents(contents: MainContents) {
-    var contentsArea = document.createElement("div") as ContentsArea;
+    const contentsArea = document.createElement("div") as ContentsArea;
     contentsArea.contents = contents;
     contentsArea.className = "ContentsArea";
     contentsArea.dataset.contentsType = contents.type;
-    var contentsNode = document.createElement("div");
+    const contentsNode = document.createElement("div");
     contentsNode.className = "Contents";
     contentsArea.appendChild(contentsNode);
     contentsArea.contentsNode = contentsNode;
 
     this.createEditMenu(contentsArea);
 
-    var title = document.createElement("div") as HTMLElement;
+    let title = document.createElement("div") as HTMLElement;
     contentsNode.appendChild(title);
-    var date = document.createElement("div");
+    const date = document.createElement("div");
     date.className = "Date";
     contentsNode.appendChild(date);
-    var body = document.createElement("div");
+    const body = document.createElement("div");
     body.className = "Body";
     contentsNode.appendChild(body);
-    var childs = document.createElement("div");
+    const childs = document.createElement("div");
     childs.className = "Childs";
     contentsArea.appendChild(childs);
     if (contents.childs) {
@@ -165,9 +165,9 @@ export class InfoContentsView extends JWF.Window {
       contentsArea.contents = contents;
       this.contentsNode[contents.id] = contentsArea;
       // if (contentsArea.dataset.contentsType === contents["type"]) {
-      var titleTag = "H" + contents["title_type"];
+      const titleTag = "H" + contents["title_type"];
       if (titleTag != title.nodeName) {
-        var newTitle = document.createElement(titleTag);
+        const newTitle = document.createElement(titleTag);
         if (title.parentNode) {
           title.parentNode.insertBefore(newTitle, title);
           title.parentNode.removeChild(title);
@@ -180,21 +180,21 @@ export class InfoContentsView extends JWF.Window {
       date.textContent = new Date(contents["date"]).toLocaleString();
       this.contentsModule.createContentsValue(body, this.pageId, contents);
       // const imageNodes = body.querySelectorAll("img");
-      // for (var i = 0; i < imageNodes.length; i++) {
+      // for (const i = 0; i < imageNodes.length; i++) {
       //   const node = imageNodes[i];
       //   node.src = node.src.replace("command=Files.download", "cmd=download");
       //   node.addEventListener("click", () => {
       //     window.open(node.src, "newtab");
       //   });
       // }
-      var nodes = body.querySelectorAll(".code");
-      for (var index = 0; nodes[index]; index++) {
-        var node = nodes[index];
+      const nodes = body.querySelectorAll(".code");
+      for (let index = 0; nodes[index]; index++) {
+        const node = nodes[index];
         highlight.highlightBlock(node);
       }
-      // var nodes = body.querySelectorAll(".update");
-      // for (var index = 0; nodes[index]; index++) {
-      //   var node = nodes[index];
+      // const nodes = body.querySelectorAll(".update");
+      // for (const index = 0; nodes[index]; index++) {
+      //   const node = nodes[index];
       //   //checkUpdate(node);
       // }
     };
@@ -275,12 +275,12 @@ export class InfoContentsView extends JWF.Window {
     this.contentsModule.callEvent("drawContents", this.getClient(), page.id);
   }
   public moveVector(id: number, vector: number) {
-    var node = this.contentsNode[id];
+    const node = this.contentsNode[id];
     if (node == null) return;
-    var parent = node.parentNode;
+    const parent = node.parentNode;
     if (!parent) return;
-    var childs = parent.childNodes;
-    for (var i = 0; i < childs.length; i++) {
+    const childs = parent.childNodes;
+    for (let i = 0; i < childs.length; i++) {
       if (childs[i] === node) {
         if (vector < 0) {
           if (i === 0) return false;
@@ -308,7 +308,7 @@ export class InfoContentsView extends JWF.Window {
   public jumpContents(id: number) {
     const node = this.contentsNode[id];
     if (node) {
-      var y =
+      const y =
         node.getBoundingClientRect().top -
         this.contentsPage.getBoundingClientRect().top;
       setTimeout(() => {
@@ -328,11 +328,11 @@ export class InfoContentsView extends JWF.Window {
     if (this.timerHandle) window.clearInterval(this.timerHandle);
     pos -= 20;
     if (pos < 0) pos = 0;
-    var limit = node.scrollHeight - node.clientHeight;
+    const limit = node.scrollHeight - node.clientHeight;
     if (pos > limit) pos = limit;
     this.scrollFlag = true;
     this.timerHandle = window.setInterval(() => {
-      var p = Math.floor(pos - node.scrollTop);
+      const p = Math.floor(pos - node.scrollTop);
       if (p === 0) {
         window.clearInterval(this.timerHandle);
         this.timerHandle = undefined;

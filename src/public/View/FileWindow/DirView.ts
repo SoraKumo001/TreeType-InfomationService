@@ -105,7 +105,7 @@ export class DirView extends JWF.Window {
     }
     const dir = await this.fileModule.getDirs();
     if (dir) {
-      var item = dirTree.getRootItem();
+      const item = dirTree.getRootItem();
       this.setTreeData(item, dir);
     }
     dirTree.setTreeStat(treeStat);

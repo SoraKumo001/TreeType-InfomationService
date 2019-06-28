@@ -35,7 +35,7 @@ export class RouterModule extends AppModule<CustomMap> {
   }
   public getLocationParams() {
     //パラメータの読み出し
-    var p: { [key: string]: string } = {};
+    const p: { [key: string]: string } = {};
     window.location.search
       .substring(1)
       .split("&")

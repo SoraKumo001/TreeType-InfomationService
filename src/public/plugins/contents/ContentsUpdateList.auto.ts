@@ -1,3 +1,6 @@
+/**
+ *更新リスト表示用プラグイン
+  */
 import {
   TreeContents,
   MainContents,
