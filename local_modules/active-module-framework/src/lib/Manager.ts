@@ -305,9 +305,9 @@ export class Manager {
     let port = 0;
     let path = "";
     if (typeof params.listen === "number") {
-      port = params.listen + parseInt(process.env.NODE_APP_INSTANCE || "0");
+      port = params.listen;// + parseInt(process.env.NODE_APP_INSTANCE || "0");
     } else {
-      path = params.listen + "." + (process.env.NODE_APP_INSTANCE || "0");
+      path = params.listen;// + "." + (process.env.NODE_APP_INSTANCE || "0");
     }
 
     //終了時の処理(Windowsでは動作しない)
