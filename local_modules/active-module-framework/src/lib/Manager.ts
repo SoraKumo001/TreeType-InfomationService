@@ -1,3 +1,5 @@
+import * as cluster from "cluster";
+import * as os from "os";
 import * as fs from "fs";
 import * as util from "util";
 import * as capcon from "capture-console";
@@ -37,7 +39,8 @@ export interface ManagerParams {
   cssPath: string[];
   jsPath: string[];
   jsPriority: string[];
-  debug: boolean;
+  cluster?: number;
+  debug?: boolean;
   listen: number | string;
   listened?: (port: string | number) => void;
 }
@@ -50,6 +53,14 @@ interface AdapterFormat {
     params: unknown[]; //パラメータ
   }[];
 }
+
+export function Sleep(timeout: number): Promise<void> {
+  return new Promise((resolv): void => {
+    setTimeout((): void => {
+      resolv();
+    }, timeout);
+  });
+}
 /**
  *フレームワーク総合管理用クラス
  *
@@ -57,12 +68,12 @@ interface AdapterFormat {
  * @class Manager
  */
 export class Manager {
-  private debug: boolean;
+  private debug?: boolean;
   private localDB: LocalDB = new LocalDB();
   private stderr: string = "";
   private modulesInstance: { [key: string]: Module } = {};
   private modulesType: { [key: string]: typeof Module } = {};
-  private express: express.Express;
+  private express?: express.Express;
   private static initFlag = false;
   private commands: {
     [key: string]: (req: express.Request, res: express.Response) => void;
@@ -73,13 +84,6 @@ export class Manager {
    * @memberof Manager
    */
   public constructor(params: ManagerParams) {
-    this.debug = params.debug;
-    this.express = express();
-    this.output("--- Start Manager");
-    //エラーメッセージをキャプチャ
-    capcon.startCapture(process.stderr, (stderr: unknown): void => {
-      this.stderr += stderr;
-    });
     this.init(params);
   }
   public getModuleTypes(): {
@@ -109,38 +113,55 @@ export class Manager {
    * @memberof Manager
    */
   public async init(params: ManagerParams): Promise<boolean> {
-    //ファイルの存在確認
-    function isExistFile(path: string): boolean {
-      try {
-        fs.statSync(path);
-      } catch (e) {
-        return false;
+    if (
+      params.cluster !== undefined &&
+      params.cluster !== -1 &&
+      cluster.isMaster
+    ) {
+      cluster.on("exit", async (worker, code, signal) => {
+        console.log(
+          "Worker %d died with code/signal %s. Restarting worker...",
+          worker.process.pid,
+          signal || code
+        );
+        Sleep(2000); //待機
+        //初期化以外の要因なら再起動
+        if (code !== -10) cluster.fork();
+      });
+
+      //子プロセスを作成
+      const numCPUs = params.cluster === 0 ? os.cpus().length : params.cluster;
+      for (var i = 0; i < numCPUs; i++) {
+        cluster.fork();
       }
-      return true;
+    } else {
+      this.debug = params.debug;
+      this.output("--- Start Manager");
+      //エラーメッセージをキャプチャ
+      capcon.startCapture(process.stderr, (stderr: unknown): void => {
+        this.stderr += stderr;
+      });
+      //ローカルDBを開く
+      if (!(await this.localDB.open(params.localDBPath))) {
+        // eslint-disable-next-line no-console
+        console.error("ローカルDBオープンエラー:%s", params.localDBPath);
+        process.exit(-10);
+      }
+
+      //モジュールを読み出す
+      const modules: { [key: string]: typeof Module } = {};
+      this.loadModule(modules, params.modulePath);
+      this.modulesType = modules;
+
+      //モジュールの初期化
+      for (const name of Object.keys(modules)) {
+        if (!(await this.getModule(name))) process.exit(-10);
+      }
+
+      //Expressの初期化
+      this.initExpress(params);
+      Manager.initFlag = true;
     }
-
-    //ローカルDBを開く
-    if (!(await this.localDB.open(params.localDBPath))) {
-      // eslint-disable-next-line no-console
-      console.error("ローカルDBオープンエラー:%s", params.localDBPath);
-      return false;
-    }
-
-    //モジュールを読み出す
-    const modules: { [key: string]: typeof Module } = {};
-    this.loadModule(modules, params.modulePath);
-    this.modulesType = modules;
-
-    //モジュールの初期化
-    for (const name of Object.keys(modules)) {
-      await this.getModule(name);
-    }
-
-    //Expressの初期化
-    this.initExpress(params);
-
-    Manager.initFlag = true;
-    this.listen(params);
     return true;
   }
   public loadModule(
@@ -185,7 +206,8 @@ export class Manager {
 
     const info = constructor.getModuleInfo();
     this.output("init: %s", JSON.stringify(info));
-    await module.onCreateModule();
+    //初期化に失敗したらnullを返す
+    if (!(await module.onCreateModule())) return null;
     return module as T;
   }
   public getModuleSync<T extends Module>(
@@ -212,6 +234,7 @@ export class Manager {
    * @memberof Manager
    */
   private initExpress(params: ManagerParams): void {
+    const exp = express();
     const commands = this.commands;
     commands.exec = (req: express.Request, res: express.Response): void => {
       this.exec(req, res);
@@ -219,7 +242,6 @@ export class Manager {
     commands.upload = (req: express.Request, res: express.Response): void => {
       this.upload(req, res);
     };
-    const exp = this.express;
 
     exp.options("*", function(req, res) {
       res.header("Access-Control-Allow-Headers", "content-type");
@@ -278,6 +300,45 @@ export class Manager {
         }
       }
     );
+
+    //待ち受けポートの設定
+    let port = 0;
+    let path = "";
+    if (typeof params.listen === "number") {
+      port = params.listen + parseInt(process.env.NODE_APP_INSTANCE || "0");
+    } else {
+      path = params.listen + "." + (process.env.NODE_APP_INSTANCE || "0");
+    }
+
+    //終了時の処理(Windowsでは動作しない)
+    const onExit: NodeJS.SignalsListener = async (): Promise<void> => {
+      await this.destory();
+      if (path) this.removeSock(path); //ソケットファイルの削除
+      process.exit(0);
+    };
+    process.on("SIGINT", onExit);
+    process.on("SIGTERM", onExit);
+
+    if (port) {
+      //ソケットの待ち受け設定
+      exp.listen(port, (): void => {
+        this.output("localhost:%d", port);
+        if (params.listened) params.listened(port);
+      });
+    } else {
+      //ソケットファイルの削除
+      this.removeSock(path);
+      //ソケットの待ち受け設定
+      exp.listen(path, (): void => {
+        this.output(path);
+        try {
+          fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
+          if (params.listened) params.listened(path);
+        } catch (e) {
+          //
+        }
+      }); //ソケットの待ち受け設定
+    }
   }
 
   /**
@@ -431,46 +492,6 @@ export class Manager {
     //クライアントに返すデータを設定
     res.json(session.result);
     res.end();
-  }
-  //待ち受け設定
-  private listen(params: ManagerParams): void {
-    let port = 0;
-    let path = "";
-    if (typeof params.listen === "number") {
-      port = params.listen + parseInt(process.env.NODE_APP_INSTANCE || "0");
-    } else {
-      path = params.listen + "." + (process.env.NODE_APP_INSTANCE || "0");
-    }
-
-    //終了時の処理(Windowsでは動作しない)
-    const onExit: NodeJS.SignalsListener = async (): Promise<void> => {
-      await this.destory();
-      if (path) this.removeSock(path); //ソケットファイルの削除
-      process.exit(0);
-    };
-    process.on("SIGINT", onExit);
-    process.on("SIGTERM", onExit);
-
-    if (port) {
-      //ソケットの待ち受け設定
-      this.express.listen(port, (): void => {
-        this.output("localhost:%d", port);
-        if (params.listened) params.listened(port);
-      });
-    } else {
-      //ソケットファイルの削除
-      this.removeSock(path);
-      //ソケットの待ち受け設定
-      this.express.listen(path, (): void => {
-        this.output(path);
-        try {
-          fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
-          if (params.listened) params.listened(path);
-        } catch (e) {
-          //
-        }
-      }); //ソケットの待ち受け設定
-    }
   }
   /**
    *前回のソケットファイルの削除
