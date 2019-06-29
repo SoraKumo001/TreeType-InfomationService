@@ -149,12 +149,11 @@ export class Manager {
       }
 
       //モジュールを読み出す
-      const modules: { [key: string]: typeof Module } = {};
-      this.loadModule(modules, params.modulePath);
-      this.modulesType = modules;
+      const modulesType = this.loadModule(params.modulePath);
+      this.modulesType = modulesType;
 
       //モジュールの初期化
-      for (const name of Object.keys(modules)) {
+      for (const name of Object.keys(modulesType)) {
         if (!(await this.getModule(name))) process.exit(-10);
       }
 
@@ -165,15 +164,15 @@ export class Manager {
     return true;
   }
   public loadModule(
-    modules: { [key: string]: typeof Module },
     modulePath: string
   ) {
+    let modulesType: { [key: string]: typeof Module } = {};
     const files = fs.readdirSync(modulePath);
     for (const file of files) {
       const filePath = path.join(modulePath, file);
       const dir = fs.statSync(filePath).isDirectory();
       if (dir) {
-        this.loadModule(modules, filePath);
+        modulesType = Object.assign(modulesType,this.loadModule(filePath));
       } else {
         if (file.match(`\(?<=\.(ts|js))(?<!d\.ts)$`)) {
           const r = require(filePath) as { [key: string]: typeof Module };
@@ -181,13 +180,14 @@ export class Manager {
             for (const name of Object.keys(r)) {
               const module = r[name];
               if (module.prototype instanceof Module) {
-                modules[name] = module;
+                modulesType[name] = module;
               }
             }
           }
         }
       }
     }
+    return modulesType;
   }
   public async getModule<T extends Module>(
     type: string | { new (manager: Manager): T }
@@ -388,7 +388,7 @@ export class Manager {
    * @memberof Manager
    */
   private exec(req: express.Request, res: express.Response): void {
-    if (req.header("content-type") == "application/json") {
+    if (req.header("content-type") === "application/json") {
       this.excute(res, req.body);
     } else {
       let postData = "";
@@ -418,7 +418,6 @@ export class Manager {
       this.localDB,
       params.globalHash,
       params.sessionHash,
-      this.modulesType,
       buffer
     );
     session.result = {
@@ -426,6 +425,14 @@ export class Manager {
       sessionHash: session.getSessionHash(),
       results: []
     };
+
+     const modulesType =this.modulesType;
+
+    //セッション初期化処理のあるモジュールを呼び出す
+    for (const name of Object.keys(modulesType)) {
+      if(modulesType[name].prototype.onStartSession)
+        await session.getModule(name);
+    }
 
     if (params.functions) {
       const results = session.result.results;
