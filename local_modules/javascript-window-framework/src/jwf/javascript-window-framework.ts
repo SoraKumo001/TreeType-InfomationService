@@ -1,4 +1,4 @@
-import "es6-promise/auto";
+//import "es6-promise/auto";
 
 export * from "./Adapter";
 export * from "./Button";
