@@ -16,7 +16,8 @@
       > input {
         user-select: all;
         position: absolute;
-        background-color: rgba(100, 100, 100, 0.2);
+        background-color: rgba(219, 238, 253, 0.5);
+        color:black;
         min-height: 2em;
         padding: 0.2em;
         border: solid 1px;
@@ -24,10 +25,10 @@
       }
 
       > div {
+        color:rgba(0,0,0,0.8);
         white-space: nowrap;
         position: absolute;
         padding: 0.2em;
-        opacity: 0.6;
       }
     }
   }
