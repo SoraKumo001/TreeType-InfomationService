@@ -18,11 +18,23 @@ export class Rss extends amf.Module {
     return true;
   }
   public async onCreateHtml(creater: HtmlCreater) {
+    const params = await this.getModule(Params);
+    let url = "";
+    if (params) {
+      const p = (await params.getGlobalParam("BASIC_DATA")) as {
+        url: string;
+        title: string;
+        info: string;
+      };
+      if (p && p.url) url = p.url;
+      url = url.replace(/\/$/, "") + "/";
+    }
+
     const document = creater.getDocument();
     const node = document.createElement("link");
     node.rel = "alternate";
     node.type = "application/rss+xml";
-    node.href = "?cmd=rss";
+    node.href = url + "?cmd=rss";
     node.title = "RSS2.0";
     document.head.appendChild(node);
   }
@@ -54,9 +66,11 @@ export class Rss extends amf.Module {
           .replace(/&nbsp;/g, " ")
           .replace(/&amp;/g, "&");
         const item = {
+          guid:c.id,
           title: c.title,
           link: `${link}?p=${c.id}`,
           pubDate: c.update,
+          category:"topic",
           description
         };
         items.push(item);
@@ -67,7 +81,7 @@ export class Rss extends amf.Module {
     const rss = {
       rss: {
         $: {
-          version: 2.0
+          version: "2.0"
         },
         channel: { title, description, link, language: "ja-jp", item: items }
       }
