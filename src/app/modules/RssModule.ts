@@ -1,7 +1,7 @@
 import * as amf from "active-module-framework";
 import express = require("express");
-import { Params } from "./Params.auto";
-import { Contents } from "./Contents.auto";
+import { Params } from "./ParamsModule";
+import { Contents } from "./ContentsModule";
 import * as xml2js from "xml2js";
 import { HtmlCreater } from "active-module-framework";
 
@@ -66,11 +66,11 @@ export class Rss extends amf.Module {
           .replace(/&nbsp;/g, " ")
           .replace(/&amp;/g, "&");
         const item = {
-          guid:c.id,
+          guid: `${link}?p=${c.id}`,
           title: c.title,
           link: `${link}?p=${c.id}`,
-          pubDate: c.update,
-          category:"topic",
+          pubDate: new Date(c.update).toUTCString(),
+          category: "topic",
           description
         };
         items.push(item);
