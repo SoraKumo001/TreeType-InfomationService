@@ -1,6 +1,6 @@
 import { Module } from "active-module-framework";
-import { RemoteDB } from "./RemoteDB.auto";
-import { Users } from "./Users.auto";
+import { RemoteDB } from "./RemoteDBModule";
+import { Users } from "./UsersModule";
 export class Params extends Module {
   public async onCreateModule() {
     const remoteDB = await this.getModule(RemoteDB);

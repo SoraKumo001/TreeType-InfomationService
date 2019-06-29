@@ -18,7 +18,7 @@ export class LocalDB extends SQLiteDB {
    */
   public async initDB(): Promise<void> {
     await this.run(
-      "CREATE TABLE IF NOT EXISTS session (id text primary key,date real,server json)"
+      "CREATE TABLE IF NOT EXISTS session (id text primary key,type text,date real,server json)"
     );
     await this.run(
       "CREATE INDEX IF NOT EXISTS idx_session_date on session(date)"
@@ -41,7 +41,7 @@ export class LocalDB extends SQLiteDB {
    * @returns {Promise<{ hash: string, values: { [key: string]: any }}>}
    * @memberof LocalDB
    */
-  public async startSession(
+  public async startSession(type:string,
     hash: string | null,
     expire: number
   ): Promise<{ hash: string; values: { [key: string]: any } }> {
@@ -49,13 +49,13 @@ export class LocalDB extends SQLiteDB {
     if (id) {
       //一時間経過したセッションを削除
       await this.run(
-        "delete from session where date < datetime(current_timestamp , ?||' hour')",
-        -expire
+        "delete from session where date < datetime(current_timestamp , ?||' second') and type=?",
+        -expire,type
       );
       //セッションを抽出
       let result = await this.get(
-        "select id,server from session where id=?",
-        id
+        "select id,server from session where id=? and type=?",
+        id,type
       );
 
       if (result) {
@@ -67,7 +67,7 @@ export class LocalDB extends SQLiteDB {
         };
       }
     }
-    return { hash: await this.createSession(), values: {} };
+    return { hash: await this.createSession(type), values: {} };
   }
   /**
    *
@@ -94,15 +94,15 @@ export class LocalDB extends SQLiteDB {
    * @returns
    * @memberof LocalDB
    */
-  public async createSession(): Promise<string> {
+  public async createSession(type:string): Promise<string> {
     var id: string | null = uuid();
     do {
-      const result = await this.all("select id from session where id=?", id);
+      const result = await this.all("select id from session where id=? and type=?", id,type);
       if (result.length) id = null;
     } while (id === null);
     await this.run(
-      "insert into session values(?,CURRENT_TIMESTAMP,json_object())",
-      id
+      "insert into session values(?,?,CURRENT_TIMESTAMP,json_object())",
+      id,type
     );
     return id;
   }

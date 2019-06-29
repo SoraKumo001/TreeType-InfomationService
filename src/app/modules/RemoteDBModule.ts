@@ -1,6 +1,6 @@
 import * as amf from "active-module-framework";
 import Postgres from "./lib/Postgres";
-import { Users } from "./Users.auto";
+import { Users } from "./UsersModule";
 import { ModuleMap } from "active-module-framework";
 
 interface DATABASE_CONFIG {
@@ -52,7 +52,7 @@ export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
   private first = true;
 
   public async onCreateModule() {
-    await this.connect();
+    this.connect();
     return true;
   }
   public async connect(){
