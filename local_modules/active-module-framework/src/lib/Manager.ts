@@ -175,7 +175,7 @@ export class Manager {
       if (dir) {
         this.loadModule(modules, filePath);
       } else {
-        if (file.match(`\.auto\.(ts|js)$`)) {
+        if (file.match(`\(?<=\.(ts|js))(?<!d\.ts)$`)) {
           const r = require(filePath) as { [key: string]: typeof Module };
           if (r) {
             for (const name of Object.keys(r)) {
