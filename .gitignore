@@ -1,5 +1,5 @@
 node_modules
-/dist/sock/app.sock.*
+/dist/sock/app.sock
 /dist/log/
 /dist/db/*.db
 package-lock.json

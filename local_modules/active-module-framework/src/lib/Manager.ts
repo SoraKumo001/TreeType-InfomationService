@@ -118,6 +118,7 @@ export class Manager {
       params.cluster !== -1 &&
       cluster.isMaster
     ) {
+      this.output("親プロセス起動");
       cluster.on("exit", async (worker, code, signal) => {
         console.log(
           "Worker %d died with code/signal %s. Restarting worker...",
@@ -135,6 +136,7 @@ export class Manager {
         cluster.fork();
       }
     } else {
+      this.output("子プロセス起動");
       this.debug = params.debug;
       this.output("--- Start Manager");
       //エラーメッセージをキャプチャ
@@ -327,7 +329,7 @@ export class Manager {
       });
     } else {
       //ソケットファイルの削除
-      this.removeSock(path);
+      //this.removeSock(path);
       //ソケットの待ち受け設定
       exp.listen(path, (): void => {
         this.output(path);
