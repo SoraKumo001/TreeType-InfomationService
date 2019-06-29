@@ -52,7 +52,7 @@ export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
   private first = true;
 
   public async onCreateModule() {
-    await this.connect();
+    this.connect();
     return true;
   }
   public async connect(){

@@ -25,7 +25,6 @@ export class Session {
   public result: AdapterResultFormat | null = null;
   private values: { [key: string]: unknown } = {};
   private localDB: LocalDB | null = null;
-  private moduleTypes: { [key: string]: typeof Module } = {};
   private modules: (Module)[] = [];
   private manager: Manager;
   private buffer?: Buffer;
@@ -46,13 +45,11 @@ export class Session {
     db: LocalDB,
     globalHash: string | null,
     sessionHash: string | null,
-    moduleTypes: { [key: string]: typeof Module },
     buffer?: Buffer
   ): Promise<void> {
     this.localDB = db;
-    this.moduleTypes = moduleTypes;
-    const global = await db.startSession(globalHash, 96);
-    const session = await db.startSession(sessionHash, 1);
+    const global = await db.startSession("GLOBAL",globalHash, 7*24*60*60);
+    const session = await db.startSession("SESSION",sessionHash, 60*60);
     this.globalHash = global.hash;
     this.sessionHash = session.hash;
     this.setValue("GLOBAL_ITEM", global.values);
@@ -227,9 +224,7 @@ export class Session {
     }
     return typeof items[name] === "undefined" ? defValue : items[name];
   }
-  public getModuleType<T extends typeof Module>(name: string): T {
-    return this.moduleTypes[name] as T;
-  }
+
   public async getModule<T extends Module>(
     type:
       | ({
