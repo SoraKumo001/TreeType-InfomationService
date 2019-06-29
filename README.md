@@ -55,9 +55,8 @@ npm run build-app
 ## nginxから使用する場合
 
 ```sample.conf
-#pm2でマルチプロセスを使う場合は最後の数字を加算したものを追加
 upstream TreeType-InfomationService{
-    server unix:/配置バス/dist/sock/app.sock.0;
+    server unix:/配置バス/dist/sock/app.sock;
 }
 
 server {
