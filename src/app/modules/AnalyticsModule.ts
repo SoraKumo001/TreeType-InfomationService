@@ -1,6 +1,6 @@
 import * as amf from "active-module-framework";
 import { HtmlCreater } from "active-module-framework";
-import { Params } from "./Params.auto";
+import { Params } from "./ParamsModule";
 
 /**
  *アナリティクス初期設定用クラス

@@ -1,6 +1,6 @@
 import * as amf from "active-module-framework";
 import Postgres from "./lib/Postgres";
-import { Users } from "./Users.auto";
+import { Users } from "./UsersModule";
 import { ModuleMap } from "active-module-framework";
 
 interface DATABASE_CONFIG {
