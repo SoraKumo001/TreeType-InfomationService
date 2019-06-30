@@ -1,10 +1,11 @@
 const path = require('path');
-var glob = require("glob");
-module.exports = {
+const glob = require("glob");
+const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const config = {
   mode: 'production',
   //mode: 'development',
   entry: [
-    '@babel/polyfill',
     path.resolve(__dirname, 'src/public/index.ts'),
   ].concat(glob.sync("./src/public/**/*.auto.ts")),
   output: {
@@ -17,7 +18,7 @@ module.exports = {
       use: ['ts-loader']
     }, {
       test: /\.js$/,
-      use: ['source-map-loader'],
+      use: [ 'source-map-loader'],
       enforce: "pre"
     }, {
       test: /\.(scss|css)$/,
@@ -37,9 +38,26 @@ module.exports = {
     extensions: ['.ts', '.js', '.scss', 'css', '.svg'],
     moduleExtensions: ['node_modules']
   },
-  devtool: 'source-map',
-  devServer: {
-    contentBase: path.join(__dirname, 'dist/public'),
-    host: "localhost"
-  }
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        cache: true,
+        parallel: true,
+        sourceMap: true,
+        terserOptions: {
+          output: {
+            comments: false,
+            beautify: false
+          },
+        },
+      })
+    ]
+  },
+  plugins: [
+    new HardSourceWebpackPlugin()
+  ]
 };
+if (config.mode === "development") {
+  config.devtool = 'source-map';
+}
+module.exports = config;

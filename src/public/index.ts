@@ -1,3 +1,6 @@
+import 'core-js/features/object';
+import 'core-js/features/promise'
+
 import { AppManager } from "./AppManager";
 import { MainView } from "./View/MainView";
 import "./index.scss";
