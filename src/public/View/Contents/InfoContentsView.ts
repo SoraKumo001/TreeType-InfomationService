@@ -222,17 +222,17 @@ export class InfoContentsView extends JWF.Window {
       });
       if (contents.type !== "PAGE") {
         contentsControle.addMenu("新規(上)", () => {
-          this.contentsModule.createContents(contents.id, 0, "TEXT");
+          this.contentsModule.createContents(contents.id, 0, "ITEM");
         });
         contentsControle.addMenu("新規(下)", () => {
-          this.contentsModule.createContents(contents.id, 1, "TEXT");
+          this.contentsModule.createContents(contents.id, 1, "ITEM");
         });
       }
       contentsControle.addMenu("新規(子上)", () => {
-        this.contentsModule.createContents(contents.id, 2, "TEXT");
+        this.contentsModule.createContents(contents.id, 2, "ITEM");
       });
       contentsControle.addMenu("新規(子下)", () => {
-        this.contentsModule.createContents(contents.id, 3, "TEXT");
+        this.contentsModule.createContents(contents.id, 3, "ITEM");
       });
       if (contents.type !== "PAGE") {
         contentsControle.addMenu("移動(上)", () => {

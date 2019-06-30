@@ -52,7 +52,7 @@ export class Contents extends amf.Module {
 					contents_stat INTEGER,contents_type TEXT,
 					contents_date timestamp with time zone,contents_update timestamp with time zone,
 					contents_title_type integer,contents_title TEXT,contents_value TEXT,contents_value_type TEXT);
-          insert into contents values(default,null,1000,1,'PAGE',current_timestamp,current_timestamp,1,'Top','')`
+          insert into contents values(default,null,1000,1,'PAGE',current_timestamp,current_timestamp,1,'Top','','TEXT')`
             );
           }
           const files = await this.getModule(Files);
@@ -340,7 +340,7 @@ export class Contents extends amf.Module {
     }
     const result = await remoteDB.get(
       `insert into contents values(default,$1,$2,-1,$3,
-				current_timestamp,current_timestamp,$4,'New','') RETURNING contents_id`,
+				current_timestamp,current_timestamp,$4,'New','','TEXT') RETURNING contents_id`,
       pid,
       priority,
       type,

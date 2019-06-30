@@ -71,7 +71,7 @@ export class InfoTreeView extends JWF.TreeView {
         item.setItemText(contents.title);
         const node = item.getNode();
         node.dataset.contentStat = contents.stat ? "true" : "false";
-        node.dataset.contentType = contents.type === "PAGE" ? "PAGE" : "TEXT";
+        node.dataset.contentType = contents.type === "PAGE" ? "PAGE" : "ITEM";
       }
     });
     contentsModule.addEventListener("moveVector", (id, vector) => {
@@ -141,7 +141,7 @@ export class InfoTreeView extends JWF.TreeView {
     item.setItemText(value.title);
     item.setItemValue(value.id);
     node.dataset.contentStat = value.stat ? "true" : "false";
-    node.dataset.contentType = value["type"] === "PAGE" ? "PAGE" : "TEXT";
+    node.dataset.contentType = value["type"] === "PAGE" ? "PAGE" : "ITEM";
     if (value.childs) {
       const flag = node.dataset.contentType !== "PAGE";
       for (let i = 0; value.childs[i]; i++) {
