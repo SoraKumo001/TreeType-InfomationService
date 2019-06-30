@@ -1,14 +1,10 @@
 import * as JWF from "javascript-window-framework";
 import { AppManager } from "../../AppManager";
-import {
-  ContentsModule,
-  MainContents,
-} from "../../modules/ContentsModule";
+import { ContentsModule, MainContents } from "../../modules/ContentsModule";
 import "./scss/InfoContentsView.scss";
 import "highlight.js/styles/tomorrow-night-eighties.css";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
-
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const highlight = require("highlight.js/lib/highlight");
@@ -145,7 +141,7 @@ export class InfoContentsView extends JWF.Window {
 
     this.createEditMenu(contentsArea);
 
-    let title = document.createElement("div") as HTMLElement;
+    let title = document.createElement("div");
     contentsNode.appendChild(title);
     const date = document.createElement("div");
     date.className = "Date";
@@ -167,12 +163,19 @@ export class InfoContentsView extends JWF.Window {
       // if (contentsArea.dataset.contentsType === contents["type"]) {
       const titleTag = "H" + contents["title_type"];
       if (titleTag != title.nodeName) {
-        const newTitle = document.createElement(titleTag);
+        const newTitle = document.createElement(titleTag) as HTMLDivElement;
         if (title.parentNode) {
           title.parentNode.insertBefore(newTitle, title);
           title.parentNode.removeChild(title);
         }
         title = newTitle;
+        title.addEventListener("dblclick", e => {
+          new ContentsEditWindow(this.manager, contents.id);
+          e.preventDefault();
+          const selection = getSelection();
+          if(selection)
+            selection.removeAllRanges();
+        });
       }
       contentsArea.dataset.contentsStat = contents.stat.toString();
       title.dataset.nodeName = "H" + contents.title_type;
