@@ -12,19 +12,17 @@ interface DATABASE_CONFIG {
 }
 
 export function Sleep(timeout: number): Promise<void> {
-  return new Promise(
-    (resolv): void => {
-      setTimeout((): void => {
-        resolv();
-      }, timeout);
-    }
-  );
+  return new Promise((resolv): void => {
+    setTimeout((): void => {
+      resolv();
+    }, timeout);
+  });
 }
 export interface CustomMap extends ModuleMap {
   connect: [];
   disconnect: [];
 }
-export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
+export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
   public constructor(manager: amf.Manager) {
     super(manager);
     const db = new Postgres();
@@ -39,12 +37,14 @@ export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
       info: "メインデータベースアクセス用"
     };
   }
-  public addEventListener<K extends keyof T>(name: K & string, proc: (...params: T[K]) => void): void{
-    if(name === "connect"){
-      if(!this.first)
-        (proc as ()=>void)();
+  public addEventListener<K extends keyof T>(
+    name: K & string,
+    proc: (...params: T[K]) => void
+  ): void {
+    if (name === "connect") {
+      if (!this.first) (proc as () => void)();
     }
-    super.addEventListener(name,proc);
+    super.addEventListener(name, proc);
   }
 
   private items: { [key: string]: unknown } = {};
@@ -55,12 +55,12 @@ export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
     this.connect();
     return true;
   }
-  public async connect(){
+  public async connect() {
     for (;;) {
       if (await this.open()) {
         this.output("DBの接続完了");
         //関連テーブルの初期化用
-        if(this.first){
+        if (this.first) {
           this.callEvent("connect");
           this.first = false;
         }
@@ -82,8 +82,7 @@ export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
     //オープン前のフラグを設定
     this.first = true;
     //ユーザ名が設定されていなければ戻る
-    if(!user)
-      return false;
+    if (!user) return false;
 
     const db = this.db;
     if (
@@ -99,12 +98,13 @@ export class RemoteDB<T extends CustomMap=CustomMap> extends amf.Module<T> {
       return false;
     }
     const client = db.getClient();
-    if(!client)
-      return false;
+    if (!client) return false;
     client.on("error", async (error: Error) => {
       console.error(error);
-      await this.close();
-      this.connect();
+      if (error.message.indexOf("terminating") >= 0 || error.message.indexOf("terminated") >= 0) {
+        //await this.close();
+        await this.connect();
+      }
     });
 
     //アイテム用テーブルの作成

@@ -2,12 +2,9 @@ import * as pg from "pg";
 
 export default class Postgres {
   private client: pg.Client | null = null;
-  private connectStat: boolean;
   private lastError?: unknown;
   private config?: pg.ClientConfig;
-  public constructor() {
-    this.connectStat = false;
-  }
+  public constructor() {}
   public getClient(): pg.Client | null {
     return this.client;
   }
@@ -15,28 +12,24 @@ export default class Postgres {
     //既存の接続を切断
     await this.close();
 
-    this.connectStat = false;
     if (config) this.config = config;
     else if (this.config) config = this.config;
     else return false;
 
     const client = new pg.Client(config);
     //client.addListener("");
-    this.client = client;
+
     return client
       .connect()
-      .then(
-        (): boolean => {
-          this.connectStat = true;
-          return true;
-        }
-      )
-      .catch(
-        (e): boolean => {
-          this.outputError(e);
-          return false;
-        }
-      );
+      .then((): boolean => {
+        this.client = client;
+        return true;
+      })
+      .catch((e): boolean => {
+        this.outputError(e);
+        client.end();
+        return false;
+      });
   }
   public outputError(e: Error): void {
     // eslint-disable-next-line no-console
@@ -47,7 +40,7 @@ export default class Postgres {
     return this.lastError;
   }
   public isConnect(): boolean {
-    return this.connectStat;
+    return this.client !== null;
   }
   public async isTable(name: string): Promise<boolean> {
     const result = await this.get(
@@ -60,13 +53,14 @@ export default class Postgres {
   public async close(): Promise<void> {
     const client = this.client;
     try {
-      if (client && this.connectStat) if (this.connectStat) await client.end();
+      if (client) {
+        client.end();
+      }
+      this.client = null;
     } catch (e) {
       //
     }
     this.client = null;
-    this.connectStat = false;
-    this.connectStat = false;
   }
   public async run(sql: string, ...params: unknown[]): Promise<boolean | null> {
     if (!this.client) return null;
@@ -74,19 +68,15 @@ export default class Postgres {
     const client = this.client;
     return await client
       .query(sql, params)
-      .then(
-        (): boolean => {
-          return true;
-        }
-      )
-      .catch(
-        (e): boolean => {
-          // eslint-disable-next-line no-console
-          console.error(sql);
-          this.outputError(e);
-          return false;
-        }
-      );
+      .then((): boolean => {
+        return true;
+      })
+      .catch((e): boolean => {
+        // eslint-disable-next-line no-console
+        console.error(sql);
+        this.outputError(e);
+        return false;
+      });
   }
   public async all(
     sql: string,
@@ -97,19 +87,15 @@ export default class Postgres {
     const client = this.client;
     return await client
       .query(sql, params)
-      .then(
-        (result): unknown[] => {
-          return result.rows;
-        }
-      )
-      .catch(
-        (e): null => {
-          // eslint-disable-next-line no-console
-          console.error("%s\n%s", sql, JSON.stringify(params));
-          this.outputError(e);
-          return null;
-        }
-      );
+      .then((result): unknown[] => {
+        return result.rows;
+      })
+      .catch((e): null => {
+        // eslint-disable-next-line no-console
+        console.error("%s\n%s", sql, JSON.stringify(params));
+        this.outputError(e);
+        return null;
+      });
   }
   public async get(
     sql: string,
@@ -121,18 +107,14 @@ export default class Postgres {
     const client = this.client;
     return await client
       .query(sql, params)
-      .then(
-        (result): { [key: string]: unknown } | null => {
-          return result.rows ? result.rows[0] : null;
-        }
-      )
-      .catch(
-        (e): null => {
-          // eslint-disable-next-line no-console
-          console.error(sql);
-          this.outputError(e);
-          return null;
-        }
-      );
+      .then((result): { [key: string]: unknown } | null => {
+        return result.rows ? result.rows[0] : null;
+      })
+      .catch((e): null => {
+        // eslint-disable-next-line no-console
+        console.error(sql);
+        this.outputError(e);
+        return null;
+      });
   }
 }
