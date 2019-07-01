@@ -165,16 +165,14 @@ export class Manager {
     }
     return true;
   }
-  public loadModule(
-    modulePath: string
-  ) {
+  public loadModule(modulePath: string) {
     let modulesType: { [key: string]: typeof Module } = {};
     const files = fs.readdirSync(modulePath);
     for (const file of files) {
       const filePath = path.join(modulePath, file);
       const dir = fs.statSync(filePath).isDirectory();
       if (dir) {
-        modulesType = Object.assign(modulesType,this.loadModule(filePath));
+        modulesType = Object.assign(modulesType, this.loadModule(filePath));
       } else {
         if (file.match(`\(?<=\.(ts|js))(?<!d\.ts)$`)) {
           const r = require(filePath) as { [key: string]: typeof Module };
@@ -285,7 +283,7 @@ export class Manager {
           const path =
             (req.header("location_path") || `https://${req.hostname}`) +
             params.remotePath;
-          console.log(path);
+          this.output(path);
           const htmlNode = new HtmlCreater();
           if (
             !htmlNode.output(
@@ -309,9 +307,9 @@ export class Manager {
     let port = 0;
     let path = "";
     if (typeof params.listen === "number") {
-      port = params.listen;// + parseInt(process.env.NODE_APP_INSTANCE || "0");
+      port = params.listen; // + parseInt(process.env.NODE_APP_INSTANCE || "0");
     } else {
-      path = params.listen;// + "." + (process.env.NODE_APP_INSTANCE || "0");
+      path = params.listen; // + "." + (process.env.NODE_APP_INSTANCE || "0");
     }
 
     //終了時の処理(Windowsでは動作しない)
@@ -330,19 +328,25 @@ export class Manager {
         if (params.listened) params.listened(port);
       });
     } else {
-      //ソケットファイルの削除
-      if(process.env.NODE_APP_INSTANCE === "0")
-        this.removeSock(path);
-      //ソケットの待ち受け設定
-      exp.listen(path, (): void => {
-        this.output(path);
-        try {
-          fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
-          if (params.listened) params.listened(path);
-        } catch (e) {
-          //
-        }
-      }); //ソケットの待ち受け設定
+      const listen = (flag: boolean) => {
+        //ソケットの待ち受け設定
+        exp.listen(path, (): void => {
+          this.output(path);
+          try {
+            fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
+            if (params.listened) params.listened(path);
+          } catch (e) {
+            //初回かどうか識別
+            if (flag) {
+              //ソケットファイルの削除
+              this.removeSock(path);
+              //リトライ
+              listen(false);
+            }
+          }
+        }); //ソケットの待ち受け設定
+      };
+      listen(true);
     }
   }
 
@@ -431,11 +435,11 @@ export class Manager {
       results: []
     };
 
-     const modulesType =this.modulesType;
+    const modulesType = this.modulesType;
 
     //セッション初期化処理のあるモジュールを呼び出す
     for (const name of Object.keys(modulesType)) {
-      if(modulesType[name].prototype.onStartSession)
+      if (modulesType[name].prototype.onStartSession)
         await session.getModule(name);
     }
 
