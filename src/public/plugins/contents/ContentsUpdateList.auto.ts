@@ -12,18 +12,19 @@ import { appManager } from "../../AppManager";
 const contentsModule = appManager.getModule(ContentsModule) as ContentsModule;
 
 function getContentsList(
-  treeContents: TreeContents & { parent?: TreeContents },
+  treeContents: TreeContents,
   list?: (typeof treeContents)[]
 ) {
   if (!list) list = [];
-  list.push(treeContents);
   const childs = treeContents.childs;
   if (childs) {
     for (const child of childs) {
-      (child as typeof treeContents).parent = treeContents;
       getContentsList(child, list);
     }
   }
+  //ページのみ保存
+  if(treeContents.type === 'PAGE')
+    list.push(treeContents);
   return list;
 }
 /**
@@ -42,7 +43,9 @@ function contentsUpdate(
   }
   const list = getContentsList(tree);
   list.sort((a, b) => {
-    return new Date(b.date).getTime() - new Date(a.date).getTime();
+    if(a.pageNew && b.pageNew)
+      return b.pageNew.date.getTime() - a.pageNew.date.getTime();
+    return 0;
   });
   const table = document.createElement("table");
   table.dataset.type = "UpdateTable";
@@ -60,11 +63,12 @@ function contentsUpdate(
     let cell: HTMLTableCellElement;
 
     //日付の作成
-    const date = new Date(list[i].date);
+    const pageNew = t.pageNew;
+    const date = pageNew?pageNew.date:t.date;
     const d = sprintf(
       "%04d/%02d/%02d %02d:%02d",
       date.getFullYear(),
-      date.getMonth(),
+      date.getMonth()+1,
       date.getDate(),
       date.getHours(),
       date.getMinutes()
@@ -75,12 +79,12 @@ function contentsUpdate(
 
     //タイトルの設定
     cell = row.insertCell();
-    let p: typeof t | undefined = t;
+    let p: typeof t | undefined = pageNew||t;
     do {
       if (p.id === pageId) break;
       const title = document.createElement("span");
       title.innerText = p.title;
-      cell.appendChild(title);
+      cell.insertBefore(title,cell.firstChild);
     } while ((p = p.parent));
   }
   body.appendChild(table);
