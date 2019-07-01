@@ -8,6 +8,8 @@ export interface TreeContents {
   type: string;
   title: string;
   childs: TreeContents[];
+  parent?: TreeContents;
+  pageNew?: TreeContents;
 }
 export interface MainContents {
   id: number;
@@ -75,6 +77,13 @@ export class ContentsModule extends AppModule<CustomMap> {
   public getTreeCache() {
     return this.treeContents;
   }
+  /**
+   *ツリーデータを受け取る
+   *
+   * @param {number} [id]
+   * @returns
+   * @memberof ContentsModule
+   */
   public async getTree(id?: number) {
     const adapter = this.getAdapter();
     const treeContents = (await adapter.exec(
@@ -82,11 +91,44 @@ export class ContentsModule extends AppModule<CustomMap> {
       id ? id : 1
     )) as TreeContents | null;
     if (treeContents) {
-      if (id === undefined || id === 1) this.treeContents = treeContents;
+      this.convertTreeContents(treeContents);
+      if (id === undefined || id === 1) {
+        this.treeContents = treeContents;
+      }
       this.callEvent("getTree", treeContents);
     }
-
     return treeContents;
+  }
+
+  /**
+   *受け取ったツリーデータを扱いやすいように変換
+   *
+   * @private
+   * @param {TreeContents} treeContents
+   * @memberof ContentsModule
+   */
+  private convertTreeContents(treeContents: TreeContents, page?: TreeContents) {
+    //取得データを文字列からDateに変換
+    treeContents.date = new Date(treeContents.date);
+    treeContents.update = new Date(treeContents.update);
+
+    if (treeContents.type === "PAGE") {
+      page = treeContents;
+      page.pageNew = treeContents;
+    } else {
+      //ページ全体の更新時間を設定
+      if (page && page.pageNew) {
+        if (treeContents.date.getTime() > page.pageNew.date.getTime()){
+          page.pageNew = treeContents;
+        }
+      }
+    }
+    if (treeContents.childs) {
+      for (const child of treeContents.childs) {
+        child.parent = treeContents;
+        this.convertTreeContents(child, page);
+      }
+    }
   }
   public async getPage(id: number) {
     const adapter = this.getAdapter();
@@ -175,8 +217,6 @@ export class ContentsModule extends AppModule<CustomMap> {
   }
   public async search(keyword: string) {
     const adapter = this.getAdapter();
-    return adapter.exec("Contents.search", keyword) as Promise<
-      number[] | null
-    >;
+    return adapter.exec("Contents.search", keyword) as Promise<number[] | null>;
   }
 }
