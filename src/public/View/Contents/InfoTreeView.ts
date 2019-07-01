@@ -32,6 +32,9 @@ export class InfoTreeView extends JWF.TreeView {
       if (e.user)
         contentsModule.selectContents(e.item.getItemValue() as number, false);
     });
+    this.addEventListener("itemDblClick", e => {
+      new ContentsEditWindow(this.manager, e.item.getItemValue() as number);
+    });
     this.addEventListener("itemOver", e => {
       const item = e.item;
       this.overId = item.getItemValue() as number;
@@ -55,8 +58,8 @@ export class InfoTreeView extends JWF.TreeView {
       this.selectId = id;
       this.selectItemFromValue(id, true);
     });
-    contentsModule.addEventListener("createContents", pid => {
-      this.loadTree(pid);
+    contentsModule.addEventListener("createContents", (pid,id) => {
+      this.loadTree(id);
     });
     contentsModule.addEventListener("moveContents", fromId => {
       this.loadTree(fromId, true);

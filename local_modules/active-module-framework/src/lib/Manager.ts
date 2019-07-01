@@ -248,6 +248,7 @@ export class Manager {
     exp.options("*", function(req, res) {
       res.header("Access-Control-Allow-Headers", "content-type");
       res.sendStatus(200);
+      res.end();
     });
     //バイナリファイルの扱い設定
     exp.use(
@@ -278,6 +279,7 @@ export class Manager {
             command(req, res);
           } else {
             res.json({ error: "リクエストエラー" });
+            res.end();
           }
         } else {
           const path =
@@ -329,7 +331,8 @@ export class Manager {
       });
     } else {
       //ソケットファイルの削除
-      //this.removeSock(path);
+      if(process.env.NODE_APP_INSTANCE === "0")
+        this.removeSock(path);
       //ソケットの待ち受け設定
       exp.listen(path, (): void => {
         this.output(path);
