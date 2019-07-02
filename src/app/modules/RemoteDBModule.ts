@@ -101,7 +101,10 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
     if (!client) return false;
     client.on("error", async (error: Error) => {
       console.error(error);
-      if (error.message.indexOf("terminating") >= 0 || error.message.indexOf("terminated") >= 0) {
+      if (
+        error.message.indexOf("terminating") >= 0 ||
+        error.message.indexOf("terminated") >= 0
+      ) {
         //await this.close();
         await this.connect();
       }
@@ -163,9 +166,12 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
   public getItem(name: string): unknown {
     return this.items[name];
   }
+  public isAdmin() {
+    const users = this.getSessionModule(Users);
+    return users.isAdmin();
+  }
   public async JS_getConfig() {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
+    if (!this.isAdmin()) return null;
 
     const localDB = this.getLocalDB();
     const host = localDB.getItem("REMOTEDB_HOST", "localhost");
@@ -183,18 +189,16 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
     return result;
   }
   public async JS_setConfig(config: DATABASE_CONFIG) {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
+    if (!this.isAdmin()) return null;
 
     const localDB = this.getLocalDB();
     localDB.setItem(config as never);
 
-    return this.open();
+    return this.connect();
   }
 
   public async JS_getInfo() {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
+    if (!this.isAdmin()) return null;
 
     const db = this.db;
     if (!db.isConnect()) {

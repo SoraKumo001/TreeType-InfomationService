@@ -1,4 +1,5 @@
 import { AppModule, ModuleMap } from "../AppModule";
+import { listLanguages } from "highlight.js";
 export interface TreeContents {
   id: number;
   pid: number;
@@ -118,7 +119,7 @@ export class ContentsModule extends AppModule<CustomMap> {
     } else {
       //ページ全体の更新時間を設定
       if (page && page.pageNew) {
-        if (treeContents.date.getTime() > page.pageNew.date.getTime()){
+        if (treeContents.date.getTime() > page.pageNew.date.getTime()) {
           page.pageNew = treeContents;
         }
       }
@@ -188,6 +189,21 @@ export class ContentsModule extends AppModule<CustomMap> {
     if (flag) this.callEvent("moveContents", fromId, toId);
     return flag;
   }
+  public async export(id: number) {
+    const adapter = this.getAdapter();
+    const blob = (await adapter.execBinary(
+      "Contents.export",
+      id
+    )) as Blob | null;
+    if (blob) {
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "export.json";
+      link.click();
+    }
+    return blob;
+  }
+
   public async import(id: number, mode: number, src: string) {
     const adapter = this.getAdapter();
     const flag = (await adapter.upload(
