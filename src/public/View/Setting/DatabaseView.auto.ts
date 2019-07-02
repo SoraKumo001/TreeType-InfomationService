@@ -32,7 +32,7 @@ export class DatabaseModule extends AppModule {
 }
 
 export class DatabaseView extends SettingView {
-  private statusView: JWF.Window;
+  private statusView: JWF.BaseView;
   private databaseModule: DatabaseModule;
   public constructor(manager: AppManager) {
     super(manager);
@@ -85,7 +85,7 @@ export class DatabaseView extends SettingView {
     });
 
     //DB情報の表示
-    const status = new JWF.Window();
+    const status = new JWF.BaseView();
     this.statusView = status;
     status.setAutoSize(true);
     this.addChild(status, "top");

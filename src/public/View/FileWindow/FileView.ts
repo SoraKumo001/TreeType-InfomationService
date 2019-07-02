@@ -16,9 +16,9 @@ export interface CustomMap extends WINDOW_EVENT_MAP {
  *
  *
  * @class FileView
- * @extends {JWF.Window}
+ * @extends {JWF.BaseView}
  */
-export class FileView extends JWF.Window {
+export class FileView extends JWF.BaseView {
   private fileModule: FileModule;
   private fileList: JWF.ListView;
   private parentId: number;

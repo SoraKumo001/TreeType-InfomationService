@@ -118,6 +118,11 @@ export class InfoTreeView extends JWF.TreeView {
     contentsControle.addMenu("インポート", () => {
       new ContentsImportWindow(this.manager, id);
     });
+    contentsControle.addMenu("エクスポート", async () => {
+       const value = await this.contentsModule.export(id);
+       if(value)
+         console.log(value.size)
+    });
   }
   public drawTree(value: TreeContents) {
     const id = value.id;

@@ -1,8 +1,9 @@
 import * as amf from "active-module-framework";
 import { Users } from "./UsersModule";
 import { RemoteDB } from "./RemoteDBModule";
-import { Files } from "./FilesModule";
+import { Files, FileData } from "./FilesModule";
 import { sprintf } from "sprintf";
+import * as express from "express";
 
 interface TreeContents {
   id: number;
@@ -31,7 +32,7 @@ export interface MainContents {
 }
 export interface ConvertContents extends MainContents {
   childs?: ConvertContents[];
-  files: { id: number; name: string; date: string; value: string }[];
+  files: FileData[];
 }
 
 export class Contents extends amf.Module {
@@ -40,9 +41,12 @@ export class Contents extends amf.Module {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
     if (remoteDB) {
+      const files = await this.getModule(Files);
       remoteDB.addEventListener(
         "connect",
         async (): Promise<void> => {
+          if (files) files.createDir(1, "Contents");
+
           if (!(await remoteDB.isTable("contents"))) {
             remoteDB.run(
               `create table contents(
@@ -55,15 +59,12 @@ export class Contents extends amf.Module {
           insert into contents values(default,null,1000,1,'PAGE',current_timestamp,current_timestamp,1,'Top','','TEXT')`
             );
           }
-          const files = await this.getModule(Files);
-          if (files) files.createDir(1, "Contents");
         }
       );
       this.remoteDB = remoteDB;
     }
 
     const localDB = this.getLocalDB();
-    //localDB.db.run('drop table users');
     localDB.run(
       "CREATE TABLE IF NOT EXISTS users (users_no integer primary key,users_enable boolean,\
 			users_id TEXT,users_password TEXT,users_name TEXT,users_info JSON,UNIQUE(users_id))"
@@ -188,22 +189,26 @@ export class Contents extends amf.Module {
     }
     return bread;
   }
+  public isAdmin() {
+    const users = this.getSessionModule(Users);
+    return users.isAdmin();
+  }
   public async getContents(
     id: number,
-    child?: boolean
+    child?: boolean,
+    admin?: boolean
   ): Promise<MainContents | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
 
-    const users = await this.getSessionModule(Users);
-    const visible = users && users.isAdmin() ? "" : "and contents_stat=1";
+    const visible = admin ? "" : "and contents_stat=1";
 
     const value = (await remoteDB.get(
       `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value_type as value_type,contents_value as value from contents where contents_id=$1 ${visible}`,
       id
     )) as MainContents | null;
     if (value && child) {
-      const childValue = await this.getChildContents(id);
+      const childValue = await this.getChildContents(id, admin ? true : false);
       if (childValue) value.childs = childValue;
     }
     return value;
@@ -217,11 +222,13 @@ export class Contents extends amf.Module {
       `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value_type as value_type,contents_value as value from contents where contents_type='PAGE' ${visible}`
     )) as MainContents[] | null;
   }
-  public async getChildContents(pid: number): Promise<MainContents[]> {
+  public async getChildContents(
+    pid: number,
+    admin: boolean
+  ): Promise<MainContents[]> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return [];
-    const users = await this.getSessionModule(Users);
-    const visible = users && users.isAdmin() ? "" : "and contents_stat=1";
+    const visible = admin ? "" : "and contents_stat=1";
 
     //親Idを元にコンテンツを抽出
     const values = (await remoteDB.all(
@@ -230,7 +237,7 @@ export class Contents extends amf.Module {
     )) as MainContents[];
     //子コンテンツを抽出
     for (const value of values) {
-      value.childs = await this.getChildContents(value.id);
+      value.childs = await this.getChildContents(value.id, admin);
     }
     return values;
   }
@@ -309,8 +316,6 @@ export class Contents extends amf.Module {
   } | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
 
     let cid = 0;
     let pid = 0;
@@ -367,12 +372,11 @@ export class Contents extends amf.Module {
     }
     //
     //関連ファイルの削除
-    const files = await this.getSessionModule(Files);
-    if (files) {
-      const path = this.getDirPath(id);
-      const fileId = await files.getDirId(1, path);
-      if (fileId) await files.deleteFile(fileId);
-    }
+    const files = this.getSessionModule(Files);
+    const path = this.getDirPath(id);
+    const fileId = await files.getDirId(1, path);
+    if (fileId) await files.deleteFile(fileId);
+
     if (id !== 1)
       await remoteDB.run("delete from contents where contents_id=$1", id);
     if (flag || flag === undefined) await remoteDB.run("commit");
@@ -488,12 +492,12 @@ export class Contents extends amf.Module {
   ): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
-    const fileModule = await this.getSessionModule(Files);
+    const fileModule = await this.getModule(Files);
     if (!fileModule) return null;
 
     //データの挿入
     const cid = (await remoteDB.get2(
-      "insert into contents values(default,$1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING contents_id",
+      "insert into contents values(default,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING contents_id",
       pid,
       value["priority"],
       value["stat"],
@@ -502,7 +506,8 @@ export class Contents extends amf.Module {
       value["update"],
       value["title_type"],
       value["title"],
-      value["value"]
+      value["value"],
+      value["value_type"]
     )) as number;
     if (cid === null) return false;
     //ファイルの復元処理
@@ -527,10 +532,7 @@ export class Contents extends amf.Module {
         for (const srcId of Object.keys(ids)) {
           const destId = ids[(srcId as unknown) as number];
           v = v.replace(
-            new RegExp(
-              sprintf('src="\\?command=Files\\.download&amp;id=%s"', srcId),
-              "g"
-            ),
+            new RegExp(sprintf('src="\\?cmd=download&amp;id=%s"', srcId), "g"),
             sprintf('src="?cmd=download&amp;id=%d"', destId)
           );
         }
@@ -559,7 +561,7 @@ export class Contents extends amf.Module {
     if (!id) return false;
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
-    const fileModule = await this.getSessionModule(Files);
+    const fileModule = await this.getModule(Files);
     if (!fileModule) return null;
 
     const value = JSON.parse(src);
@@ -581,7 +583,7 @@ export class Contents extends amf.Module {
         await remoteDB.run("commit");
       } else {
         //上書き元のデータを取得
-        const contents = await this.getContents(id);
+        const contents = await this.getContents(id, false, true);
         if (!contents) return null;
         const pid = contents.pid;
         //上書き元のデータを削除
@@ -598,13 +600,73 @@ export class Contents extends amf.Module {
     }
     return true;
   }
+  public async export(res: express.Response, id: number) {
+    const remoteDB = this.remoteDB;
+    if (!remoteDB) return null;
+    const fileModule = this.getSessionModule(Files);
+    const values = (await remoteDB.all(
+      "select contents_id as id,contents_parent as pid,contents_stat as stat,contents_priority as priority,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as update,contents_title_type as title_type,contents_title as title,contents_value as value,contents_value_type as value_type from contents order by contents_type='PAGE',contents_priority"
+    )) as ConvertContents[];
+    if (values === null) return null;
+    const items: { [key: number]: ConvertContents } = {};
+    for (const value of values) {
+      const id2 = value.id;
+      //ID参照用データの作成
+      items[id2] = value;
+    }
+    //親子関係の作成
+    for (const item of Object.values(items)) {
+      if (item.pid !== null) {
+        const parent = items[item.pid];
+        parent.childs ? parent.childs.push(item) : (parent.childs = [item]);
+      }
+    }
+
+    const promise: Promise<unknown>[] = [];
+    const fileLoad = async (contents: ConvertContents) => {
+      const id = contents.id;
+      //子データの取得開始
+      if (contents.childs) {
+        for (const child of contents.childs) {
+          promise.push(fileLoad(child));
+        }
+      }
+      //ファイルデータの読み出し
+      const path = this.getDirPath(id);
+      const fileId = await fileModule.getDirId(1, path);
+      if (fileId !== null) {
+        const fileList = await fileModule.getChildList(fileId);
+        if (fileList) {
+          contents.files = [];
+          for (const fileId of fileList) {
+            await fileModule.getFile(fileId).then(fileData => {
+              if (fileData) contents.files.push(fileData);
+            });
+          }
+        }
+      }
+    };
+    //必要なファイルデータの読み出し
+    promise.push(fileLoad(items[id]));
+    //読み出しが終わるまで待機
+    await Promise.all(promise);
+
+    //戻り値をカスタマイズ
+    this.setReturn(false);
+    //res.contentType("text/json");
+    res.header("Content-disposition", 'attachment; filename="export.json"');
+    res.json(items[id]);
+    res.end();
+  }
+
   public async search(keyword: string, admin?: boolean) {
     const visible = admin ? "" : "where contents_stat=1";
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     const results = (await remoteDB.all(
       "select contents_id as id,contents_title || ' ' ||contents_value as value from contents " +
-        visible+" order by contents_date desc"
+        visible +
+        " order by contents_date desc"
     )) as { id: number; value: string }[] | null;
     if (!results) return null;
     const keywords = keyword
@@ -620,10 +682,10 @@ export class Contents extends amf.Module {
       //タグを削除、全角を半角に変換、小文字に変換
       const msg = r.value
         .replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, "")
-        .replace(/&nbsp;/g," ")
-        .replace(/&gt;/g,">")
-        .replace(/&lt;/g,"<")
-        .replace(/&amp;/g,"&")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&gt;/g, ">")
+        .replace(/&lt;/g, "<")
+        .replace(/&amp;/g, "&")
         .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
           return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
         })
@@ -641,14 +703,16 @@ export class Contents extends amf.Module {
     }
     return hits;
   }
+  public JS_export(id: number) {
+    if (!this.isAdmin()) return null;
+    return this.export(this.getResponse(), id);
+  }
   public async JS_search(keyword: string) {
-    const users = await this.getSessionModule(Users);
-    const admin = (users && users.isAdmin()) as boolean;
+    const admin = this.isAdmin();
     return this.search(keyword, admin);
   }
   public async JS_import(id: number, mode: number): Promise<boolean | null> {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
+    if (!this.isAdmin()) return null;
     const buffer = this.getSession().getBuffer();
     if (!buffer) return null;
     return this.import(id, mode, buffer.toString());
@@ -657,16 +721,14 @@ export class Contents extends amf.Module {
     fromId: number,
     toId: number
   ): Promise<boolean | null> {
-    const users = await this.getSessionModule(Users);
-    if (users && users.isAdmin()) return this.moveContents(fromId, toId);
+    if (this.isAdmin()) return this.moveContents(fromId, toId);
     return false;
   }
   public async JS_moveVector(
     id: number,
     vector: number
   ): Promise<boolean | null> {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
+    if (!this.isAdmin()) return null;
     return this.moveVector(id, vector);
   }
   public async JS_createContents(
@@ -679,19 +741,20 @@ export class Contents extends amf.Module {
   } | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
+    if (!this.isAdmin()) return null;
     return this.createContents(id, vector, type);
   }
   public async JS_getTree(id: number): Promise<TreeContents | null> {
-    const users = await this.getSessionModule(Users);
-    const admin = (users && users.isAdmin()) as boolean;
+    const admin = this.isAdmin();
     return this.getTree(id, admin);
   }
   public async JS_getPage(id: number): Promise<MainContents | null> {
+    const admin = this.isAdmin();
     const pid = await this.getParentPage(id);
     if (pid === 0) return null;
-    const contents = await this.getContents(pid);
+    const contents = await this.getContents(pid, false, admin);
     if (contents === null) return null;
-    contents.childs = await this.getChildContents(pid);
+    contents.childs = await this.getChildContents(pid, admin);
 
     // const images = this.getImages(contents, []);
     // for (const id of images) {
@@ -704,11 +767,11 @@ export class Contents extends amf.Module {
     id: number,
     child?: boolean
   ): Promise<MainContents | null> {
-    return this.getContents(id, child);
+    const admin = this.isAdmin();
+    return this.getContents(id, child, admin);
   }
   public async JS_deleteContents(id: number): Promise<boolean | null> {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
+    if (!this.isAdmin()) return null;
     const flag = await this.deleteContents(id);
     return flag;
   }

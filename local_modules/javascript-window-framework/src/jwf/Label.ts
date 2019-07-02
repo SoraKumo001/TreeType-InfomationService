@@ -1,6 +1,6 @@
-import { Window } from "./Window";
+import { BaseView } from "./BaseView";
 import "./scss/Label.scss";
-export class Label extends Window {
+export class Label extends BaseView {
   private node:HTMLElement;
   private nodeText: HTMLSpanElement;
   public constructor(text?: string) {

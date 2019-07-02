@@ -34,7 +34,7 @@ export class LocalDB extends SQLiteDB {
   }
 
   /**
-   *
+   *セッションの開始と関連データの更新
    *
    * @param {string} hash
    * @param {number} expire
@@ -70,7 +70,7 @@ export class LocalDB extends SQLiteDB {
     return { hash: await this.createSession(type), values: {} };
   }
   /**
-   *
+   *セッションの終了とデータの保存
    *
    * @param {string} hash
    * @param {{[key:string]:any}} values
@@ -89,9 +89,16 @@ export class LocalDB extends SQLiteDB {
     return true;
   }
   /**
-   *
+   *セッションの作成
    *
    * @returns
+   * @memberof LocalDB
+   */
+  /**
+   *セッションの作成
+   *
+   * @param {string} type セッションタイプ GLOBAL | SESSION
+   * @returns {Promise<string>}
    * @memberof LocalDB
    */
   public async createSession(type:string): Promise<string> {
@@ -107,7 +114,7 @@ export class LocalDB extends SQLiteDB {
     return id;
   }
   /**
-   *
+   *セッション用データの設定
    *
    * @param {string} name
    * @param {*} value
@@ -135,13 +142,8 @@ export class LocalDB extends SQLiteDB {
       }
     }
   }
-  /*
-  public setItem(value:{[key:string]:unknown}): void {
-    this.items[name] = value;
-    this.run("replace into app_data values(?,?)", name, JSON.stringify(value));
-  }*/
   /**
-   *
+   *セッション用データの取得
    *
    * @param {string} name
    * @returns {*}
