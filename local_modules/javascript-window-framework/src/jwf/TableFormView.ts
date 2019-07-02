@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/class-name-casing */
 /* eslint-disable @typescript-eslint/interface-name-prefix */
-import { Window, WINDOW_PARAMS, WINDOW_EVENT_MAP } from "./Window";
+import { BaseView, WINDOW_PARAMS, WINDOW_EVENT_MAP } from "./BaseView";
 import { CalendarView } from "./CalendarView";
 import "./scss/TableFormView.scss";
 
@@ -47,9 +47,9 @@ export type FormInputElement = (
  *
  * @export
  * @class TableFormView
- * @extends {Window}
+ * @extends {BaseView}
  */
-export class TableFormView extends Window<TableFormViewMap> {
+export class TableFormView extends BaseView<TableFormViewMap> {
   private items: HTMLDivElement;
   private footer: HTMLDivElement;
   public constructor(params?: WINDOW_PARAMS) {

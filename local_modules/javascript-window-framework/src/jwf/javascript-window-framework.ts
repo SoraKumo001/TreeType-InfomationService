@@ -16,5 +16,5 @@ export * from "./TableFormView";
 export * from "./TextBox";
 export * from "./TextArea";
 export * from "./TreeView";
-export * from "./Window";
+export * from "./BaseView";
 export * from "./WindowManager";

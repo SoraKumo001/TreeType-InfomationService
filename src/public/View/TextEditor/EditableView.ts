@@ -8,7 +8,7 @@ export interface CustomEvent extends JWF.WINDOW_EVENT_MAP {
   insertFile: [{ fileList: FileList; enter: boolean }];
 }
 
-export class EditableView extends JWF.Window<CustomEvent> {
+export class EditableView extends JWF.BaseView<CustomEvent> {
   private htmlArea: HTMLDivElement;
   private panel?: HTMLElement;
   private keepRange?: Range;

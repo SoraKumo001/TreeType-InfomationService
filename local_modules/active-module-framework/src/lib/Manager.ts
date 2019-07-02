@@ -54,6 +54,13 @@ interface AdapterFormat {
   }[];
 }
 
+/**
+ *一時待機用
+ *
+ * @export
+ * @param {number} timeout
+ * @returns {Promise<void>}
+ */
 export function Sleep(timeout: number): Promise<void> {
   return new Promise((resolv): void => {
     setTimeout((): void => {
@@ -86,13 +93,23 @@ export class Manager {
   public constructor(params: ManagerParams) {
     this.init(params);
   }
+
+  /**
+   *モジュールのコンストラクター一覧を返す
+   *
+   * @returns {{
+   *     [key: string]: typeof Module;
+   *   }}
+   * @memberof Manager
+   */
   public getModuleTypes(): {
     [key: string]: typeof Module;
   } {
     return this.modulesType;
   }
+
   /**
-   *
+   *デバッグ情報の出力
    *
    * @param {string} msg
    * @param {*} params
@@ -104,6 +121,7 @@ export class Manager {
       console.log(msg, ...params);
     }
   }
+
   /**
    * 初期化処理
    *
@@ -165,6 +183,14 @@ export class Manager {
     }
     return true;
   }
+
+  /**
+   *ディレクトリからモジュールを読み込む
+   *
+   * @param {string} modulePath
+   * @returns
+   * @memberof Manager
+   */
   public loadModule(modulePath: string) {
     let modulesType: { [key: string]: typeof Module } = {};
     const files = fs.readdirSync(modulePath);
@@ -189,6 +215,15 @@ export class Manager {
     }
     return modulesType;
   }
+
+  /**
+   *モジュールの取得と新規インスタンスの作成
+   *
+   * @template T
+   * @param {(string | { new (manager: Manager): T })} type
+   * @returns {(Promise<T | null>)}
+   * @memberof Manager
+   */
   public async getModule<T extends Module>(
     type: string | { new (manager: Manager): T }
   ): Promise<T | null> {
@@ -210,6 +245,15 @@ export class Manager {
     if (!(await module.onCreateModule())) return null;
     return module as T;
   }
+
+  /**
+   *非同期を使わずモジュールの取得(未初期化は例外発生)
+   *
+   * @template T
+   * @param {(string | { new (manager: Manager): T })} type
+   * @returns {(T | null)}
+   * @memberof Manager
+   */
   public getModuleSync<T extends Module>(
     type: string | { new (manager: Manager): T }
   ): T | null {
@@ -221,12 +265,23 @@ export class Manager {
     if (module) return module as T;
     throw "Module Load Error";
   }
+
+  /**
+   *コマンドの追加
+   * /?cmd=コマンド
+   * に対応したルーティングを行う
+   *
+   * @param {string} name
+   * @param {(req: express.Request, res: express.Response) => void} proc
+   * @memberof Manager
+   */
   public addCommand(
     name: string,
     proc: (req: express.Request, res: express.Response) => void
   ): void {
     this.commands[name] = proc;
   }
+
   /**
    *Expressの設定を行う
    *
@@ -376,6 +431,15 @@ export class Manager {
   public getLocalDB(): LocalDB {
     return this.localDB;
   }
+
+  /**
+   *ファイルのアップロード対処用
+   *
+   * @private
+   * @param {express.Request} req
+   * @param {express.Response} res
+   * @memberof Manager
+   */
   private upload(req: express.Request, res: express.Response): void {
     if (req.body instanceof Buffer) {
       const params = req.query.params;
@@ -388,6 +452,7 @@ export class Manager {
       }
     }
   }
+
   /**
    *モジュール処理の区分け実行
    *
@@ -416,6 +481,17 @@ export class Manager {
         });
     }
   }
+
+  /**
+   *クライアントからの処理要求を実行
+   *
+   * @private
+   * @param {express.Response} res
+   * @param {AdapterFormat} params
+   * @param {Buffer} [buffer]
+   * @returns {Promise<void>}
+   * @memberof Manager
+   */
   private async excute(
     res: express.Response,
     params: AdapterFormat,
@@ -427,6 +503,7 @@ export class Manager {
       this.localDB,
       params.globalHash,
       params.sessionHash,
+      res,
       buffer
     );
     session.result = {
@@ -440,7 +517,7 @@ export class Manager {
     //セッション初期化処理のあるモジュールを呼び出す
     for (const name of Object.keys(modulesType)) {
       if (modulesType[name].prototype.onStartSession)
-        await session.getModule(name);
+        await session.initModule(name);
     }
 
     if (params.functions) {
@@ -490,11 +567,17 @@ export class Manager {
         }
         //命令の実行
         try {
-          this.output("命令実行: %s %s", funcName, JSON.stringify(func.params));
+          if (this.debug)
+            this.output(
+              "命令実行: %s %s",
+              funcName,
+              JSON.stringify(func.params)
+            );
           //戻り値の受け取り
           const funcResult = funcPt.call(classPt, ...func.params);
           result.value = await funcResult;
-          this.output("実行結果: %s", JSON.stringify(result.value));
+          if (this.debug)
+            this.output("実行結果: %s", JSON.stringify(result.value));
         } catch (e) {
           // eslint-disable-next-line no-console
           console.error(e);
@@ -506,9 +589,12 @@ export class Manager {
       session.final();
     }
     //クライアントに返すデータを設定
-    res.json(session.result);
-    res.end();
+    if (session.isReturn()) {
+      res.json(session.result);
+      res.end();
+    }
   }
+
   /**
    *前回のソケットファイルの削除
    *

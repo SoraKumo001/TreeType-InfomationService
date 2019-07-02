@@ -5,9 +5,9 @@ import { FileEditWindow } from "./FileEditWindow";
  *
  *
  * @class DirView
- * @extends {JWF.Window}
+ * @extends {JWF.BaseView}
  */
-export class DirView extends JWF.Window {
+export class DirView extends JWF.BaseView {
   private dirTree: JWF.TreeView;
   private fileModule: FileModule;
   public constructor(fileModule: FileModule) {
