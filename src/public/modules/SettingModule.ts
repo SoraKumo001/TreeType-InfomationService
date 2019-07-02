@@ -1,9 +1,9 @@
 import { AppModule} from "../AppModule";
-import { Window } from "javascript-window-framework";
+import { BaseView } from "javascript-window-framework";
 import { AppManager } from "../AppManager";
 
 
-export class SettingView extends Window{
+export class SettingView extends BaseView{
   private manager:AppManager;
   public constructor(manager:AppManager){
     super();

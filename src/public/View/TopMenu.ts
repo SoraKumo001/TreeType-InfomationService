@@ -9,7 +9,7 @@ import { ParamsModule } from "../modules/ParamsModule";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LogoImage = require("./images/sorakumo_logo.svg");
-export class TopMenu extends JWF.Window {
+export class TopMenu extends JWF.BaseView {
   public constructor(manager: AppManager) {
     super();
     this.setJwfStyle("TopMenu");

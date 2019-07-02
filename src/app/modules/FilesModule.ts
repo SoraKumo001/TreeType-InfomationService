@@ -13,6 +13,14 @@ export interface FileInfo {
   files_date: string | null;
   childs?: FileInfo[];
 }
+export interface FileData {
+  id: number;
+  kind: number;
+  name: string;
+  sise: number;
+  date: Date;
+  value: string;
+}
 
 export class Files extends amf.Module {
   public async onCreateModule(): Promise<boolean> {
@@ -40,7 +48,7 @@ export class Files extends amf.Module {
     return true;
   }
   public async getFileId(parentId: number, path: string) {
-    const remoteDB = await this.getSessionModule(RemoteDB);
+    const remoteDB = await this.getModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
 
     const dirs = path.replace(/(^\/)|(\/$)/g, "").split("/");
@@ -59,7 +67,7 @@ export class Files extends amf.Module {
     return id;
   }
   public async getFileInfo(fileId: number) {
-    const remoteDB = await this.getSessionModule(RemoteDB);
+    const remoteDB = await this.getModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
 
     return remoteDB.get(
@@ -67,9 +75,18 @@ export class Files extends amf.Module {
       fileId
     );
   }
-  public async createDir(parentId: number, path: string) {
+
+  public async getFile(fileId: number) {
     const remoteDB = await this.getModule(RemoteDB);
-    const users = await this.getSessionModule(Users);
+    if (!remoteDB || !remoteDB.isConnect()) return null;
+
+    return (await remoteDB.get(
+      "select files_id as id,files_kind as kind,files_name as name,octet_length(files_byte) as size,files_date as date,encode(files_byte, 'base64') as value from files where files_id=$1 and files_kind=1",
+      fileId
+    )) as FileData | null;
+  }
+  public async createDir(parentId: number, path: string, userNo: number = 1) {
+    const remoteDB = await this.getModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return 0;
 
     const dirs = path.replace(/(^\/)|(\/$)/g, "").split("/");
@@ -85,7 +102,6 @@ export class Files extends amf.Module {
       if (file["files_kind"] != 0) return 0;
       pid = id;
     }
-    const remoteNo = users ? users.getRemoteNo() : 1;
     if (id) return id;
     id = pid;
     for (; i < length; i++) {
@@ -93,7 +109,7 @@ export class Files extends amf.Module {
       id = (await remoteDB.get2(
         "insert into files values(default,$1,0,$2,$3,now(),null) on conflict do nothing returning files_id",
         id,
-        remoteNo,
+        userNo,
         name
       )) as number;
       if (!id) return 0;
@@ -101,7 +117,7 @@ export class Files extends amf.Module {
     return id;
   }
   public async setFileName(fileId: number, name: string) {
-    const remoteDB = await this.getSessionModule(RemoteDB);
+    const remoteDB = await this.getModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
     return remoteDB.run(
       "update files set files_name=$1 where files_id=$2",
@@ -110,12 +126,12 @@ export class Files extends amf.Module {
     );
   }
   public async getChildList(dirId: number) {
-    const remoteDB = await this.getSessionModule(RemoteDB);
+    const remoteDB = await this.getModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
-    const result = await remoteDB.all(
+    const result = (await remoteDB.all(
       "select files_id as id from files where files_parent=$1",
       dirId
-    ) as {id:number}[]|null;
+    )) as { id: number }[] | null;
     if (!result) return null;
     const values: number[] = [];
     for (const r of result) {
@@ -133,7 +149,7 @@ export class Files extends amf.Module {
     }
     //単一削除処理
     if (fileId <= 1) return false;
-    const remoteDB = await this.getSessionModule(RemoteDB);
+    const remoteDB = await this.getModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
 
     //配下のオブジェクトを削除
@@ -149,23 +165,23 @@ export class Files extends amf.Module {
   }
 
   public async getFileList(parentId: number) {
-    const remoteDB = await this.getSessionModule(RemoteDB);
+    const remoteDB = await this.getModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
 
-    return await remoteDB.all(
+    return (await remoteDB.all(
       `select files_id as id,files_parent as parent,files_kind as kind,files_name as name,files_date as date,octet_length(files_byte) as size
 			from files where files_parent=$1 order by files_kind,files_name`,
       parentId
-    ) as FileInfo[]|null;
+    )) as FileInfo[] | null;
   }
   public async getDirList() {
-    const remoteDB = await this.getSessionModule(RemoteDB);
+    const remoteDB = await this.getModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
 
-    const dirInfos = await remoteDB.all(
+    const dirInfos = (await remoteDB.all(
       `select files_id as id,files_parent as parent ,files_kind as kind,files_name as name,files_date as date,octet_length(files_byte) as size
 			from files where files_kind=0 order by files_name`
-    ) as FileInfo[] | null;
+    )) as FileInfo[] | null;
     const hash = new Map<number, FileInfo>();
 
     if (dirInfos) {
@@ -191,11 +207,11 @@ export class Files extends amf.Module {
     const dirs = path.replace(/(^\/)|(\/$)/g, "").split("/");
     let id = parentId;
     for (const name of dirs) {
-      const result = await remoteDB.get2(
+      const result = (await remoteDB.get2(
         "select files_id from files where files_parent=$1 and files_name=$2",
         id,
         name
-      )as number;
+      )) as number;
       if (!result) return null;
       id = result;
     }
@@ -207,7 +223,7 @@ export class Files extends amf.Module {
     name: string,
     buffer: Buffer
   ) {
-    const remoteDB = await this.getSessionModule(RemoteDB);
+    const remoteDB = await this.getModule(RemoteDB);
     if (!remoteDB || !remoteDB.isConnect()) return null;
     return (await remoteDB.get(
       `insert into files values(default,$1,1,$2,$3,now(),$4) ON CONFLICT (files_parent,files_name)
@@ -264,9 +280,9 @@ export class Files extends amf.Module {
         `${httpDisposition} filename*=utf-8'jp'${encodeURI(fileName)}`
       );
       res.end(result.value);
-    }else{
+    } else {
       res.status(404);
-	    res.end('notfound');
+      res.end("notfound");
     }
 
     return result;
@@ -283,41 +299,39 @@ export class Files extends amf.Module {
       value
     );
   }
+  public isAdmin() {
+    const users = this.getSessionModule(Users);
+    return users.isAdmin();
+  }
   public async JS_createDir(parentId: number, path: string) {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
-    return this.createDir(parentId, path);
+    if (!this.isAdmin()) return null;
+    const users = this.getSessionModule(Users);
+    return this.createDir(parentId, path, users.getRemoteNo());
   }
   public async JS_setFileName(fileId: number, name: string) {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
+    if (!this.isAdmin()) return null;
     return this.setFileName(fileId, name);
   }
   public async JS_deleteFile(fileIds: number | number[]) {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
+    if (!this.isAdmin()) return null;
     return this.deleteFile(fileIds);
   }
   public async JS_getFileList(parentId: number) {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
+    if (!this.isAdmin()) return null;
     return this.getFileList(parentId);
   }
   public async JS_getDirList() {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
+    if (!this.isAdmin()) return null;
     return this.getDirList();
   }
   public async JS_getDirId(parentId: number, name: string) {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
+    if (!this.isAdmin()) return null;
     return this.getDirId(parentId, name);
   }
 
   public async JS_uploadFile(parentId: number, name: string) {
-    const users = await this.getSessionModule(Users);
-    if (!users || !users.isAdmin()) return null;
-
+    if (!this.isAdmin()) return null;
+    const users = this.getSessionModule(Users);
     const code = users.getRemoteNo();
     if (code === 0) return null;
     const buffer = this.getSession().getBuffer();

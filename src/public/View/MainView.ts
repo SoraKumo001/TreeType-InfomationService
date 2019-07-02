@@ -9,7 +9,7 @@ import { UserModule } from "../modules/UserModule";
 import { TreeItem } from "javascript-window-framework";
 import "analytics-gtag"
 
-export class MainView extends JWF.Window {
+export class MainView extends JWF.BaseView {
   private routerModule: RouterModule;
   private infoTreeView :InfoTreeView;
   public constructor(manager: AppManager) {

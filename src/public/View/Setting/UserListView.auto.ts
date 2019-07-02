@@ -17,7 +17,7 @@ export interface UserInfo {
  *
  * @export
  * @class UserListWindow
- * @extends {JWF.Window}
+ * @extends {JWF.BaseView}
  */
 export class UserListView extends SettingView {
   private listView: JWF.ListView;

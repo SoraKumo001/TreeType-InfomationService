@@ -11,7 +11,7 @@ interface CustomEvent extends WINDOW_EVENT_MAP {
   color: [Color];
 }
 
-export class ColorView extends JWF.Window<CustomEvent> {
+export class ColorView extends JWF.BaseView<CustomEvent> {
   private triangleCanvas: HTMLCanvasElement;
   private trianglePoinst: { x: number; y: number }[] = [];
   private targetSize = 40;
@@ -251,7 +251,7 @@ export class ColorPickerWindow extends JWF.FrameWindow<CustomEvent> {
       localStorage.getItem(this.getStrageName("Colors")) || "[]"
     );
     this.colorValues = colorValues;
-    const colorSelector = new JWF.Window();
+    const colorSelector = new JWF.BaseView();
     colorSelector.setJwfStyle("ColorSelector");
     colorSelector.setWidth(120);
     this.addChild(colorSelector, "left");

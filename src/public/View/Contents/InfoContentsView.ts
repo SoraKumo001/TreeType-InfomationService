@@ -27,9 +27,9 @@ export interface ContentsArea extends HTMLDivElement {
  *
  * @export
  * @class InfoContentsView
- * @extends {JWF.Window}
+ * @extends {JWF.BaseView}
  */
-export class InfoContentsView extends JWF.Window {
+export class InfoContentsView extends JWF.BaseView {
   private contentsModule: ContentsModule;
   private contentsPage: HTMLDivElement;
   private contentsNode: { [key: number]: ContentsArea } = {};
