@@ -308,8 +308,6 @@ export class Manager {
       bodyParser.raw({ type: "application/octet-stream", limit: "300mb" })
     );
     exp.use(bodyParser.json({ type: "application/json", limit: "3mb" }));
-    //一般コンテンツの対応付け
-    exp.use(params.remotePath, express.static(params.rootPath));
     //クライアント接続時の処理
     exp.all(
       params.remotePath,
@@ -357,6 +355,8 @@ export class Manager {
         }
       }
     );
+    //一般コンテンツの対応付け
+    exp.use(params.remotePath, express.static(params.rootPath));
 
     //待ち受けポートの設定
     let port = 0;
