@@ -15,5 +15,4 @@ new amf.Manager({
   debug: true, //デバッグ用メッセージ出力
   listen: 8080 //受付ポート/UNIXドメインソケット
   //listen:'dist/sock/app.sock'
-
 });
