@@ -13,18 +13,23 @@ export class SeoModule extends amf.Module {
     const req = creater.getRequest();
     const id = req.query.p || 1;
 
-    //基本パラメータの読み出し
-    const basicData = ((await paramsModule.getGlobalParam("BASIC_DATA")) ||
-      {}) as {
-      url: string;
-      logo: string;
-      info: string;
-      title: string;
-    };
+    //パラメータの読み出し
+    let [basicData, breads, contents] = await Promise.all([
+      paramsModule.getGlobalParam("BASIC_DATA") as Promise<{
+        url?: string;
+        logo?: string;
+        info?: string;
+        title?: string;
+      }|null>,
+      contentsModule.getBreadcrumb(id),
+      contentsModule.getContents(id)
+    ]);
+    if(!basicData)
+      basicData = {};
 
     let title = "";
+
     //パンくずリスト作成
-    let breads = await contentsModule.getBreadcrumb(id);
     if (!breads || breads.length === 0) {
       //コンテンツが無かったらエラーコードを設定
       creater.setStatus(404);
@@ -62,7 +67,6 @@ export class SeoModule extends amf.Module {
     breadcrumbList.textContent = JSON.stringify(breadcrumbValue);
     document.head.appendChild(breadcrumbList);
 
-    const contents = await contentsModule.getContents(id);
     let info = "";
     if (contents && contents.value) {
       //タグの無効化
