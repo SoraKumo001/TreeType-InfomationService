@@ -25,12 +25,11 @@ export class SeoModule extends amf.Module {
     let title = "";
     //パンくずリスト作成
     let breads = await contentsModule.getBreadcrumb(id);
-    if (!breads || breads.length===0) {
+    if (!breads || breads.length === 0) {
       //コンテンツが無かったらエラーコードを設定
       creater.setStatus(404);
       return;
     }
-
 
     let srcUrl;
     if (basicData && basicData["url"]) srcUrl = basicData["url"];
@@ -63,6 +62,15 @@ export class SeoModule extends amf.Module {
     breadcrumbList.textContent = JSON.stringify(breadcrumbValue);
     document.head.appendChild(breadcrumbList);
 
+    const contents = await contentsModule.getContents(id);
+    let info = "";
+    if (contents && contents.value) {
+      //タグの無効化
+      info = contents.value
+        .replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&");
+    }
 
     //タイトルの設定
     document.title = title;
@@ -75,26 +83,29 @@ export class SeoModule extends amf.Module {
     document.head.appendChild(link);
 
     //説明の設定
-    if (basicData.info) {
-      this.createMeta(document, null, "description", basicData.info);
-      this.createMeta(document, "og:description", null, basicData.info);
-    }
+    if (info.length === 0 && basicData.info) info = basicData.info;
+    this.createMeta(document, null, "description", info);
+    this.createMeta(document, "og:description", null, info);
 
-    this.createMeta(document, "og:type", null, id===1?"website":"article");
+    this.createMeta(
+      document,
+      "og:type",
+      null,
+      id === 1 ? "website" : "article"
+    );
     this.createMeta(document, "og:url", null, normalUrl);
     this.createMeta(document, "og:title", null, title);
     this.createMeta(document, "fb:app_id", null, "562797474252030");
-    if (basicData.title) this.createMeta(document, "og:site_name", null, basicData.title);
+    if (basicData.title)
+      this.createMeta(document, "og:site_name", null, basicData.title);
 
     if (basicData.logo)
       this.createMeta(
         document,
         "og:image",
         null,
-        (url + "/?cmd=download&id=" + basicData.logo)
+        url + "/?cmd=download&id=" + basicData.logo
       );
-
-
   }
 
   private createMeta(
@@ -103,9 +114,9 @@ export class SeoModule extends amf.Module {
     name: string | null,
     content: string
   ) {
-    const meta = document.createElement("meta") as HTMLMetaElement
+    const meta = document.createElement("meta") as HTMLMetaElement;
     if (name) meta.name = name;
-    if (property) meta.setAttribute("property",property);
+    if (property) meta.setAttribute("property", property);
     meta.content = content;
     document.head.appendChild(meta);
   }
