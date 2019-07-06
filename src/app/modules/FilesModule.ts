@@ -142,9 +142,11 @@ export class Files extends amf.Module {
   public async deleteFile(fileId: number | number[]) {
     //パラメータが配列だった場合は複数削除
     if (Array.isArray(fileId)) {
+      const promise = [];
       for (const id of fileId) {
-        if (!this.deleteFile(id)) return false;
+        promise.push(this.deleteFile(id));
       }
+      await Promise.all(promise);
       return true;
     }
     //単一削除処理
@@ -155,13 +157,14 @@ export class Files extends amf.Module {
     //配下のオブジェクトを削除
     const childs = await this.getChildList(fileId);
     if (childs) {
+      const promise = [];
       for (const child of childs) {
-        await this.deleteFile(child);
+        promise.push(this.deleteFile(child));
       }
+      await Promise.all(promise);
     }
     //ファイル削除
-    const result = remoteDB.run("delete from files where files_id=$1", fileId);
-    return result;
+    return remoteDB.run("delete from files where files_id=$1", fileId);
   }
 
   public async getFileList(parentId: number) {
