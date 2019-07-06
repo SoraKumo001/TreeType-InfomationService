@@ -13,8 +13,11 @@ import {
   sprintf
 } from "javascript-window-framework";
 import { RouterModule } from "../../modules/RouterModule";
+import { ContentsCacheModule } from "./ContentsCache.auto";
 
 const contentsModule = appManager.getModule(ContentsModule);
+const contentsCacheModule = appManager.getModule(ContentsCacheModule);
+
 contentsModule.addEventListener("drawContents", (client, id) => {
   const contentsPage = client.querySelector(
     "[data-type=ContentsPage]"
@@ -82,7 +85,7 @@ export class ContentsSearchWindow extends FrameWindow {
     const result = await contentsModule.search(keyword);
     if (result) {
       for (const r of result) {
-        const contents = contentsModule.findTreeContents(r);
+        const contents = contentsCacheModule.findTreeContents(r);
         if (contents) {
           const date = new Date(contents.date);
           const dateStr = sprintf(
@@ -96,7 +99,7 @@ export class ContentsSearchWindow extends FrameWindow {
           do {
             if (title.length) title += " - ";
             title += parent.title;
-          } while ((parent = contentsModule.findTreeContents(parent.pid)));
+          } while ((parent = contentsCacheModule.findTreeContents(parent.pid)));
           listView.addItem([dateStr, title], r);
 
           routerModule.setLocationParams({ search: keyword });

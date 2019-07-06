@@ -110,7 +110,10 @@ export class InfoContentsView extends JWF.BaseView {
     contentsModule.addEventListener("updateContents", contents => {
       const contentsNode = this.contentsNode[contents.id];
       if (contentsNode) {
-        contentsNode.update(contents);
+        if(contentsNode.contents.type !== contents.type)
+          this.loadPage(contents.id,true);
+        else
+          contentsNode.update(contents);
       }
     });
     contentsModule.addEventListener("moveVector", (id, vector) => {
@@ -146,7 +149,7 @@ export class InfoContentsView extends JWF.BaseView {
     const date = document.createElement("div");
     date.className = "Date";
     contentsNode.appendChild(date);
-    const body = document.createElement("div");
+    const body = document.createElement("p");
     body.className = "Body";
     contentsNode.appendChild(body);
     const childs = document.createElement("div");
