@@ -1,0 +1,19 @@
+[data-style="BreadContents"] {
+  display: flex;
+  flex-wrap: wrap;
+  a {
+    display: block;
+    color: black;
+    text-decoration: none;
+    white-space: nowrap;
+    border: solid rgb(211, 219, 219) 1px;
+    border-radius: 0.5em;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.3em;
+    margin: 0.2em;
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+}
