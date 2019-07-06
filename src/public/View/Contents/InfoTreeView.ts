@@ -58,7 +58,7 @@ export class InfoTreeView extends JWF.TreeView {
       this.selectId = id;
       this.selectItemFromValue(id, true);
     });
-    contentsModule.addEventListener("createContents", (pid,id) => {
+    contentsModule.addEventListener("createContents", (pid, id) => {
       this.loadTree(id);
     });
     contentsModule.addEventListener("moveContents", fromId => {
@@ -71,10 +71,14 @@ export class InfoTreeView extends JWF.TreeView {
     contentsModule.addEventListener("updateContents", contents => {
       const item = this.findItemFromValue(contents.id);
       if (item) {
-        item.setItemText(contents.title);
         const node = item.getNode();
-        node.dataset.contentStat = contents.stat ? "true" : "false";
-        node.dataset.contentType = contents.type === "PAGE" ? "PAGE" : "ITEM";
+        if (node.dataset.contentType !== contents.type) {
+          //タイプ変更の場合はツリーを読み直す
+          this.loadTree(contents.pid ? contents.pid : 1,true);
+        } else {
+          item.setItemText(contents.title);
+          node.dataset.contentStat = contents.stat ? "true" : "false";
+        }
       }
     });
     contentsModule.addEventListener("moveVector", (id, vector) => {
@@ -119,9 +123,8 @@ export class InfoTreeView extends JWF.TreeView {
       new ContentsImportWindow(this.manager, id);
     });
     contentsControle.addMenu("エクスポート", async () => {
-       const value = await this.contentsModule.export(id);
-       if(value)
-         console.log(value.size)
+      const value = await this.contentsModule.export(id);
+      if (value) console.log(value.size);
     });
   }
   public drawTree(value: TreeContents) {

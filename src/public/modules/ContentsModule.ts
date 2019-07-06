@@ -1,5 +1,5 @@
 import { AppModule, ModuleMap } from "../AppModule";
-import { listLanguages } from "highlight.js";
+
 export interface TreeContents {
   id: number;
   pid: number;
@@ -45,7 +45,6 @@ type ValueTypeProc = (
   contents: MainContents
 ) => void;
 export class ContentsModule extends AppModule<CustomMap> {
-  private treeContents?: TreeContents;
   private contentsValueTypes: { [name: string]: ValueTypeProc } = {};
   public async createContents(pid: number, vector: number, type: string) {
     const adapter = this.getAdapter();
@@ -60,24 +59,7 @@ export class ContentsModule extends AppModule<CustomMap> {
     }
     return result;
   }
-  public findTreeContents(
-    id: number,
-    tree?: TreeContents
-  ): TreeContents | null {
-    if (!tree) tree = this.treeContents;
-    if (!tree) return null;
-    if (tree.id === id) return tree;
-    if (tree.childs) {
-      for (const child of tree.childs) {
-        const result = this.findTreeContents(id, child);
-        if (result) return result;
-      }
-    }
-    return null;
-  }
-  public getTreeCache() {
-    return this.treeContents;
-  }
+
   /**
    *ツリーデータを受け取る
    *
@@ -93,44 +75,18 @@ export class ContentsModule extends AppModule<CustomMap> {
     )) as TreeContents | null;
     if (treeContents) {
       this.convertTreeContents(treeContents);
-      if (id === undefined || id === 1) {
-        this.treeContents = treeContents;
-      }
       this.callEvent("getTree", treeContents);
     }
     return treeContents;
   }
 
   /**
-   *受け取ったツリーデータを扱いやすいように変換
+   *コンテンツ表示用のページデータを読み出す
    *
-   * @private
-   * @param {TreeContents} treeContents
+   * @param {number} id
+   * @returns
    * @memberof ContentsModule
    */
-  private convertTreeContents(treeContents: TreeContents, page?: TreeContents) {
-    //取得データを文字列からDateに変換
-    treeContents.date = new Date(treeContents.date);
-    treeContents.update = new Date(treeContents.update);
-
-    if (treeContents.type === "PAGE") {
-      page = treeContents;
-      page.pageNew = treeContents;
-    } else {
-      //ページ全体の更新時間を設定
-      if (page && page.pageNew) {
-        if (treeContents.date.getTime() > page.pageNew.date.getTime()) {
-          page.pageNew = treeContents;
-        }
-      }
-    }
-    if (treeContents.childs) {
-      for (const child of treeContents.childs) {
-        child.parent = treeContents;
-        this.convertTreeContents(child, page);
-      }
-    }
-  }
   public async getPage(id: number) {
     const adapter = this.getAdapter();
     const page = (await adapter.exec(
@@ -142,9 +98,26 @@ export class ContentsModule extends AppModule<CustomMap> {
     }
     return page;
   }
+
+  /**
+   *ページを選択する
+   *
+   * @param {number} id
+   * @param {boolean} [tree]
+   * @memberof ContentsModule
+   */
   public selectContents(id: number, tree?: boolean) {
     this.callEvent("selectContents", id, tree);
   }
+
+  /**
+   *対象IDのコンテンツのみ取得
+   *
+   * @param {number} id
+   * @param {boolean} [child]
+   * @returns
+   * @memberof ContentsModule
+   */
   public getContents(id: number, child?: boolean) {
     const adapter = this.getAdapter();
     return adapter.exec(
@@ -153,12 +126,22 @@ export class ContentsModule extends AppModule<CustomMap> {
       child
     ) as Promise<MainContents | null>;
   }
+
+  /**
+   *コンテンツの削除
+   *
+   * @param {number} id
+   * @returns
+   * @memberof ContentsModule
+   */
   public async deleteContents(id: number) {
     const adapter = this.getAdapter();
     const flag = (await adapter.exec("Contents.deleteContents", id)) as Promise<
       boolean | null
     >;
-    if (flag) this.callEvent("deleteContents", id);
+    if (flag) {
+      this.callEvent("deleteContents", id);
+    }
     return flag;
   }
   public async updateContents(contents: MainContents, save?: boolean) {
@@ -170,7 +153,9 @@ export class ContentsModule extends AppModule<CustomMap> {
         | null;
     } else flag = true;
 
-    if (flag) this.callEvent("updateContents", contents);
+    if (flag) {
+      this.callEvent("updateContents", contents);
+    }
     return flag;
   }
   public async moveVector(id: number, vector: number) {
@@ -234,5 +219,35 @@ export class ContentsModule extends AppModule<CustomMap> {
   public async search(keyword: string) {
     const adapter = this.getAdapter();
     return adapter.exec("Contents.search", keyword) as Promise<number[] | null>;
+  }
+  /**
+   *受け取ったツリーデータを扱いやすいように変換
+   *
+   * @private
+   * @param {TreeContents} treeContents
+   * @memberof ContentsModule
+   */
+  private convertTreeContents(treeContents: TreeContents, page?: TreeContents) {
+    //取得データを文字列からDateに変換
+    treeContents.date = new Date(treeContents.date);
+    treeContents.update = new Date(treeContents.update);
+
+    if (treeContents.type === "PAGE") {
+      page = treeContents;
+      page.pageNew = treeContents;
+    } else {
+      //ページ全体の更新時間を設定
+      if (page && page.pageNew) {
+        if (treeContents.date.getTime() > page.pageNew.date.getTime()) {
+          page.pageNew = treeContents;
+        }
+      }
+    }
+    if (treeContents.childs) {
+      for (const child of treeContents.childs) {
+        child.parent = treeContents;
+        this.convertTreeContents(child, page);
+      }
+    }
   }
 }
