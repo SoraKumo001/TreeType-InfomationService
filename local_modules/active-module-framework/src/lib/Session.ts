@@ -57,12 +57,10 @@ export class Session {
     buffer?: Buffer
   ): Promise<void> {
     this.localDB = db;
-    const global = await db.startSession(
-      "GLOBAL",
-      globalHash,
-      7 * 24 * 60 * 60
-    );
-    const session = await db.startSession("SESSION", sessionHash, 60 * 60);
+    const [global, session] = await Promise.all([
+      db.startSession("GLOBAL", globalHash, 7 * 24 * 60 * 60),
+      db.startSession("SESSION", sessionHash, 60 * 60)
+    ]);
     this.globalHash = global.hash;
     this.sessionHash = session.hash;
     this.setValue("GLOBAL_ITEM", global.values);
@@ -241,9 +239,7 @@ export class Session {
     }
     return typeof items[name] === "undefined" ? defValue : items[name];
   }
-  public async initModule<T extends Module>(
-    type:string
-  ): Promise<T | null> {
+  public async initModule<T extends Module>(type: string): Promise<T | null> {
     try {
       const moduleSrc = this.manager.getModuleSync(type);
       if (!moduleSrc) return null;
@@ -278,13 +274,13 @@ export class Session {
     }
     try {
       const moduleSrc = this.manager.getModuleSync(type);
-      if (!moduleSrc) throw("Module not found");
+      if (!moduleSrc) throw "Module not found";
       const module = Object.assign(moduleSrc) as T;
       module.setSession(this);
       this.modules.push(module);
       return module;
     } catch (e) {
-      throw("Module not found");
+      throw "Module not found";
     }
   }
   public async releaseModules(): Promise<void> {

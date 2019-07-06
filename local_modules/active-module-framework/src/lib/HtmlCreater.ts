@@ -19,10 +19,12 @@ interface FileInfo {
  * @class HtmlCreater
  */
 export class HtmlCreater {
-  private status:number = 200;
-  private jsdom?: JSDOM;
+  private status: number = 200;
   private links: string[] = [];
-  private baseUrl?: string;
+  private cssFiles?: FileInfo[];
+  private jsFiles?: FileInfo[];
+  private jsdomSerial?: string;
+  private jsdom?: JSDOM;
   private req?: express.Request;
   /**
    *DOM操作用インスタンスの取得
@@ -51,6 +53,34 @@ export class HtmlCreater {
   public getRequest(): express.Request {
     return this.req as express.Request;
   }
+
+  public async init(
+    rootPath: string,
+    indexPath: string,
+    cssPath: string[],
+    jsPath: string[],
+    priorityJs: string[]
+  ) {
+    const jsdom = await this.openTemplate(indexPath);
+    if (!jsdom) return false;
+    const cssFiles = this.getFileInfo(rootPath, cssPath, ".css");
+    const jsFiles = this.getFileInfo(rootPath, jsPath, ".js");
+
+    //JSを優先順位に従って並び替え
+    jsFiles.sort((a, b): number => {
+      const v1 = priorityJs.indexOf(a.name);
+      const v2 = priorityJs.indexOf(b.name);
+      return v2 - v1;
+    });
+    //必要なファイルを追加
+    this.addScript(jsdom, jsFiles);
+    this.addCSS(jsdom, cssFiles);
+
+    this.cssFiles = cssFiles;
+    this.jsFiles = jsFiles;
+
+    this.jsdomSerial = jsdom.serialize();
+  }
   /**
    *HTMLデータの出力
    *
@@ -70,31 +100,22 @@ export class HtmlCreater {
     req: express.Request,
     res: express.Response,
     baseUrl: string,
-    rootPath: string,
-    indexPath: string,
-    cssPath: string[],
-    jsPath: string[],
-    priorityJs: string[],
     modules: Module[]
   ): Promise<boolean> {
-    if (!(await this.openTemplate(indexPath))) return false;
+    this.jsdom = new JSDOM(this.jsdomSerial);
     this.req = req;
-    this.baseUrl = baseUrl;
-    const cssFiles = this.getFileInfo(rootPath, cssPath, ".css");
-    const jsFiles = this.getFileInfo(rootPath, jsPath, ".js");
-
-    //JSを優先順位に従って並び替え
-    jsFiles.sort((a, b): number => {
-      const v1 = priorityJs.indexOf(a.name);
-      const v2 = priorityJs.indexOf(b.name);
-      return v2 - v1;
-    });
-    //必要なファイルを追加
-    this.addScript(jsFiles);
-    this.addCSS(cssFiles);
-
-    this.addLink(jsFiles.map((v): string => v.dir + "/" + v.name), "script");
-    this.addLink(cssFiles.map((v): string => v.dir + "/" + v.name), "style");
+    if (this.jsFiles)
+      this.addLink(
+        baseUrl,
+        this.jsFiles.map((v): string => v.dir + "/" + v.name),
+        "script"
+      );
+    if (this.cssFiles)
+      this.addLink(
+        baseUrl,
+        this.cssFiles.map((v): string => v.dir + "/" + v.name),
+        "style"
+      );
 
     for (const module of modules) {
       if (module.onCreateHtml) {
@@ -106,11 +127,10 @@ export class HtmlCreater {
       "Content-Type": "text/html; charset=UTF-8",
       link: this.links
     });
-    if (this.jsdom){
+    if (this.jsdom) {
       res.write("<!DOCTYPE html>\n");
       res.end(this.jsdom.window.document.documentElement.outerHTML);
-    }else
-      res.end();
+    } else res.end();
     return true;
   }
   /**
@@ -119,28 +139,24 @@ export class HtmlCreater {
    * @param {number} status
    * @memberof HtmlCreater
    */
-  public setStatus(status:number){
+  public setStatus(status: number) {
     this.status = status;
   }
 
-  private async openTemplate(indexPath: string): Promise<boolean> {
+  private async openTemplate(indexPath: string): Promise<JSDOM | null> {
     try {
-      const jsdom = await JSDOM.fromFile(indexPath);
-      this.jsdom = jsdom;
-      return true;
+      return await JSDOM.fromFile(indexPath);
     } catch (e) {
-      return false;
+      return null;
     }
   }
-  public addLink(files: string[], style: string): void {
+  public addLink(baseUrl: string, files: string[], style: string): void {
     const links = this.links;
-    const baseUrl = this.baseUrl;
     for (const file of files) {
       links.push(`<${baseUrl}${file}>;rel=preload;as=${style};`);
     }
   }
-  private addScript(files: FileInfo[]): void {
-    const jsdom = this.jsdom;
+  private addScript(jsdom: JSDOM, files: FileInfo[]): void {
     if (!jsdom) return;
     const document = jsdom.window.document;
     const head = document.head;
@@ -151,8 +167,7 @@ export class HtmlCreater {
       head.appendChild(node);
     }
   }
-  private addCSS(files: FileInfo[]): void {
-    const jsdom = this.jsdom;
+  private addCSS(jsdom: JSDOM, files: FileInfo[]): void {
     if (!jsdom) return;
     const document = jsdom.window.document;
     const head = document.head;
@@ -201,4 +216,6 @@ export class HtmlCreater {
       );
     }
   }
+
+
 }
