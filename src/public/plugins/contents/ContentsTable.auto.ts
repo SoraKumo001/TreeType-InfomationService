@@ -1,12 +1,11 @@
-  /**
-   *目次表示用プラグイン
-   */
-
-
+/**
+ *目次表示用プラグイン
+ */
 import { appManager } from "../../AppManager";
 import { ContentsModule } from "../../modules/ContentsModule";
 import { sprintf } from "javascript-window-framework";
-import "./ContentsTable.scss";
+import "./ContentsTable.auto.scss";
+
 const contentsModule = appManager.getModule(ContentsModule);
 contentsModule.addEventListener("drawContents", (client, id) => {
   const contentsPage = client.querySelector("[data-type=ContentsPage]");
@@ -37,11 +36,14 @@ contentsModule.addEventListener("drawContents", (client, id) => {
         const row = table.insertRow();
         let cell: HTMLTableDataCellElement;
         cell = row.insertCell();
-        cell.innerText = sprintf("  %02d. %s",index++,c.title);
-
-        row.addEventListener("click", () => {
+        const link = document.createElement("a");
+        link.innerText = sprintf("  %02d. %s", index++, c.title);
+        link.href = "?p=" + id;
+        link.addEventListener("click", e => {
           contentsModule.selectContents(c.id);
+          e.preventDefault();
         });
+        cell.appendChild(link);
       }
       div.appendChild(table);
       if (flag) contentsPage.appendChild(subContents);
