@@ -35,6 +35,8 @@ export class SeoModule extends amf.Module {
       creater.setStatus(404);
       return;
     }
+    //パンくずリストからページのIDを取得
+    const pageId = breads[breads.length-1].id;
 
     let srcUrl;
     if (basicData && basicData["url"]) srcUrl = basicData["url"];
@@ -67,20 +69,22 @@ export class SeoModule extends amf.Module {
     breadcrumbList.textContent = JSON.stringify(breadcrumbValue);
     document.head.appendChild(breadcrumbList);
 
+    //ページの説明文章の作成
     let info = "";
     if (contents && contents.value) {
       //タグの無効化
       info = contents.value
         .replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, "")
         .replace(/&nbsp;/g, " ")
-        .replace(/&amp;/g, "&");
+        .replace(/&amp;/g, "&")
+        .replace(/\n|\r\n|\r/g, "");
     }
 
     //タイトルの設定
     document.title = title;
 
-    //正規URLの作成
-    const normalUrl = `${url}/?p=${id}`;
+    //正規URLの作成(正規IDはページのIDを設定)
+    const normalUrl = `${url}/?p=${pageId}`;
     const link = document.createElement("link");
     link.rel = "canonical";
     link.href = normalUrl;
