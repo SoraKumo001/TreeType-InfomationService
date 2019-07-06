@@ -8,8 +8,10 @@ import {
 } from "../../modules/ContentsModule";
 import { sprintf } from "javascript-window-framework";
 import { appManager } from "../../AppManager";
+import { ContentsCacheModule } from "./ContentsCache.auto";
 
-const contentsModule = appManager.getModule(ContentsModule) as ContentsModule;
+const contentsModule = appManager.getModule(ContentsModule);
+const contentsCacheModule = appManager.getModule(ContentsCacheModule);
 
 function getContentsList(
   treeContents: TreeContents,
@@ -37,7 +39,7 @@ function contentsUpdate(
   contents: MainContents
 ) {
   body.innerHTML = contents["value"];
-  const tree = contentsModule.findTreeContents(pageId);
+  const tree = contentsCacheModule.findTreeContents(pageId);
   if (!tree) {
     return;
   }
