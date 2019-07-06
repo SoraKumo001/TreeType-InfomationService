@@ -75,6 +75,7 @@ export function Sleep(timeout: number): Promise<void> {
  * @class Manager
  */
 export class Manager {
+  private htmlCreater: HtmlCreater = new HtmlCreater();
   private debug?: boolean;
   private localDB: LocalDB = new LocalDB();
   private stderr: string = "";
@@ -176,6 +177,14 @@ export class Manager {
       for (const name of Object.keys(modulesType)) {
         if (!(await this.getModule(name))) process.exit(-10);
       }
+
+      this.htmlCreater.init(
+        params.rootPath,
+        params.indexPath,
+        params.cssPath,
+        params.jsPath,
+        params.jsPriority
+      );
 
       //Expressの初期化
       this.initExpress(params);
@@ -337,17 +346,12 @@ export class Manager {
             (req.header("location_path") || `https://${req.hostname}`) +
             params.remotePath;
           this.output(path);
-          const htmlNode = new HtmlCreater();
+          const htmlNode = Object.assign(this.htmlCreater);
           if (
             !htmlNode.output(
               req,
               res,
               path,
-              params.rootPath,
-              params.indexPath,
-              params.cssPath,
-              params.jsPath,
-              params.jsPriority,
               Object.values(this.modulesInstance)
             )
           )
