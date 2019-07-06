@@ -363,22 +363,35 @@ export class Contents extends amf.Module {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     if (flag || flag === undefined) await remoteDB.run("begin");
-    const ids = (await remoteDB.all(
-      "select contents_id from contents where contents_parent=$1",
-      id
-    )) as { contents_id: number }[] | null;
-    if (ids) {
-      for (const cid of ids) await this.deleteContents(cid.contents_id, false);
-    }
-    //
-    //関連ファイルの削除
-    const files = this.getSessionModule(Files);
-    const path = this.getDirPath(id);
-    const fileId = await files.getDirId(1, path);
-    if (fileId) await files.deleteFile(fileId);
 
-    if (id !== 1)
-      await remoteDB.run("delete from contents where contents_id=$1", id);
+    const promise: Promise<unknown>[] = [];
+    //関連ファイルの削除
+    const fileDelete = async () => {
+      const files = this.getSessionModule(Files);
+      const path = this.getDirPath(id);
+      const fileId = await files.getDirId(1, path);
+      if (fileId) await files.deleteFile(fileId);
+    };
+    promise.push(fileDelete());
+    //コンテンツ削除
+    const contentsDelete = async () => {
+      const ids = (await remoteDB.all(
+        "select contents_id from contents where contents_parent=$1",
+        id
+      )) as { contents_id: number }[] | null;
+      if (ids) {
+        const promise: Promise<unknown>[] = [];
+        for (const cid of ids)
+          promise.push(this.deleteContents(cid.contents_id, false));
+        await Promise.all(promise);
+      }
+    };
+    await contentsDelete();
+
+    if (id !== 1){
+      promise.push(remoteDB.run("delete from contents where contents_id=$1", id));
+    }
+    Promise.all(promise);
     if (flag || flag === undefined) await remoteDB.run("commit");
     //コンテンツの削除
     return true;
