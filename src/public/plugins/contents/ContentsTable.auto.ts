@@ -5,8 +5,11 @@ import { appManager } from "../../AppManager";
 import { ContentsModule } from "../../modules/ContentsModule";
 import { sprintf } from "javascript-window-framework";
 import "./ContentsTable.auto.scss";
+import { ContentsCacheModule } from "./ContentsCache.auto";
 
 const contentsModule = appManager.getModule(ContentsModule);
+const contentsCacheModule = appManager.getModule(ContentsCacheModule);
+
 contentsModule.addEventListener("drawContents", (client, id) => {
   const contentsPage = client.querySelector("[data-type=ContentsPage]");
   if (!contentsPage) return;
@@ -18,7 +21,7 @@ contentsModule.addEventListener("drawContents", (client, id) => {
   const div = document.createElement("div");
   subContents.appendChild(div);
 
-  const contents = contentsModule.findTreeContents(id);
+  const contents = contentsCacheModule.findTreeContents(id);
   if (contents) {
     const childs = contents.childs;
     if (childs) {

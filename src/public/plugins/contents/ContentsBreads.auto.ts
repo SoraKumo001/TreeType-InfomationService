@@ -5,8 +5,11 @@
 import { appManager } from "../../AppManager";
 import { ContentsModule, TreeContents } from "../../modules/ContentsModule";
 import "./ContentsBreads.auto.scss";
+import { ContentsCacheModule } from "./ContentsCache.auto";
 
 const contentsModule = appManager.getModule(ContentsModule);
+const contentsCacheModule = appManager.getModule(ContentsCacheModule);
+
 contentsModule.addEventListener("drawContents", (client, id) => {
   const contentsPage = client.querySelector("[data-type=ContentsPage]");
   if (contentsPage) {
@@ -16,7 +19,7 @@ contentsModule.addEventListener("drawContents", (client, id) => {
     let parent:
       | TreeContents
       | undefined
-      | null = contentsModule.findTreeContents(id);
+      | null = contentsCacheModule.findTreeContents(id);
     if (!parent) return;
     while ((parent = parent.parent)) {
       //SEO対策のためaタグを生成
