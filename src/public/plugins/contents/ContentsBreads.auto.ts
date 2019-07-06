@@ -4,6 +4,7 @@
 
 import { appManager } from "../../AppManager";
 import { ContentsModule, TreeContents } from "../../modules/ContentsModule";
+import "./ContentsBreads.auto.scss";
 
 const contentsModule = appManager.getModule(ContentsModule);
 contentsModule.addEventListener("drawContents", (client, id) => {
@@ -18,13 +19,16 @@ contentsModule.addEventListener("drawContents", (client, id) => {
       | null = contentsModule.findTreeContents(id);
     if (!parent) return;
     while ((parent = parent.parent)) {
-      const div = document.createElement("div");
+      //SEO対策のためaタグを生成
+      const link = document.createElement("a");
       const id = parent.id;
-      div.innerText = parent.title;
-      div.addEventListener("click", () => {
+      link.href = "?p="+id;
+      link.innerText = parent.title;
+      link.addEventListener("click", (e) => {
         contentsModule.selectContents(id);
+        e.preventDefault();
       });
-      breadContents.insertBefore(div, breadContents.firstChild);
+      breadContents.insertBefore(link, breadContents.firstChild);
     }
     contentsPage.insertBefore(breadContents, contentsPage.firstChild);
   }
