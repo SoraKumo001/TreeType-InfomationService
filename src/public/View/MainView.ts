@@ -7,11 +7,12 @@ import { InfoContentsView } from "./Contents/InfoContentsView";
 import { RouterModule } from "../modules/RouterModule";
 import { UserModule } from "../modules/UserModule";
 import { TreeItem } from "javascript-window-framework";
-import "analytics-gtag"
+import "analytics-gtag";
 
 export class MainView extends JWF.BaseView {
   private routerModule: RouterModule;
-  private infoTreeView :InfoTreeView;
+  private infoTreeView: InfoTreeView;
+  private firstStat: boolean = true;
   public constructor(manager: AppManager) {
     super({ overlap: true });
     this.setMaximize(true);
@@ -19,11 +20,10 @@ export class MainView extends JWF.BaseView {
 
     const splitter = new JWF.Splitter();
     this.addChild(splitter, "client");
-    splitter.setSplitterPos(300,"ew");
-    splitter.setOverlay(true,600);
+    splitter.setSplitterPos(300, "ew");
+    splitter.setOverlay(true, 600);
 
-    splitter.addChild(0,new TopMenu(manager), "bottom");
-
+    splitter.addChild(0, new TopMenu(manager), "bottom");
 
     const infoTreeView = new InfoTreeView(manager);
     this.infoTreeView = infoTreeView;
@@ -34,23 +34,30 @@ export class MainView extends JWF.BaseView {
     const routerModule = manager.getModule(RouterModule);
     this.routerModule = routerModule;
 
-    contentsModule.addEventListener("selectContents", (id,tree) => {
-      this.routerModule.setLocationParams({ p: id },!tree);
+    contentsModule.addEventListener("selectContents", (id, tree) => {
+      this.routerModule.setLocationParams({ p: id }, !tree);
     });
     contentsModule.addEventListener("selectPage", id => {
       const title = this.selectPage(id);
-      if(!title)
-        return;
+      if (!title) return;
 
-      //トラッカーに通知
-      try {
-        const AnalyticsUA = (global as NodeJS.Global&{AnalyticsUA:string})["AnalyticsUA"];
-        // eslint-disable-next-line no-undef
-        gtag("config", AnalyticsUA, {
-          page_title: title,
-          page_path: "/?p=" + id
-        });
-      } catch (e) {// empty
+      if (this.firstStat) {
+        //初回はカウントしない
+        this.firstStat = false;
+      } else {
+        //トラッカーに通知
+        try {
+          const AnalyticsUA = (global as NodeJS.Global & {
+            AnalyticsUA: string;
+          })["AnalyticsUA"];
+          // eslint-disable-next-line no-undef
+          gtag("config", AnalyticsUA, {
+            page_title: title,
+            page_path: "/?p=" + id
+          });
+        } catch (e) {
+          // empty
+        }
       }
     });
 
@@ -60,8 +67,8 @@ export class MainView extends JWF.BaseView {
     routerModule.addEventListener("goLocation", params => {
       //ページの更新や戻る/進むボタンの処理
       const id = parseInt(params["p"] || "1");
-      infoTreeView.loadTree(id).then((e)=>{
-        if(e){
+      infoTreeView.loadTree(id).then(e => {
+        if (e) {
           this.selectPage(id);
         }
       });
@@ -80,23 +87,22 @@ export class MainView extends JWF.BaseView {
     });
 
     routerModule.goLocation();
-
   }
-  public selectPage(id:number){
-      let item: TreeItem | null = this.infoTreeView.findItemFromValue(id);
-      if (!item) return "";
-      let title = "";
-      const values: { name: string; value: number }[] = [];
-      do {
-        const name = item.getItemText();
-        values.push({
-          name,
-          value: item.getItemValue() as number
-        });
-        if (title.length) title += " - ";
-        title += name;
-      } while ((item = item.getParentItem()));
-      document.title = title;
-      return title;
+  public selectPage(id: number) {
+    let item: TreeItem | null = this.infoTreeView.findItemFromValue(id);
+    if (!item) return "";
+    let title = "";
+    const values: { name: string; value: number }[] = [];
+    do {
+      const name = item.getItemText();
+      values.push({
+        name,
+        value: item.getItemValue() as number
+      });
+      if (title.length) title += " - ";
+      title += name;
+    } while ((item = item.getParentItem()));
+    document.title = title;
+    return title;
   }
 }
