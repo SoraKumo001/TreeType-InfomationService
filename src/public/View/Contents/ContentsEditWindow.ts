@@ -78,7 +78,7 @@ export class ContentsEditWindow extends TextEditWindow {
     const ext = fileName.split(".").pop();
     let imageFlag = false;
     if (ext) {
-      if (["jpg", "jpeg", "png", "svg"].indexOf(ext.toLowerCase()) >= 0)
+      if (["gif","jpg", "jpeg", "png", "svg"].indexOf(ext.toLowerCase()) >= 0)
         imageFlag = true;
     }
     const fileId = id.toString();
