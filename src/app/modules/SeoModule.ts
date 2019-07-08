@@ -20,12 +20,11 @@ export class SeoModule extends amf.Module {
         logo?: string;
         info?: string;
         title?: string;
-      }|null>,
+      } | null>,
       contentsModule.getBreadcrumb(id),
-      contentsModule.getContents(id)
+      contentsModule.getContents(id, true)
     ]);
-    if(!basicData)
-      basicData = {};
+    if (!basicData) basicData = {};
 
     let title = "";
 
@@ -36,7 +35,7 @@ export class SeoModule extends amf.Module {
       return;
     }
     //パンくずリストからページのIDを取得
-    const pageId = breads[breads.length-1].id;
+    const pageId = breads[breads.length - 1].id;
 
     let srcUrl;
     if (basicData && basicData["url"]) srcUrl = basicData["url"];
@@ -71,13 +70,18 @@ export class SeoModule extends amf.Module {
 
     //ページの説明文章の作成
     let info = "";
-    if (contents && contents.value) {
-      //タグの無効化
-      info = contents.value
-        .replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, "")
-        .replace(/&nbsp;/g, " ")
-        .replace(/&amp;/g, "&")
-        .replace(/\n|\r\n|\r/g, "");
+    if (contents) {
+      //本文を設定
+      if (contents.value) {
+        //タグの無効化
+        info = this.convertText(contents.value);
+      }
+      //サブタイトルを設定
+      if (contents.childs) {
+        for (const child of contents.childs) {
+          info += child.title + " ";
+        }
+      }
     }
 
     //タイトルの設定
@@ -115,7 +119,13 @@ export class SeoModule extends amf.Module {
         url + "/?cmd=download&id=" + basicData.logo
       );
   }
-
+  private convertText(value: string) {
+    return value
+      .replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/\n|\r\n|\r/g, "");
+  }
   private createMeta(
     document: Document,
     property: string | null,
