@@ -1,3 +1,8 @@
+/**
+ *コンテンツデータをキャッシュして他のプラグインから利用可能にするプラグイン
+ *
+ */
+
 import { appManager, AppManager } from "../../AppManager";
 import { ContentsModule, TreeContents } from "../../modules/ContentsModule";
 import { AppModule } from "../../AppModule";

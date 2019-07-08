@@ -6,10 +6,10 @@ import * as JWF from "javascript-window-framework";
 import { AppManager } from "../../AppManager";
 import { ContentsModule, TreeContents } from "../../modules/ContentsModule";
 import { TreeItem } from "javascript-window-framework";
-import "./scss/InfoTreeView.scss";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
 import { ContentsImportWindow } from "./ContentsInportWindow";
+import "./scss/InfoTreeView.scss";
 
 export class InfoTreeView extends JWF.TreeView {
   private manager: AppManager;

@@ -1,3 +1,8 @@
+/**
+ *コンテンツ編集メニュー表示用
+ *
+ */
+
 import { FrameWindow } from "javascript-window-framework";
 import "./scss/ContentsControleWindow.scss";
 export class ContentsControleWindow extends FrameWindow {
