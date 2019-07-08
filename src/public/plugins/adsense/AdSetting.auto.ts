@@ -1,3 +1,8 @@
+/**
+ *アドセンス設定項目追加プラグイン
+ *
+ */
+
 import * as JWF from "javascript-window-framework";
 
 import { SettingView, SettingModule } from "../../modules/SettingModule";

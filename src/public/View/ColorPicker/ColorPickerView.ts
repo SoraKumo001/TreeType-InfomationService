@@ -1,3 +1,8 @@
+/**
+ *カラーピッカー表示用
+ *
+ */
+
 import * as JWF from "javascript-window-framework";
 import "./ColorPickerView.scss";
 import { WINDOW_EVENT_MAP, sprintf } from "javascript-window-framework";
