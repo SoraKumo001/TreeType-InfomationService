@@ -1,8 +1,17 @@
+/**
+ *アドセンスをコンテンツに埋め込むためのプラグイン
+ *
+ */
+
 import { ParamsModule } from "../../modules/ParamsModule";
 import { ContentsModule } from "../../modules/ContentsModule";
 import { appManager } from "../../AppManager";
 
 declare var adsbygoogle: unknown;
+/**
+ *
+ *
+ */
 declare interface Window {
   adsbygoogle: {}[];
 }
