@@ -1,11 +1,10 @@
 {
-	"compilerOptions": {
-		"target": "es2017",
-		"module": "commonjs",
-	},
-	"references": [
-		{"path": "./src/app"}
-	],
-
-	"exclude": ["."]
+  "references": [
+    {
+      "path": "./src/app"
+    }
+  ],
+  "exclude": [
+    "."
+  ]
 }
