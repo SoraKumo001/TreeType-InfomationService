@@ -30,7 +30,7 @@ export class Analytics extends amf.Module {
       window.dataLayer = window.dataLayer || [];
       function gtag() { dataLayer.push(arguments); }
       gtag('js', new Date());
-      //gtag('config', AnalyticsUA);`;
+      gtag('config', AnalyticsUA);`;
       document.head.appendChild(script2);
     }
   }
