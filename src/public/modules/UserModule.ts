@@ -14,6 +14,13 @@ export interface CustomMap extends ModuleMap {
   updateUser: [{no:number}];
 }
 
+/**
+ *ユーザデータ管理用モジュール
+ *
+ * @export
+ * @class UserModule
+ * @extends {AppModule<CustomMap>}
+ */
 export class UserModule extends AppModule<CustomMap> {
   private userInfo?: UserInfo;
 

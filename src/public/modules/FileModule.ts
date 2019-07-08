@@ -18,6 +18,13 @@ export interface CustomMap extends ModuleMap {
   upload_file: [number,number,File]; //parentId,id,File
 }
 
+/**
+ *ファイルデータアクセス用モジュール
+ *
+ * @export
+ * @class FileModule
+ * @extends {AppModule<CustomMap>}
+ */
 export class FileModule extends AppModule<CustomMap> {
   public getDirs() {
     const adapter = this.getAdapter();

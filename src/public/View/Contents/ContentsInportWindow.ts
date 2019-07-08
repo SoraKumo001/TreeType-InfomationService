@@ -1,3 +1,8 @@
+/**
+ *コンテンツインポート用UI
+ *
+ */
+
 import * as JWF from "javascript-window-framework";
 import { AppManager } from "../../AppManager";
 import { ContentsModule } from "../../modules/ContentsModule";

@@ -35,8 +35,21 @@ export interface ConvertContents extends MainContents {
   files: FileData[];
 }
 
+/**
+ *コンテンツデータ管理クラス
+ *
+ * @export
+ * @class Contents
+ * @extends {amf.Module}
+ */
 export class Contents extends amf.Module {
   private remoteDB?: RemoteDB;
+  /**
+   *モジュール作成時の初期化処理
+   *
+   * @returns {Promise<boolean>}
+   * @memberof Contents
+   */
   public async onCreateModule(): Promise<boolean> {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
@@ -73,6 +86,13 @@ export class Contents extends amf.Module {
     return true;
   }
 
+  /**
+   *コンテンツを含むPageIDを返す
+   *
+   * @param {number} id コンテンツのID
+   * @returns {Promise<number>}
+   * @memberof Contents
+   */
   public async getParentPage(id: number): Promise<number> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return 0;
@@ -88,6 +108,13 @@ export class Contents extends amf.Module {
     }
     return id;
   }
+  /**
+   *親IDを返す
+   *
+   * @param {number} id コンテンツのID
+   * @returns {(Promise<number | null>)}
+   * @memberof Contents
+   */
   public async getParent(id: number): Promise<number | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
@@ -96,6 +123,14 @@ export class Contents extends amf.Module {
       id
     )) as number | null;
   }
+  /**
+   *コンテンツの上位に対象のIDがあるかチェックする
+   *
+   * @param {number} id コンテンツのID
+   * @param {number} checkId 親の可能性があるID
+   * @returns {Promise<boolean>}
+   * @memberof Contents
+   */
   public async isParent(id: number, checkId: number): Promise<boolean> {
     let cid: number | null = id;
     if (cid === checkId) return true;
@@ -104,6 +139,15 @@ export class Contents extends amf.Module {
     }
     return false;
   }
+  /**
+   *ページ内の最新更新時間を返す
+   *
+   * @private
+   * @param {MainContents} value
+   * @param {Date} [date]
+   * @returns {Date}
+   * @memberof Contents
+   */
   private getMaxDate(value: MainContents, date?: Date): Date {
     if (
       !date ||
@@ -119,6 +163,12 @@ export class Contents extends amf.Module {
     }
     return date;
   }
+  /**
+   *ページを構成するのにに必要なデータを返す
+   *
+   * @returns {(Promise<MainContents[] | null>)}
+   * @memberof Contents
+   */
   public async getPage(): Promise<MainContents[] | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
@@ -170,6 +220,13 @@ export class Contents extends amf.Module {
 
     return pages;
   }
+  /**
+   *パンくずリスト用データを返す
+   *
+   * @param {number} id
+   * @returns {(Promise<{ id: number; title: string }[] | null>)}
+   * @memberof Contents
+   */
   public async getBreadcrumb(
     id: number
   ): Promise<{ id: number; title: string }[] | null> {
@@ -189,10 +246,41 @@ export class Contents extends amf.Module {
     }
     return bread;
   }
+  /**
+   *現在のセッションが管理権限を持つか返す
+   *
+   * @returns
+   * @memberof Contents
+   */
   public isAdmin() {
     const users = this.getSessionModule(Users);
     return users.isAdmin();
   }
+  /**
+   *全ページデータを返す
+   *
+   * @param {boolean} admin
+   * @returns {(Promise<MainContents[] | null>)}
+   * @memberof Contents
+   */
+  public async getPages(admin: boolean): Promise<MainContents[] | null> {
+    const remoteDB = this.remoteDB;
+    if (!remoteDB) return null;
+    const visible = admin ? "" : "and contents_stat=1";
+
+    return (await remoteDB.all(
+      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value_type as value_type,contents_value as value from contents where contents_type='PAGE' ${visible}`
+    )) as MainContents[] | null;
+  }
+  /**
+   *コンテンツを返す
+   *
+   * @param {number} id
+   * @param {boolean} [child]
+   * @param {boolean} [admin]
+   * @returns {(Promise<MainContents | null>)}
+   * @memberof Contents
+   */
   public async getContents(
     id: number,
     child?: boolean,
@@ -213,15 +301,15 @@ export class Contents extends amf.Module {
     }
     return value;
   }
-  public async getPages(admin: boolean): Promise<MainContents[] | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
-    const visible = admin ? "" : "and contents_stat=1";
 
-    return (await remoteDB.all(
-      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value_type as value_type,contents_value as value from contents where contents_type='PAGE' ${visible}`
-    )) as MainContents[] | null;
-  }
+  /**
+   *親IDを指定し、子コンテンツを返す
+   *
+   * @param {number} pid
+   * @param {boolean} admin
+   * @returns {Promise<MainContents[]>}
+   * @memberof Contents
+   */
   public async getChildContents(
     pid: number,
     admin: boolean
@@ -235,24 +323,26 @@ export class Contents extends amf.Module {
       `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value_type as value_type,contents_value as value from contents where contents_parent=$1 and contents_type != 'PAGE' ${visible} order by contents_priority`,
       pid
     )) as MainContents[];
-    //子コンテンツを抽出
+    //子コンテンツを抽出(非同期)
+    const promise = [];
     for (const value of values) {
-      value.childs = await this.getChildContents(value.id, admin);
+      promise.push(this.getChildContents(value.id, admin));
+    }
+    const childValues = await Promise.all(promise);
+    //非同期で取得した結果を設定
+    let index = 0;
+    for (const value of values) {
+      value.childs = childValues[index];
     }
     return values;
   }
-  public getImages(contents: MainContents, images: string[]): string[] {
-    const value = contents.value;
-    const regexp = /<img src="\?command=Files\.download&amp;id=(\d+?)"/gi;
-    let ids;
-    while ((ids = regexp.exec(value))) images = images.concat(ids[1]);
-    if (contents.childs) {
-      for (const child of contents.childs) {
-        images = this.getImages(child, images);
-      }
-    }
-    return images;
-  }
+  /**
+   *親コンテンツのIDを返す
+   *
+   * @param {number} id
+   * @returns {(Promise<number | null>)}
+   * @memberof Contents
+   */
   public async getContentsParent(id: number): Promise<number | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
@@ -261,6 +351,13 @@ export class Contents extends amf.Module {
       id
     )) as number | null;
   }
+  /**
+   *コンテンツの表示優先度を返す
+   *
+   * @param {number} id
+   * @returns {(Promise<number | null>)}
+   * @memberof Contents
+   */
   public async getContentsPriority(id: number): Promise<number | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
@@ -269,8 +366,14 @@ export class Contents extends amf.Module {
       id
     ) as Promise<number>;
   }
+  /**
+   *PAGEタイプまでの深さを探索
+   *
+   * @param {number} id
+   * @returns {(Promise<number | null>)}
+   * @memberof Contents
+   */
   public async getDeeps(id: number): Promise<number | null> {
-    //PAGEタイプまでの深さを探索
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     let count = 0;
@@ -284,6 +387,13 @@ export class Contents extends amf.Module {
     }
     return count;
   }
+  /**
+   *表示優先度を正規化
+   *
+   * @param {number} id
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async updatePriority(id: number): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
@@ -306,6 +416,18 @@ export class Contents extends amf.Module {
     return true;
   }
 
+  /**
+   *新規コンテンツを作成しIDを返す
+   *
+   * @param {number} id
+   * @param {number} vector
+   * @param {string} type
+   * @returns {(Promise<{
+   *     pid: number;
+   *     id: number;
+   *   } | null>)}
+   * @memberof Contents
+   */
   public async createContents(
     id: number,
     vector: number,
@@ -356,6 +478,14 @@ export class Contents extends amf.Module {
     this.updatePriority(pid);
     return { pid: pid, id: cid };
   }
+  /**
+   *コンテンツの削除(関連ファイルも削除)
+   *
+   * @param {number} id
+   * @param {boolean} [flag]
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async deleteContents(
     id: number,
     flag?: boolean
@@ -388,17 +518,33 @@ export class Contents extends amf.Module {
     };
     await contentsDelete();
 
-    if (id !== 1){
-      promise.push(remoteDB.run("delete from contents where contents_id=$1", id));
+    if (id !== 1) {
+      promise.push(
+        remoteDB.run("delete from contents where contents_id=$1", id)
+      );
     }
     Promise.all(promise);
     if (flag || flag === undefined) await remoteDB.run("commit");
     //コンテンツの削除
     return true;
   }
+  /**
+   *コンテンツに対応するファイルパスを返す
+   *
+   * @param {number} id
+   * @returns {string}
+   * @memberof Contents
+   */
   public getDirPath(id: number): string {
     return sprintf("/Contents/%04d/%02d", Math.floor(id / 100) * 100, id % 100);
   }
+  /**
+   *コンテンツを更新する
+   *
+   * @param {MainContents} contents
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async updateContents(contents: MainContents): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
@@ -416,6 +562,13 @@ export class Contents extends amf.Module {
       contents.id
     );
   }
+  /**
+   *子コンテンツのIDから兄弟の表示優先順位を正規化する
+   *
+   * @param {number} id
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async updatePriorityFromChild(id: number): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
@@ -435,6 +588,14 @@ export class Contents extends amf.Module {
     if (sql.length) return remoteDB.run(sql);
     return false;
   }
+  /**
+   *表示優先順位の変更
+   *
+   * @param {number} id
+   * @param {number} vector
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async moveVector(id: number, vector: number): Promise<boolean | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
@@ -450,6 +611,14 @@ export class Contents extends amf.Module {
     return priority !== priority2;
   }
 
+  /**
+   *ツリー構造のコンテンツデータを返す
+   *
+   * @param {number} id
+   * @param {boolean} admin
+   * @returns {(Promise<TreeContents | null>)}
+   * @memberof Contents
+   */
   public async getTree(
     id: number,
     admin: boolean
@@ -481,6 +650,14 @@ export class Contents extends amf.Module {
     //最上位データを返す
     return items.get(id) || null;
   }
+  /**
+   *コンテンツの階層を移動する
+   *
+   * @param {number} fromId
+   * @param {number} toId
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async moveContents(
     fromId: number,
     toId: number
@@ -499,6 +676,14 @@ export class Contents extends amf.Module {
     this.updatePriority(toId);
     return flag;
   }
+  /**
+   *コンテンツデータをインポートする
+   *
+   * @param {(number | null)} pid
+   * @param {ConvertContents} value
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async importChild(
     pid: number | null,
     value: ConvertContents
@@ -566,6 +751,15 @@ export class Contents extends amf.Module {
     return true;
   }
 
+  /**
+   *コンテンツデータをインポートする
+   *
+   * @param {number} id
+   * @param {number} mode
+   * @param {string} src
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async import(
     id: number,
     mode: number,
@@ -613,6 +807,14 @@ export class Contents extends amf.Module {
     }
     return true;
   }
+  /**
+   *コンテンツデータをエクスポートする
+   *
+   * @param {express.Response} res
+   * @param {number} id
+   * @returns
+   * @memberof Contents
+   */
   public async export(res: express.Response, id: number) {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
@@ -672,6 +874,14 @@ export class Contents extends amf.Module {
     res.end();
   }
 
+  /**
+   *コンテンツの検索
+   *
+   * @param {string} keyword
+   * @param {boolean} [admin]
+   * @returns
+   * @memberof Contents
+   */
   public async search(keyword: string, admin?: boolean) {
     const visible = admin ? "" : "where contents_stat=1";
     const remoteDB = this.remoteDB;
@@ -716,20 +926,51 @@ export class Contents extends amf.Module {
     }
     return hits;
   }
+  /**
+   *コンテンツのエクスポート
+   *
+   * @param {number} id
+   * @returns
+   * @memberof Contents
+   */
   public JS_export(id: number) {
     if (!this.isAdmin()) return null;
     return this.export(this.getResponse(), id);
   }
-  public async JS_search(keyword: string) {
-    const admin = this.isAdmin();
-    return this.search(keyword, admin);
-  }
+  /**
+   *コンテンツのインポート
+   *
+   * @param {number} id
+   * @param {number} mode
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async JS_import(id: number, mode: number): Promise<boolean | null> {
     if (!this.isAdmin()) return null;
     const buffer = this.getSession().getBuffer();
     if (!buffer) return null;
     return this.import(id, mode, buffer.toString());
   }
+  /**
+   *コンテンツの検索
+   *
+   * @param {string} keyword
+   * @returns
+   * @memberof Contents
+   */
+  public async JS_search(keyword: string) {
+    const admin = this.isAdmin();
+    return this.search(keyword, admin);
+  }
+
+  /**
+   *コンテンツの階層を移動
+   *
+   * @param {number} fromId
+   * @param {number} toId
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async JS_moveContents(
     fromId: number,
     toId: number
@@ -737,6 +978,15 @@ export class Contents extends amf.Module {
     if (this.isAdmin()) return this.moveContents(fromId, toId);
     return false;
   }
+
+  /**
+   *表示優先順位の変更
+   *
+   * @param {number} id
+   * @param {number} vector
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async JS_moveVector(
     id: number,
     vector: number
@@ -744,6 +994,18 @@ export class Contents extends amf.Module {
     if (!this.isAdmin()) return null;
     return this.moveVector(id, vector);
   }
+  /**
+   *新規コンテンツの作成
+   *
+   * @param {number} id
+   * @param {number} vector
+   * @param {string} type
+   * @returns {(Promise<{
+   *     pid: number;
+   *     id: number;
+   *   } | null>)}
+   * @memberof Contents
+   */
   public async JS_createContents(
     id: number,
     vector: number,
@@ -757,10 +1019,24 @@ export class Contents extends amf.Module {
     if (!this.isAdmin()) return null;
     return this.createContents(id, vector, type);
   }
+  /**
+   *ツリー構造のコンテンツデータを返す
+   *
+   * @param {number} id
+   * @returns {(Promise<TreeContents | null>)}
+   * @memberof Contents
+   */
   public async JS_getTree(id: number): Promise<TreeContents | null> {
     const admin = this.isAdmin();
     return this.getTree(id, admin);
   }
+  /**
+   *一ページ分のコンテンツデータを返す
+   *
+   * @param {number} id
+   * @returns {(Promise<MainContents | null>)}
+   * @memberof Contents
+   */
   public async JS_getPage(id: number): Promise<MainContents | null> {
     const admin = this.isAdmin();
     const pid = await this.getParentPage(id);
@@ -773,9 +1049,16 @@ export class Contents extends amf.Module {
     // for (const id of images) {
     //   header("link: <?command=Files.download&id=$id>;rel=preload;as=image;",false);
     // }
-
     return contents;
   }
+  /**
+   *コンテンツデータを返す
+   *
+   * @param {number} id
+   * @param {boolean} [child]
+   * @returns {(Promise<MainContents | null>)}
+   * @memberof Contents
+   */
   public JS_getContents(
     id: number,
     child?: boolean
@@ -783,12 +1066,26 @@ export class Contents extends amf.Module {
     const admin = this.isAdmin();
     return this.getContents(id, child, admin);
   }
+  /**
+   *コンテンツを削除
+   *
+   * @param {number} id
+   * @returns {(Promise<boolean | null>)}
+   * @memberof Contents
+   */
   public async JS_deleteContents(id: number): Promise<boolean | null> {
     if (!this.isAdmin()) return null;
     const flag = await this.deleteContents(id);
     return flag;
   }
 
+  /**
+   *コンテンツの更新
+   *
+   * @param {MainContents} contents
+   * @returns
+   * @memberof Contents
+   */
   public async JS_updateContents(contents: MainContents) {
     const users = await this.getSessionModule(Users);
     if (!users || !users.isAdmin()) return null;
