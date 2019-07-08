@@ -44,6 +44,14 @@ type ValueTypeProc = (
   pageId: number,
   contents: MainContents
 ) => void;
+
+/**
+ *コンテンツデータアクセス用モジュール
+ *
+ * @export
+ * @class ContentsModule
+ * @extends {AppModule<CustomMap>}
+ */
 export class ContentsModule extends AppModule<CustomMap> {
   private contentsValueTypes: { [name: string]: ValueTypeProc } = {};
   public async createContents(pid: number, vector: number, type: string) {

@@ -5,6 +5,13 @@ export interface CustomMap extends ModuleMap {
   goLocation: [{ [key: string]: string }]; //parameter
 }
 
+/**
+ *URLハッシュルーティングモジュール
+ *
+ * @export
+ * @class RouterModule
+ * @extends {AppModule<CustomMap>}
+ */
 export class RouterModule extends AppModule<CustomMap> {
   private lastParams: string;
   public constructor(manager: AppManager) {

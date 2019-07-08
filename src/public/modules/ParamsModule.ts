@@ -4,6 +4,13 @@ export interface CustomMap extends ModuleMap {
   updateParam: [string, unknown]; //name,value
   updateGlobalParam: [string, unknown]; //name,value
 }
+/**
+ *アプリケーションパラメータ入出力モジュール
+ *
+ * @export
+ * @class ParamsModule
+ * @extends {AppModule<CustomMap>}
+ */
 export class ParamsModule extends AppModule<CustomMap> {
   public getGlobalParam(name:string){
     const adapter = this.getAdapter();

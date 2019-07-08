@@ -1,3 +1,7 @@
+/**
+ *コンテンツ編集用ウインドウ
+ *
+ */
 import * as JWF from "javascript-window-framework";
 import { TextEditWindow } from "../TextEditor/TextEditWindow";
 import { PanelControl } from "../TextEditor/PanelControl";
@@ -7,7 +11,7 @@ import { FileWindow } from "../FileWindow/FileWindow";
 import { FileModule } from "../../modules/FileModule";
 
 /**
- *コンテンツ編集用ウインドウ
+ *コンテンツ編集用ウインドウクラス
  *
  * @export
  * @class ContentsEditWindow
