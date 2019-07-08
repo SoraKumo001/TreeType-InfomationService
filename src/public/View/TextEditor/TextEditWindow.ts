@@ -66,4 +66,7 @@ export class TextEditWindow extends JWF.FrameWindow {
   public insertNode(node: HTMLElement) {
     this.editableView.insertNode(node);
   }
+  public setRange(){
+    this.editableView.setRange();
+  }
 }
