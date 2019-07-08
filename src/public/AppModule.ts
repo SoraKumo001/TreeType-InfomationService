@@ -1,3 +1,8 @@
+/**
+ *アプリケーション全体の管理
+ *通信アダプターやモジュールインスタンスを取り扱う
+ */
+
 import * as JWF from "javascript-window-framework";
 import { AppManager} from "./AppManager";
 

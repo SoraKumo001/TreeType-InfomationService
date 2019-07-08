@@ -1,10 +1,14 @@
+/**
+ *コンテンツのページ表示用
+ *
+ */
 import * as JWF from "javascript-window-framework";
 import { AppManager } from "../../AppManager";
 import { ContentsModule, MainContents } from "../../modules/ContentsModule";
-import "./scss/InfoContentsView.scss";
-import "highlight.js/styles/tomorrow-night-eighties.css";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
+import "./scss/InfoContentsView.scss";
+import "highlight.js/styles/tomorrow-night-eighties.css";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const highlight = require("highlight.js/lib/highlight");
