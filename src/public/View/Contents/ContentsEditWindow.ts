@@ -109,6 +109,7 @@ export class ContentsEditWindow extends TextEditWindow {
     const dirId = await fileModule.createDir(1, path);
     if (dirId) {
       const result = await fileModule.uploadFile(dirId, fileList);
+      this.setRange();
       for (const r of result) {
         this.insertFileContents(r.id, r.file.name);
       }
