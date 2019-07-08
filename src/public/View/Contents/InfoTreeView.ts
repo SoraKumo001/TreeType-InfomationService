@@ -1,3 +1,7 @@
+/**
+ *コンテンツのタイトルツリーの管理
+ *
+ */
 import * as JWF from "javascript-window-framework";
 import { AppManager } from "../../AppManager";
 import { ContentsModule, TreeContents } from "../../modules/ContentsModule";
