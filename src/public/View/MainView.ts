@@ -12,7 +12,6 @@ import "analytics-gtag";
 export class MainView extends JWF.BaseView {
   private routerModule: RouterModule;
   private infoTreeView: InfoTreeView;
-  private firstStat: boolean = true;
   public constructor(manager: AppManager) {
     super({ overlap: true });
     this.setMaximize(true);
@@ -41,23 +40,18 @@ export class MainView extends JWF.BaseView {
       const title = this.selectPage(id);
       if (!title) return;
 
-      if (this.firstStat) {
-        //初回はカウントしない
-        this.firstStat = false;
-      } else {
-        //トラッカーに通知
-        try {
-          const AnalyticsUA = (global as NodeJS.Global & {
-            AnalyticsUA: string;
-          })["AnalyticsUA"];
-          // eslint-disable-next-line no-undef
-          gtag("config", AnalyticsUA, {
-            page_title: title,
-            page_path: "/?p=" + id
-          });
-        } catch (e) {
-          // empty
-        }
+      //トラッカーに通知
+      try {
+        const AnalyticsUA = (global as NodeJS.Global & {
+          AnalyticsUA: string;
+        })["AnalyticsUA"];
+        // eslint-disable-next-line no-undef
+        gtag("config", AnalyticsUA, {
+          page_title: title,
+          page_path: "/?p=" + id
+        });
+      } catch (e) {
+        // empty
       }
     });
 

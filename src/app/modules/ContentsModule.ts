@@ -332,7 +332,7 @@ export class Contents extends amf.Module {
     //非同期で取得した結果を設定
     let index = 0;
     for (const value of values) {
-      value.childs = childValues[index];
+      value.childs = childValues[index++];
     }
     return values;
   }
