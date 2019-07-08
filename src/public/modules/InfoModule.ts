@@ -8,6 +8,13 @@ export interface ModuleInfo {
     info: string;
 }
 
+/**
+ *プラグイン情報取得用モジュール
+ *
+ * @export
+ * @class InfoModule
+ * @extends {AppModule}
+ */
 export class InfoModule extends AppModule {
   public getInfo():Promise<ModuleInfo[]>{
     const adapter = this.getAdapter();

@@ -3,6 +3,13 @@ import { BaseView } from "javascript-window-framework";
 import { AppManager } from "../AppManager";
 
 
+/**
+ *基本データ設定用モジュール
+ *
+ * @export
+ * @class SettingView
+ * @extends {BaseView}
+ */
 export class SettingView extends BaseView{
   private manager:AppManager;
   public constructor(manager:AppManager){
