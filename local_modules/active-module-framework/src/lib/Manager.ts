@@ -11,7 +11,7 @@ import { Module } from "./Module";
 import { LocalDB } from "./LocalDB";
 import { Session } from "./Session";
 import { AdapterResult } from "./Session";
-import { HtmlCreater } from "./HtmlCreater";
+import { HtmlCreater, HtmlTemplate } from "./HtmlCreater";
 
 /**
  *マネージャ初期化用パラメータ
@@ -75,7 +75,7 @@ export function Sleep(timeout: number): Promise<void> {
  * @class Manager
  */
 export class Manager {
-  private htmlCreater: HtmlCreater = new HtmlCreater();
+  private htmlTemplate: HtmlTemplate = new HtmlTemplate();
   private debug?: boolean;
   private localDB: LocalDB = new LocalDB();
   private stderr: string = "";
@@ -92,6 +92,13 @@ export class Manager {
    * @memberof Manager
    */
   public constructor(params: ManagerParams) {
+    /*
+    setInterval(() => {
+      global.gc();
+      console.log("%d", process.memoryUsage().heapUsed);
+    }, 100);
+    */
+
     this.init(params);
   }
 
@@ -178,7 +185,7 @@ export class Manager {
         if (!(await this.getModule(name))) process.exit(-10);
       }
 
-      this.htmlCreater.init(
+      this.htmlTemplate.init(
         params.rootPath,
         params.indexPath,
         params.cssPath,
@@ -224,7 +231,9 @@ export class Manager {
     }
     return modulesType;
   }
-
+  public getModuleType(name: string){
+    return this.modulesType[name];
+  }
   /**
    *モジュールの取得と新規インスタンスの作成
    *
@@ -346,13 +355,14 @@ export class Manager {
             (req.header("location_path") || `https://${req.hostname}`) +
             params.remotePath;
           this.output(path);
-          const htmlNode = Object.assign(this.htmlCreater);
+          const htmlNode = new HtmlCreater();
           if (
             !htmlNode.output(
               req,
               res,
               path,
-              Object.values(this.modulesInstance)
+              Object.values(this.modulesInstance),
+              this.htmlTemplate.getHtml()
             )
           )
             next();
