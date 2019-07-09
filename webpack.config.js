@@ -3,8 +3,8 @@ const glob = require("glob");
 const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const config = {
-  mode: 'production',
-  //mode: 'development',
+  //mode: 'production',
+  mode: 'development',
   entry: [
     path.resolve(__dirname, 'src/public/index.ts'),
   ].concat(glob.sync("./src/public/**/*.auto.ts")),

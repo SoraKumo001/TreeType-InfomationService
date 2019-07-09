@@ -1041,9 +1041,7 @@ export class Contents extends amf.Module {
     const admin = this.isAdmin();
     const pid = await this.getParentPage(id);
     if (pid === 0) return null;
-    const contents = await this.getContents(pid, false, admin);
-    if (contents === null) return null;
-    contents.childs = await this.getChildContents(pid, admin);
+    const contents = await this.getContents(pid, true, admin);
 
     // const images = this.getImages(contents, []);
     // for (const id of images) {
