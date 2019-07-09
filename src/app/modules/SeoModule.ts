@@ -39,7 +39,7 @@ export class SeoModule extends amf.Module {
 
     let srcUrl;
     if (basicData && basicData["url"]) srcUrl = basicData["url"];
-    else srcUrl = `${req.protocol}://${req.host}${req.url}`;
+    else srcUrl = `${req.protocol}://${req.hostname}${req.url}`;
     const url = srcUrl.replace(/\?.*$/, "").replace(/\/$/, "");
     const list = [];
     for (const item of breads) {

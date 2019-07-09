@@ -239,11 +239,15 @@ export class Session {
     }
     return typeof items[name] === "undefined" ? defValue : items[name];
   }
-  public async initModule<T extends Module>(type: string): Promise<T | null> {
+  public async initModule<T extends Module>(name: string): Promise<T | null> {
     try {
-      const moduleSrc = this.manager.getModuleSync(type);
+      const moduleSrc = this.manager.getModuleSync(name);
       if (!moduleSrc) return null;
-      const module = Object.assign(moduleSrc) as T;
+      const moduleType = this.manager.getModuleType(name);
+      const module = Object.assign(
+        new moduleType(this.manager),
+        moduleSrc
+      ) as T;
       module.setSession(this);
       if (module.onStartSession) await module.onStartSession();
       this.modules.push(module);
@@ -275,7 +279,13 @@ export class Session {
     try {
       const moduleSrc = this.manager.getModuleSync(type);
       if (!moduleSrc) throw "Module not found";
-      const module = Object.assign(moduleSrc) as T;
+      let module;
+      if (typeof type === "string") {
+        const moduleType = this.manager.getModuleType(type);
+        module = Object.assign(new moduleType(this.manager), moduleSrc) as T;
+      } else {
+        module = Object.assign(new type(this.manager), moduleSrc) as T;
+      }
       module.setSession(this);
       this.modules.push(module);
       return module;
