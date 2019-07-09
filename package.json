@@ -12,7 +12,7 @@
     "watch-amf": "npx tsc -b -w local_modules/active-module-framework/src/",
     "build-app": "npx tsc -b ",
     "watch-app": "npx tsc -b -w ",
-    "build-all": "npx tsc -b & npx webpack -b --config local_modules/javascript-window-framework/src/webpack.config.js & npx webpack -b",
+    "build-all": "npm run build-app & npm run build-jwf & npm run build-public",
     "start": "node dist/app/index.js"
   },
   "keywords": [],
@@ -21,7 +21,6 @@
   "devDependencies": {
     "@types/capture-console": "^1.0.0",
     "@types/express": "^4.17.0",
-    "@types/gapi.analytics": "0.0.2",
     "@types/highlight.js": "^9.12.3",
     "@types/jsdom": "^12.2.4",
     "@types/pg": "^7.4.14",
