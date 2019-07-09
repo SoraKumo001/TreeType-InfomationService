@@ -28,11 +28,13 @@ export class HtmlTemplate {
     const jsFiles = this.getFileInfo(rootPath, jsPath, ".js");
 
     //JSを優先順位に従って並び替え
-    jsFiles.sort((a, b): number => {
-      const v1 = priorityJs.indexOf(a.name);
-      const v2 = priorityJs.indexOf(b.name);
-      return v2 - v1;
-    });
+    jsFiles.sort(
+      (a, b): number => {
+        const v1 = priorityJs.indexOf(a.name);
+        const v2 = priorityJs.indexOf(b.name);
+        return v2 - v1;
+      }
+    );
     //必要なファイルを追加
     this.addScript(jsdom, jsFiles);
     this.addCSS(jsdom, cssFiles);
@@ -176,9 +178,16 @@ export class HtmlCreater {
     this.jsdom = jsdom;
     this.req = req;
 
+    for (const module of modules) {
+      if (module.onCreateHtml) {
+        await module.onCreateHtml(this);
+      }
+    }
+
     const scripts = jsdom.window.document.head.querySelectorAll("script");
     for (const file of scripts) {
       const src = file.src;
+      if (!src) continue;
       if (src.indexOf(":") === -1 && src[0] !== "/")
         this.addLink(baseUrl, src, "script");
       else this.addLink("", src, "script");
@@ -186,18 +195,12 @@ export class HtmlCreater {
     const css = jsdom.window.document.head.querySelectorAll(
       "link[rel=stylesheet]"
     ) as NodeListOf<HTMLLinkElement>;
-
     for (const file of css) {
       const src = file.href;
+      if (!src) continue;
       if (src.indexOf(":") === -1 && src[0] !== "/")
         this.addLink(baseUrl, src, "style");
       else this.addLink("", src, "style");
-    }
-
-    for (const module of modules) {
-      if (module.onCreateHtml) {
-        await module.onCreateHtml(this);
-      }
     }
 
     res.writeHead(this.status, {
