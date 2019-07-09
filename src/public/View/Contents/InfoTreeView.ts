@@ -153,6 +153,7 @@ export class InfoTreeView extends JWF.TreeView {
   }
   private setTreeItem(item: TreeItem, value: TreeContents) {
     const node = item.getNode();
+    const level = item.getTreeLevel();
     item.setItemText(value.title);
     item.setItemValue(value.id);
     node.dataset.contentStat = value.stat ? "true" : "false";
@@ -162,7 +163,7 @@ export class InfoTreeView extends JWF.TreeView {
       for (let i = 0; value.childs[i]; i++) {
         const child = value.childs[i];
         // if (/*Contents.visible || */ child["stat"])
-        this.setTreeItem(item.addItem("", flag), child);
+        this.setTreeItem(item.addItem("", flag||level<1), child);
       }
     }
   }
