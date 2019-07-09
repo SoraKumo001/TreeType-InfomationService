@@ -352,7 +352,7 @@ export class Manager {
           }
         } else {
           const path =
-            (req.header("location_path") || `https://${req.hostname}`) +
+            (req.header("location_path") || '') +
             params.remotePath;
           this.output(path);
           const htmlNode = new HtmlCreater();
