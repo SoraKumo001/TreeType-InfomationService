@@ -35,7 +35,7 @@ export class SeoModule extends amf.Module {
       return;
     }
     //パンくずリストからページのIDを取得
-    const pageId = breads[breads.length - 1].id;
+    const pageId = breads[0].id;
 
     let srcUrl;
     if (basicData && basicData["url"]) srcUrl = basicData["url"];
