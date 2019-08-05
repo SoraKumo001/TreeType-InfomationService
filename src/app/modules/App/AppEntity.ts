@@ -11,8 +11,8 @@ import {
 export class AppEntity {
   @PrimaryColumn()
   name!: string;
-  @Column()
-  value!: string;
+  @Column('simple-json', { default: {} })
+  value!: {[key:string]:unknown};
 }
 
 @EntityRepository(AppEntity)
@@ -28,14 +28,14 @@ export class AppRepository extends ExtendRepository<AppEntity> {
   public async getItems() {
     const result = await this.find();
     if (!result) return {};
-    const map: { [key: string]: string } = {};
-    for (const r of result) map[r.name] = JSON.parse(r.value);
+    const map: { [key: string]: unknown } = {};
+    for (const r of result) map[r.name] = r.value;
     return map;
   }
   public async setItem(name: string, values: unknown) {
-    const value = JSON.stringify(values);
-    this.items[name] = value;
-    await this.save({ name, value });
+    //const value = JSON.stringify(values);
+    this.items[name] = values;
+    return await this.save({ name, values });
   }
   /**
    *アプリケーションデータの設定
@@ -48,8 +48,8 @@ export class AppRepository extends ExtendRepository<AppEntity> {
     for (const name of Object.keys(values)) {
       const v = values[name as keyof typeof values];
       this.items[name] = v;
-      const value = JSON.stringify(v);
-      await this.save({ name, value });
+      //const value = JSON.stringify(v);
+      await this.save({ name, v });
     }
   }
   /**

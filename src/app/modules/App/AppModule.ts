@@ -27,10 +27,12 @@ export class AppModule extends amf.Module {
     return this.appRepository.getItem(name, defValue);
   }
   public setItem(name: string, value: unknown) {
-    if (this.appRepository) this.appRepository.setItem(name, value);
+    if (!this.appRepository) return false;
+    return this.appRepository.setItem(name, value);
   }
   public setItems(values: { [key: string]: unknown }) {
-    if (this.appRepository) this.appRepository.setItems(values);
+    if (!this.appRepository) return false;
+    this.appRepository.setItems(values);
   }
 
   public isAdmin() {
