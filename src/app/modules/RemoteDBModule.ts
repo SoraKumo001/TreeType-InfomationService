@@ -1,13 +1,20 @@
 import * as amf from "active-module-framework";
-import Postgres from "./lib/Postgres";
-import { Users } from "./UsersModule";
-import { ModuleMap } from "active-module-framework";
+import { Users } from "./User/UsersModule";
+import * as typeorm from "typeorm";
 
-interface DATABASE_CONFIG {
-  REMOTEDB_HOST: string;
-  REMOTEDB_PORT: number;
-  REMOTEDB_DATABASE: string;
-  REMOTEDB_USER: number;
+@typeorm.Entity()
+class DatabaseConfigEntity extends typeorm.BaseEntity {
+  @typeorm.PrimaryGeneratedColumn()
+  id?: number;
+  @typeorm.Column()
+  REMOTEDB_HOST?: string;
+  @typeorm.Column()
+  REMOTEDB_PORT?: number;
+  @typeorm.Column()
+  REMOTEDB_DATABASE?: string;
+  @typeorm.Column()
+  REMOTEDB_USER?: string;
+  @typeorm.Column()
   REMOTEDB_PASSWORD?: string;
 }
 
@@ -18,16 +25,21 @@ export function Sleep(timeout: number): Promise<void> {
     }, timeout);
   });
 }
-export interface CustomMap extends ModuleMap {
-  connect: [];
+export interface CustomMap extends amf.ModuleMap {
+  connect: [typeorm.Connection];
   disconnect: [];
 }
 export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
-  public constructor(manager: amf.Manager) {
-    super(manager);
-    const db = new Postgres();
-    this.db = db;
+  private entities: (new () => unknown)[] = [];
+  private localRepository?: typeorm.Repository<DatabaseConfigEntity>;
+  public addEntity<T>(model: new () => T) {
+    this.entities.push(model);
   }
+  public getRepository<T>(model: new () => T): typeorm.Repository<T> {
+    if (!this.connection) throw "Error can't local database";
+    return this.connection.getRepository(model);
+  }
+  connection?: typeorm.Connection;
   public static getModuleInfo(): amf.ModuleInfo {
     return {
       className: this.name,
@@ -37,135 +49,68 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
       info: "メインデータベースアクセス用"
     };
   }
-  public addEventListener<K extends keyof T>(
-    name: K & string,
-    proc: (...params: T[K]) => void
-  ): void {
-    if (name === "connect") {
-      if (!this.first) (proc as () => void)();
-    }
-    super.addEventListener(name, proc);
+  public getConnection() {
+    return this.connection;
   }
-
-  private items: { [key: string]: unknown } = {};
-  private db: Postgres;
-  private first = true;
-
   public async onCreateModule() {
+    this.getLocalDB().addEntity(DatabaseConfigEntity);
+    return true;
+  }
+  public async onCreatedModule() {
+    const repository = this.getLocalDB().getRepository(DatabaseConfigEntity);
+    this.localRepository = repository;
     this.connect();
     return true;
   }
   public async connect() {
-    for (;;) {
-      if (await this.open()) {
-        this.output("DBの接続完了");
-        //関連テーブルの初期化用
-        if (this.first) {
-          this.callEvent("connect");
-          this.first = false;
-        }
-        return true;
-      }
-      this.output("RemoteDBのオープンに失敗");
-      await Sleep(1000);
+    if (await this.open()) {
+      this.output("DBの接続完了");
+      return true;
     }
+    return false;
   }
 
   public async open() {
-    const localDB = this.getLocalDB();
-    const host = localDB.getItem("REMOTEDB_HOST", "localhost");
-    const port = localDB.getItem("REMOTEDB_PORT", 5432);
-    const database = localDB.getItem("REMOTEDB_DATABASE", "postgres");
-    const user = localDB.getItem("REMOTEDB_USER", "");
-    const password = localDB.getItem("REMOTEDB_PASSWORD", "");
+    await this.close();
+
+    if (!this.localRepository) return false;
+    const config = await this.localRepository.findOne();
+    if (!config) return false;
+
+    const host = config.REMOTEDB_HOST || "localhost";
+    const port = config.REMOTEDB_PORT || 0;
+    const database = config.REMOTEDB_DATABASE || "postgres";
+    const username = config.REMOTEDB_USER || "";
+    const password = config.REMOTEDB_PASSWORD || "";
 
     //オープン前のフラグを設定
-    this.first = true;
+    //this.first = true;
     //ユーザ名が設定されていなければ戻る
-    if (!user) return false;
-
-    const db = this.db;
-    if (
-      !(await db.open({
-        host,
-        database,
-        user,
-        password,
-        port,
-        keepAlive: true
-      }))
-    ) {
-      return false;
-    }
-    const client = db.getClient();
-    if (!client) return false;
-    client.on("error", async (error: Error) => {
-      console.error(error);
-      if (
-        error.message.indexOf("terminating") >= 0 ||
-        error.message.indexOf("terminated") >= 0
-      ) {
-        //await this.close();
-        await this.connect();
-      }
+    if (!username) return false;
+    this.connection = await typeorm.createConnection({
+      name: "RemoteDB",
+      type: "postgres",
+      host, // 接続するDBホスト名
+      port,
+      username, // DBユーザ名
+      password, // DBパスワード
+      database, // DB名
+      synchronize: true,
+      logging: false,
+      entities: [...this.entities]
     });
-
-    //アイテム用テーブルの作成
-    await this.run(
-      "CREATE TABLE IF NOT EXISTS app_data (name text primary key,value json)"
-    );
-    const json = await this.get(
-      "select json_build_object(name,value) as value from app_data"
-    );
-    this.items = json ? (json.value as {}) : {};
-
+    if (this.connection) this.callEvent("connect", this.connection);
     return true;
   }
-  public close() {
-    const db = this.db;
-    db.close();
+  public async close() {
+    const connection = this.connection;
+    if (connection) {
+      this.callEvent("disconnect");
+      await connection.close();
+      this.connection = undefined;
+    }
   }
-  public isConnect() {
-    return this.db.isConnect();
-  }
-  public run(sql: string, ...params: unknown[]) {
-    return this.db.run(sql, ...params);
-  }
-  public all(sql: string, ...params: unknown[]) {
-    return this.db.all(sql, ...params);
-  }
-  public get(
-    sql: string,
-    ...params: unknown[]
-  ): Promise<
-    | ({
-        [key: string]: unknown;
-      })
-    | null
-  > {
-    return this.db.get(sql, ...params);
-  }
-  public async get2(sql: string, ...params: unknown[]) {
-    const result = await this.get(sql, ...params);
-    if (!result) return null;
-    const v = Object.values(result);
-    if (v.length) return v[0];
-    return null;
-  }
-  public setItem(name: string, value: unknown) {
-    this.items[name] = value;
-    return this.run(
-      "INSERT INTO app_data VALUES ($1,$2) ON CONFLICT (name) DO UPDATE SET value = $2",
-      name,
-      JSON.stringify(value)
-    );
-  }
-  public isTable(name: string) {
-    return this.db.isTable(name);
-  }
-  public getItem(name: string): unknown {
-    return this.items[name];
-  }
+
   public isAdmin() {
     const users = this.getSessionModule(Users);
     return users.isAdmin();
@@ -173,39 +118,38 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
   public async JS_getConfig() {
     if (!this.isAdmin()) return null;
 
-    const localDB = this.getLocalDB();
-    const host = localDB.getItem("REMOTEDB_HOST", "localhost");
-    const port = localDB.getItem("REMOTEDB_PORT", 5432);
-    const database = localDB.getItem("REMOTEDB_DATABASE", "postgres");
-    const user = localDB.getItem("REMOTEDB_USER", "");
+    if (!this.localRepository) return false;
+    const config = await this.localRepository.findOne();
+    if (!config) return false;
+
+    const host = config.REMOTEDB_HOST || "localhost";
+    const port = config.REMOTEDB_PORT || 0;
+    const database = config.REMOTEDB_DATABASE || "postgres";
+    const username = config.REMOTEDB_USER || "";
+    const password = config.REMOTEDB_PASSWORD || "";
 
     const result = {
       REMOTEDB_HOST: host,
       REMOTEDB_PORT: port,
       REMOTEDB_DATABASE: database,
-      REMOTEDB_USER: user
+      REMOTEDB_USER: username,
+      REMOTEDB_PASSWORD: password
     };
-    console.log(result);
     return result;
   }
-  public async JS_setConfig(config: DATABASE_CONFIG) {
+  public async JS_setConfig(config: DatabaseConfigEntity) {
     if (!this.isAdmin()) return null;
-
-    const localDB = this.getLocalDB();
-    localDB.setItem(config as never);
-
+    if (!this.localRepository) return null;
+    await this.localRepository.clear();
+    await this.localRepository.save(config);
     return this.connect();
   }
 
   public async JS_getInfo() {
-    if (!this.isAdmin()) return null;
-
-    const db = this.db;
-    if (!db.isConnect()) {
-      return { connect: false };
-    }
-    return this.get(
+    if (!this.isAdmin() || !this.connection) return null;
+    const result = await this.connection.query(
       "select true as connect,current_database() as database,pg_database_size(current_database()) as size,version() as server"
     );
+    return result ? result[0] : null;
   }
 }

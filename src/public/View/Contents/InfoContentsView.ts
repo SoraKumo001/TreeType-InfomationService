@@ -159,8 +159,8 @@ export class InfoContentsView extends JWF.BaseView {
     const childs = document.createElement("div");
     childs.className = "Childs";
     contentsArea.appendChild(childs);
-    if (contents.childs) {
-      for (const child of contents.childs) {
+    if (contents.children) {
+      for (const child of contents.children) {
         childs.appendChild(this.createContents(child));
       }
     }
@@ -184,7 +184,7 @@ export class InfoContentsView extends JWF.BaseView {
             selection.removeAllRanges();
         });
       }
-      contentsArea.dataset.contentsStat = contents.stat.toString();
+      contentsArea.dataset.contentsStat = contents.visible.toString();
       title.dataset.nodeName = "H" + contents.title_type;
       title.textContent = contents.title;
       date.textContent = new Date(contents["date"]).toLocaleString();

@@ -1,43 +1,74 @@
 import * as amf from "active-module-framework";
-import { Users } from "./UsersModule";
+import { Users } from "./User/UsersModule";
 import { RemoteDB } from "./RemoteDBModule";
 import express = require("express");
 
+import * as typeorm from "typeorm";
+import { ExtendRepository } from "./ExtendRepository";
+@typeorm.Entity()
+@typeorm.Index(["parent", "name"], { unique: true })
+export class FileEntity {
+  @typeorm.PrimaryGeneratedColumn()
+  id!: number;
+  @typeorm.Column({ default: 0 })
+  kind!: number;
+  @typeorm.Column()
+  name!: string;
+  @typeorm.Column({ default: () => "localtimestamp" })
+  date!: Date;
+  @typeorm.Column({ type: "bytea", nullable: true })
+  value?: Buffer;
+
+  @typeorm.Column({ nullable: true })
+  parentId?: number;
+
+  @typeorm.TreeParent()
+  parent?: FileEntity;
+  @typeorm.TreeChildren()
+  children?: FileEntity[];
+  size!: number;
+}
+export interface FileData {
+  id: number;
+  pid: number;
+  kind: number;
+  name: string;
+  size: number;
+  date: Date;
+  value: string;
+}
 export interface FileInfo {
   id: number;
-  parent: number;
+  parentId: number;
   kind: number;
   name: string;
   size: number;
   date: string | null;
-  files_date: string | null;
   childs?: FileInfo[];
 }
-export interface FileData {
-  id: number;
-  kind: number;
-  name: string;
-  sise: number;
-  date: Date;
-  value: string;
-}
-
 export class Files extends amf.Module {
+  repository?: ExtendRepository<FileEntity>;
   public async onCreateModule(): Promise<boolean> {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
-    //ユーザモジュールの初期化を優先するために空呼び出し
-    await this.getModule(Users);
-    if (remoteDB) {
-      remoteDB.addEventListener("connect", async () => {
-        if (!(await remoteDB.isTable("files"))) {
-          remoteDB.run(
-            `create table files(files_id SERIAL PRIMARY KEY,files_parent INTEGER references files(files_id),files_kind INTEGER,users_no INTEGER references users(users_no),files_name TEXT,files_date TIMESTAMP with time zone,files_byte BYTEA,UNIQUE(files_parent,files_name));
-            insert into files values(default,null,0,null,'[ROOT]',now(),null)`
-          );
-        }
-      });
-    }
+    remoteDB.addEntity(FileEntity);
+
+    remoteDB.addEventListener(
+      "connect",
+      async (): Promise<void> => {
+        const repository = new ExtendRepository(
+          remoteDB.getConnection() as typeorm.Connection,
+          FileEntity
+        );
+        this.repository = repository;
+        if (!(await repository.findOne(1)))
+          await repository.insert({ kind: 0, name: "[ROOT]" });
+      }
+    );
+    remoteDB.addEventListener("disconnect", () => {
+      this.repository = undefined;
+    });
+
     this.addCommand(
       "download",
       (req: express.Request, res: express.Response) => {
@@ -48,46 +79,33 @@ export class Files extends amf.Module {
     return true;
   }
   public async getFileId(parentId: number, path: string) {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
+    const repository = this.repository;
+    if (!repository) return null;
 
     const dirs = path.replace(/(^\/)|(\/$)/g, "").split("/");
     let pid = parentId;
     let id: number | null = null;
     for (const name of dirs) {
-      const result = await remoteDB.get(
-        "select files_id from files where files_parent=$1 and files_name=$2",
-        pid,
-        name
-      );
+      const result = await repository.findOne({
+        where: { parentId: pid, name },
+        select: ["id"]
+      });
       if (!result) return null;
-      id = result["files_id"] as number;
+      id = result.id as number;
       pid = id;
     }
     return id;
   }
-  public async getFileInfo(fileId: number) {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
-
-    return remoteDB.get(
-      "select files_name,files_kind,octet_length(files_byte),files_date from files where files_id=$1",
-      fileId
-    );
-  }
 
   public async getFile(fileId: number) {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
+    const repository = this.repository;
+    if (!repository) return null;
 
-    return (await remoteDB.get(
-      "select files_id as id,files_kind as kind,files_name as name,octet_length(files_byte) as size,files_date as date,encode(files_byte, 'base64') as value from files where files_id=$1 and files_kind=1",
-      fileId
-    )) as FileData | null;
+    return repository.findOne(fileId);
   }
-  public async createDir(parentId: number, path: string, userNo: number = 1) {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return 0;
+  public async createDir(parentId: number, path: string) {
+    const repository = this.repository;
+    if (!repository) return 0;
 
     const dirs = path.replace(/(^\/)|(\/$)/g, "").split("/");
     let pid = parentId;
@@ -98,40 +116,36 @@ export class Files extends amf.Module {
       id = await this.getFileId(pid, name);
       if (id === null) break;
       const file = await this.getFileInfo(id);
-      if (file === null) break;
-      if (file["files_kind"] != 0) return 0;
+      if (!file) break;
+      if (file.kind != 0) return 0;
       pid = id;
     }
     if (id) return id;
     id = pid;
     for (; i < length; i++) {
       const name = dirs[i];
-      id = (await remoteDB.get2(
-        "insert into files values(default,$1,0,$2,$3,now(),null) on conflict do nothing returning files_id",
-        id,
-        userNo,
-        name
-      )) as number;
-      if (!id) return 0;
+      const file2: {
+        id?: number;
+        parentId?: number;
+        name: string;
+      } = { parentId: id, name };
+      await repository.save(file2);
+      id = file2.id as number;
     }
     return id;
   }
   public async setFileName(fileId: number, name: string) {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
-    return remoteDB.run(
-      "update files set files_name=$1 where files_id=$2",
-      name,
-      fileId
-    );
+    const repository = this.repository;
+    if (!repository) return null;
+    return repository.update(fileId, { name });
   }
   public async getChildList(dirId: number) {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
-    const result = (await remoteDB.all(
-      "select files_id as id from files where files_parent=$1",
-      dirId
-    )) as { id: number }[] | null;
+    const repository = this.repository;
+    if (!repository) return null;
+    const result = await repository.find({
+      select: ["id"],
+      where: { parent: { id: dirId } }
+    });
     if (!result) return null;
     const values: number[] = [];
     for (const r of result) {
@@ -151,8 +165,8 @@ export class Files extends amf.Module {
     }
     //単一削除処理
     if (fileId <= 1) return false;
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
+    const repository = this.repository;
+    if (!repository) return null;
 
     //配下のオブジェクトを削除
     const childs = await this.getChildList(fileId);
@@ -164,27 +178,42 @@ export class Files extends amf.Module {
       await Promise.all(promise);
     }
     //ファイル削除
-    return remoteDB.run("delete from files where files_id=$1", fileId);
+    return repository.delete(fileId);
+  }
+  public async getFileInfo(fileId: number) {
+    const repository = this.repository;
+    if (!repository) return null;
+
+    return repository.findOne({
+      select: ["id", "kind", "name", "date"],
+      where: { id: fileId }
+    });
   }
 
   public async getFileList(parentId: number) {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
+    const repository = this.repository;
+    if (!repository) return null;
 
-    return (await remoteDB.all(
-      `select files_id as id,files_parent as parent,files_kind as kind,files_name as name,files_date as date,octet_length(files_byte) as size
-			from files where files_parent=$1 order by files_kind,files_name`,
-      parentId
-    )) as FileInfo[] | null;
+    const result = await repository
+      .createQueryBuilder()
+      .select("id,kind,name,date,octet_length(value) as size")
+      .where({ parentId })
+      .orderBy("kind,name")
+      .getRawMany();
+    return result;
   }
   public async getDirList() {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
+    const repository = this.repository;
+    if (!repository) return null;
 
-    const dirInfos = (await remoteDB.all(
-      `select files_id as id,files_parent as parent ,files_kind as kind,files_name as name,files_date as date,octet_length(files_byte) as size
-			from files where files_kind=0 order by files_name`
-    )) as FileInfo[] | null;
+    const dirInfos = (await repository
+      .createQueryBuilder()
+      .select(
+        `id,"parentId",kind,name,date,octet_length(value) as size`
+      )
+      .where("kind=0")
+      .orderBy("name")
+      .getRawMany()) as FileInfo[];
     const hash = new Map<number, FileInfo>();
 
     if (dirInfos) {
@@ -193,9 +222,9 @@ export class Files extends amf.Module {
         hash.set(dir.id, dir);
       }
       for (const dir of hash.values()) {
-        const parent = dir.parent as number;
-        if (parent > 0) {
-          const p = hash.get(parent);
+        const parentId = dir.parentId as number;
+        if (parentId > 0) {
+          const p = hash.get(parentId);
           if (p && p.childs) p.childs.push(dir);
         }
       }
@@ -203,47 +232,61 @@ export class Files extends amf.Module {
 
     return hash.get(1) as FileInfo;
   }
+  public async clear() {
+    const repository = this.repository;
+    if (!repository) return null;
+    await repository.clear();
+    await repository.query("select setval ($1, 1, false)", [
+      repository.metadata.tableName + "_id_seq"
+    ]);
+  }
   public async getDirId(parentId: number, path: string) {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
+    const repository = this.repository;
+    if (!repository) return null;
 
     const dirs = path.replace(/(^\/)|(\/$)/g, "").split("/");
     let id = parentId;
     for (const name of dirs) {
-      const result = (await remoteDB.get2(
-        "select files_id from files where files_parent=$1 and files_name=$2",
-        id,
-        name
-      )) as number;
+      const result = await repository.findOne({
+        select: ["id"],
+        where: { parentId: id, name }
+      });
       if (!result) return null;
-      id = result;
+      id = result.id;
     }
     return id;
   }
-  public async uploadFile(
-    parentId: number,
-    userNo: number,
-    name: string,
-    buffer: Buffer
-  ) {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
-    return (await remoteDB.get(
-      `insert into files values(default,$1,1,$2,$3,now(),$4) ON CONFLICT (files_parent,files_name)
-      DO UPDATE SET files_name=$3,files_date=now(),files_byte=$4 returning files_id as id,octet_length(files_byte) as size`,
-      parentId,
-      userNo,
+  public async uploadFile(parentId: number, name: string, buffer: Buffer) {
+    const repository = this.repository;
+    if (!repository) return null;
+    const check = await repository.findOne({
+      select: ["id"],
+      where: { parentId: parentId, name }
+    });
+    const file = {
+      id: check ? check.id : undefined,
+      parent: { id: parentId } as FileEntity,
       name,
-      buffer
-    )) as { id: number; size: number } | null;
+      date: () => "default",
+      kind: 1,
+      value: buffer
+    };
+    repository.save((file as unknown) as FileEntity);
+    return file;
   }
   public async downloadFile(res: express.Response, fileId: number) {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
-    const result = await remoteDB.get(
-      "select files_name as name,octet_length(files_byte) as size,files_date as date,files_byte  as value from files where files_id=$1 and files_kind=1",
-      fileId
-    );
+    const repository = this.repository;
+    if (!repository) return null;
+    const result = (await repository
+      .createQueryBuilder()
+      .select("name,octet_length(value) as size,date,value")
+      .where("id=:id and kind=1", { id: fileId })
+      .getRawOne()) as {
+      name: string;
+      size: number;
+      date: Date;
+      value: Buffer;
+    };
     let httpDisposition = "inline;";
     if (result) {
       const fileName = result.name as string;
@@ -282,7 +325,7 @@ export class Files extends amf.Module {
         "Content-Disposition",
         `${httpDisposition} filename*=utf-8'jp'${encodeURI(fileName)}`
       );
-      res.end(result.value);
+      res.end(result.value, "binary");
     } else {
       res.status(404);
       res.end("notfound");
@@ -290,17 +333,23 @@ export class Files extends amf.Module {
 
     return result;
   }
-  public async setFile(pid: number, name: string, date: Date, value: string) {
-    const remoteDB = await this.getModule(RemoteDB);
-    if (!remoteDB || !remoteDB.isConnect()) return null;
-    return remoteDB.get2(
-      "insert into files values(default,$1,1,$2,$3,$4,decode($5,'base64')) returning files_id",
-      pid,
-      1,
+  public async setFile(pid: number, name: string, date: Date, value: Buffer) {
+    const repository = this.repository;
+    if (!repository) return null;
+
+    let id: number | undefined;
+    const result = await repository.findOne({ parentId: pid, name });
+    if (result) id = result.id;
+    const file = {
+      id,
+      kind: 1,
       name,
       date,
+      parent: { id: pid },
       value
-    );
+    };
+    repository.save(file);
+    return (<FileEntity>file).id;
   }
   public isAdmin() {
     const users = this.getSessionModule(Users);
@@ -308,8 +357,7 @@ export class Files extends amf.Module {
   }
   public async JS_createDir(parentId: number, path: string) {
     if (!this.isAdmin()) return null;
-    const users = this.getSessionModule(Users);
-    return this.createDir(parentId, path, users.getRemoteNo());
+    return this.createDir(parentId, path);
   }
   public async JS_setFileName(fileId: number, name: string) {
     if (!this.isAdmin()) return null;
@@ -335,9 +383,7 @@ export class Files extends amf.Module {
   public async JS_uploadFile(parentId: number, name: string) {
     if (!this.isAdmin()) return null;
     const users = this.getSessionModule(Users);
-    const code = users.getRemoteNo();
-    if (code === 0) return null;
     const buffer = this.getSession().getBuffer();
-    if (buffer) return this.uploadFile(parentId, code, name, buffer);
+    if (buffer) return this.uploadFile(parentId, name, buffer);
   }
 }

@@ -2,7 +2,7 @@ import { AppModule, ModuleMap } from "../AppModule";
 
 export interface FileInfo {
   id: number;
-  parent: number;
+  parentId: number;
   kind: number;
   name: string;
   size: number;

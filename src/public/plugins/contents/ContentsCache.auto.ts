@@ -27,7 +27,7 @@ export class ContentsCacheModule extends AppModule {
       if (treeContents) {
         const parent = treeContents.parent;
         if (parent) {
-          const childs = parent.childs;
+          const childs = parent.children;
           childs.splice(childs.indexOf(treeContents), 1);
         }
       }
@@ -37,7 +37,7 @@ export class ContentsCacheModule extends AppModule {
       if(treeContents){
         treeContents.title = mainContents.title;
         treeContents.type = mainContents.type;
-        treeContents.stat = mainContents.stat!==0;
+        treeContents.visible = mainContents.visible;
         treeContents.date = mainContents.date;
       }
     });
@@ -49,8 +49,8 @@ export class ContentsCacheModule extends AppModule {
     if (!tree) tree = this.treeContents;
     if (!tree) return null;
     if (tree.id === id) return tree;
-    if (tree.childs) {
-      for (const child of tree.childs) {
+    if (tree.children) {
+      for (const child of tree.children) {
         const result = this.findTreeContents(id, child);
         if (result) return result;
       }
