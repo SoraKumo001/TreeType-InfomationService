@@ -12,13 +12,13 @@ export class AppModule extends amf.Module {
   }
   public async onCreatedModule() {
     const remoteDB = await this.getModule(RemoteDB);
-    remoteDB.addEventListener("connect",async()=>{
+    remoteDB.addEventListener("connect", async () => {
       const connection = remoteDB.getConnection();
       if (connection) {
         this.appRepository = new AppRepository(connection);
         await this.appRepository.init();
       }
-    })
+    });
 
     return true;
   }

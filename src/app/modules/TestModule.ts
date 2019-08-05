@@ -21,11 +21,11 @@ export class TestModule extends amf.Module {
   public JS_add(a: number, b: number) {
     return a + b;
   }
-  public JS_getModuleInfo(){
+  public JS_getModuleInfo() {
     const manager = this.getManager();
     const types = manager.getModuleTypes();
-    const infos:amf.ModuleInfo[] = [];
-    for(const type of Object.values(types)){
+    const infos: amf.ModuleInfo[] = [];
+    for (const type of Object.values(types)) {
       infos.push(type.getModuleInfo());
     }
     return infos;

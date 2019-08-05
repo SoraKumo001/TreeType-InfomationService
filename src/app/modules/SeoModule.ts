@@ -42,8 +42,8 @@ export class SeoModule extends amf.Module {
     else srcUrl = `${req.protocol}://${req.hostname}${req.url}`;
     const url = srcUrl.replace(/\?.*$/, "").replace(/\/$/, "");
     const list = [];
-    let item:ContentsEntity|undefined = breads
-    while (item = item.parent) {
+    let item: ContentsEntity | undefined = breads;
+    while ((item = item.parent)) {
       const bradcrumb = {
         "@type": "ListItem",
         position: 1,

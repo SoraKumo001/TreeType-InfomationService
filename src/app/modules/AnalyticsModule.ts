@@ -25,8 +25,7 @@ export class Analytics extends amf.Module {
         "https://www.googletagmanager.com/gtag/js?id=" + basicData.analytics;
       document.head.appendChild(script1);
       const script2 = document.createElement("script");
-      script2.innerHTML =
-      `AnalyticsUA = '${basicData.analytics}';
+      script2.innerHTML = `AnalyticsUA = '${basicData.analytics}';
       window.dataLayer = window.dataLayer || [];
       function gtag() { dataLayer.push(arguments); }
       gtag('js', new Date());
