@@ -628,22 +628,23 @@ export class Contents extends amf.Module {
     const fileModule = await this.getModule(Files);
     if (!fileModule) return null;
 
-    //データの挿入
-    if (pid) value.parent = { id: pid } as ContentsEntity;
+    const entity = Object.assign({},value,{parent:{id:pid}});
 
+    //データの挿入
     const v: any = value;
     if (v.childs) v.children = v.childs;
     if (v.stat) v.visible = v.stat === 1;
 
-    (<{ id: unknown }>value).id = undefined;
-    await repository.save(value);
+    (<{ id: unknown }>entity).id = undefined;
+    await repository.save(entity);
+    const id = entity.id;
 
-    if (value.id === undefined) return false;
+    if (id === undefined) return false;
     //ファイルの復元処理
     const files = value.files;
     if (files && files.length) {
       const ids: { [key: number]: number } = {};
-      const path = this.getDirPath(value.id);
+      const path = this.getDirPath(id);
       const dirId = await fileModule.createDir(1, path);
       if (dirId) {
         for (const file of files) {
@@ -668,14 +669,14 @@ export class Contents extends amf.Module {
             sprintf('src="?cmd=download&amp;id=%d"', destId)
           );
         }
-        await repository.update(value.id, { value: v });
+        await repository.update(id, { value: v });
       }
     }
     //子データの挿入
     const children = value.children;
     if (children) {
       for (const child of children) {
-        await this.importChild(value.id, child);
+        await this.importChild(id, child);
       }
     }
     return true;
@@ -713,8 +714,7 @@ export class Contents extends amf.Module {
             repository.metadata.tableName + "_id_seq"
           ]);
           //関連ファイルの削除
-          const fileId = await fileModule.getDirId(1, "/Contents");
-          if (fileId) await fileModule.deleteFile(fileId);
+          await fileModule.clear();
           await fileModule.createDir(1, "Contents");
           //インポート処理
 
