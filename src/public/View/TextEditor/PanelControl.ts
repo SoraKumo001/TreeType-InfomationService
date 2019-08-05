@@ -18,7 +18,7 @@ export class PanelControl {
   public static setControlValue(
     target: HTMLElement,
     name: string,
-    value: string | number
+    value: string | number|boolean
   ) {
     const node = target.querySelector(`[name="${name}"]`) as
       | HTMLInputElement

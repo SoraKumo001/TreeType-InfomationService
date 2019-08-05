@@ -44,7 +44,6 @@ export class AppModule<T extends ModuleMap=ModuleMap> {
     return new AppModuleRemover(this,name as string,proc as (...params: unknown[]) => void);
   }
   public removeEventListener<K extends keyof T>(name: K, proc:(...params: T[K]) => void): void {
-    console.log("remove");
     const listener = this.listeners[name as string];
     if (!listener) {
       this.listeners[name as string] = [proc];

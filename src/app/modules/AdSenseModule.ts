@@ -1,6 +1,6 @@
 import * as amf from "active-module-framework";
 import { HtmlCreater } from "active-module-framework";
-import { Params } from "./ParamsModule";
+import { AppModule } from "./App/AppModule";
 
 /**
  *アドセンス初期設定用クラス
@@ -11,7 +11,7 @@ import { Params } from "./ParamsModule";
  */
 export class AdSense extends amf.Module {
   public async onCreateHtml(creater: HtmlCreater): Promise<void> {
-    const paramsModule = await this.getModule(Params);
+    const paramsModule = await this.getModule(AppModule);
 
     if (!paramsModule) return;
     const basicData = (await paramsModule.getGlobalParam("ADSENSE_DATA")) as {

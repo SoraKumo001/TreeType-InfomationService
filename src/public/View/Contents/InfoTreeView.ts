@@ -81,7 +81,7 @@ export class InfoTreeView extends JWF.TreeView {
           this.loadTree(contents.pid ? contents.pid : 1,true);
         } else {
           item.setItemText(contents.title);
-          node.dataset.contentStat = contents.stat ? "true" : "false";
+          node.dataset.contentStat = contents.visible ? "true" : "false";
         }
       }
     });
@@ -156,12 +156,12 @@ export class InfoTreeView extends JWF.TreeView {
     const level = item.getTreeLevel();
     item.setItemText(value.title);
     item.setItemValue(value.id);
-    node.dataset.contentStat = value.stat ? "true" : "false";
+    node.dataset.contentStat = value.visible ? "true" : "false";
     node.dataset.contentType = value["type"] === "PAGE" ? "PAGE" : "ITEM";
-    if (value.childs) {
+    if (value.children) {
       const flag = node.dataset.contentType !== "PAGE";
-      for (let i = 0; value.childs[i]; i++) {
-        const child = value.childs[i];
+      for (let i = 0; value.children[i]; i++) {
+        const child = value.children[i];
         // if (/*Contents.visible || */ child["stat"])
         this.setTreeItem(item.addItem("", flag||level<1), child);
       }
