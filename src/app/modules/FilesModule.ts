@@ -19,7 +19,7 @@ export class FileEntity {
   @typeorm.Column({ type: "bytea", nullable: true })
   value?: Buffer;
 
-  @typeorm.Column({nullable:true})
+  @typeorm.Column({ nullable: true })
   parentId?: number;
 
   @typeorm.TreeParent()
@@ -125,7 +125,7 @@ export class Files extends amf.Module {
     for (; i < length; i++) {
       const name = dirs[i];
       const file2: {
-        id?:number;
+        id?: number;
         parentId?: number;
         name: string;
       } = { parentId: id, name };
@@ -232,6 +232,14 @@ export class Files extends amf.Module {
 
     return hash.get(1) as FileInfo;
   }
+  public async clear() {
+    const repository = this.repository;
+    if (!repository) return null;
+    await repository.clear();
+    await repository.query("select setval ($1, 1, false)", [
+      repository.metadata.tableName + "_id_seq"
+    ]);
+  }
   public async getDirId(parentId: number, path: string) {
     const repository = this.repository;
     if (!repository) return null;
@@ -265,11 +273,6 @@ export class Files extends amf.Module {
     };
     repository.save((file as unknown) as FileEntity);
     return file;
-    // return (await repository.query(
-    //   `insert into "${repository.metadata.tableName}" values(default,$1,1,$2,$3,now(),$4) ON CONFLICT (parentId,name)
-    //   DO UPDATE SET name=$3,date=now(),value=$4 returning id,octet_length(value) as size`,
-    //   [parentId, userNo, name, buffer.buffer ]
-    //    )) as { id: number; size: number } | null;
   }
   public async downloadFile(res: express.Response, fileId: number) {
     const repository = this.repository;
@@ -322,8 +325,7 @@ export class Files extends amf.Module {
         "Content-Disposition",
         `${httpDisposition} filename*=utf-8'jp'${encodeURI(fileName)}`
       );
-      res.end(result.value,'binary');
-
+      res.end(result.value, "binary");
     } else {
       res.status(404);
       res.end("notfound");
@@ -335,10 +337,9 @@ export class Files extends amf.Module {
     const repository = this.repository;
     if (!repository) return null;
 
-    let id:number|undefined;
-    const result = await repository.findOne({parentId:pid,name});
-    if(result)
-      id = result.id;
+    let id: number | undefined;
+    const result = await repository.findOne({ parentId: pid, name });
+    if (result) id = result.id;
     const file = {
       id,
       kind: 1,
