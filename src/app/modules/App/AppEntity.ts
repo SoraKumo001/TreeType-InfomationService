@@ -1,5 +1,11 @@
 import { ExtendRepository } from "../ExtendRepository";
-import { Entity, PrimaryColumn, Column, EntityRepository, Connection, Repository } from "active-module-framework/node_modules/typeorm";
+import {
+  Entity,
+  PrimaryColumn,
+  Column,
+  EntityRepository,
+  Connection
+} from "typeorm";
 
 @Entity()
 export class AppEntity {
@@ -12,8 +18,8 @@ export class AppEntity {
 @EntityRepository(AppEntity)
 export class AppRepository extends ExtendRepository<AppEntity> {
   private items: { [key: string]: unknown } = {};
-  constructor(con:Connection){
-    super(con,AppEntity)
+  constructor(con: Connection) {
+    super(con, AppEntity);
   }
 
   public async init(): Promise<void> {
@@ -21,18 +27,15 @@ export class AppRepository extends ExtendRepository<AppEntity> {
   }
   public async getItems() {
     const result = await this.find();
-    if(!result)
-      return {};
-    const map:{[key:string]:string} = {};
-    for(const r of result)
-      map[r.name] = JSON.parse(r.value);
+    if (!result) return {};
+    const map: { [key: string]: string } = {};
+    for (const r of result) map[r.name] = JSON.parse(r.value);
     return map;
-
   }
   public async setItem(name: string, values: unknown) {
     const value = JSON.stringify(values);
     this.items[name] = value;
-    await this.save({name,value});
+    await this.save({ name, value });
   }
   /**
    *アプリケーションデータの設定

@@ -126,7 +126,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
         | FindConditions<Entity>
         | ObjectLiteral
         | string;
-        order?:string|[string, "ASC" | "DESC", "NULLS FIRST" | "NULLS LAST"]
+      order?: string | [string, "ASC" | "DESC", "NULLS FIRST" | "NULLS LAST"];
     }
   ): Promise<Entity> {
     let builder: SelectQueryBuilder<Entity>;
@@ -157,11 +157,9 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
         ]);
       }
       if (options.where) builder.where(options.where);
-      if(options.order)
-      if(typeof options.order  === 'string')
-        builder.orderBy(options.order)
-      else
-        builder.orderBy(...options.order);
+      if (options.order)
+        if (typeof options.order === "string") builder.orderBy(options.order);
+        else builder.orderBy(...options.order);
     }
 
     const entitiesAndScalars = await builder.getRawAndEntities();
@@ -394,9 +392,13 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
         })
         .join(" AND ");
 
-      return this.createQueryBuilder(alias)
-        .innerJoin(this.metadata.targetName, "joined", whereCondition+" AND "+joinCondition,parameters)
-        //.where(joinCondition, parameters);
+      return this.createQueryBuilder(alias).innerJoin(
+        this.metadata.targetName,
+        "joined",
+        whereCondition + " AND " + joinCondition,
+        parameters
+      );
+      //.where(joinCondition, parameters);
     } else if (this.metadata.treeType === "materialized-path") {
       return this.createQueryBuilder(alias).where(qb => {
         const subQuery = qb

@@ -1,7 +1,7 @@
 import * as amf from "active-module-framework";
 import { Users } from "./User/UsersModule";
 import { RemoteDB } from "./RemoteDBModule";
-import { Files,  FileEntity } from "./FilesModule";
+import { Files, FileEntity } from "./FilesModule";
 import { sprintf } from "sprintf";
 import * as express from "express";
 import * as typeorm from "typeorm";
@@ -502,7 +502,9 @@ export class Contents extends amf.Module {
    * @returns {(Promise<boolean | null>)}
    * @memberof Contents
    */
-  public async updateContents(contents: ContentsEntity): Promise<boolean | null> {
+  public async updateContents(
+    contents: ContentsEntity
+  ): Promise<boolean | null> {
     const repository = this.repository;
     if (!repository) return null;
 
@@ -530,7 +532,7 @@ export class Contents extends amf.Module {
       .select("id")
       .where('"parentId"=' + subQuery)
       .orderBy("type='PAGE',priority")
-      .setParameters({id})
+      .setParameters({ id })
       .getRawMany()) as undefined | { id: number }[];
     if (!values) return false;
 
@@ -631,8 +633,7 @@ export class Contents extends amf.Module {
 
     const v: any = value;
     if (v.childs) v.children = v.childs;
-    if(v.stat)
-      v.visible = v.stat === 1;
+    if (v.stat) v.visible = v.stat === 1;
 
     (<{ id: unknown }>value).id = undefined;
     await repository.save(value);
@@ -808,7 +809,7 @@ export class Contents extends amf.Module {
       .createQueryBuilder()
       .select("id,title || ' ' ||value as value")
       .where(visible)
-      .orderBy({"date":"DESC"})
+      .orderBy({ date: "DESC" })
       .getRawMany()) as { id: number; value: string }[] | null;
     if (!results) return null;
     const keywords = keyword

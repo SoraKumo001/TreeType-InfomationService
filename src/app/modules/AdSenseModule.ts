@@ -16,14 +16,13 @@ export class AdSense extends amf.Module {
     if (!paramsModule) return;
     const basicData = (await paramsModule.getGlobalParam("ADSENSE_DATA")) as {
       top?: string;
-      bottom?:string;
+      bottom?: string;
     };
     if (basicData && (basicData.top || basicData.bottom)) {
       const document = creater.getDocument();
       const script1 = document.createElement("script");
       script1.defer = true;
-      script1.src =
-        "//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+      script1.src = "//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
       document.head.appendChild(script1);
     }
   }

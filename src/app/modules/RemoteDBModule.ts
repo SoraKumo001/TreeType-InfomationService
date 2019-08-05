@@ -1,12 +1,11 @@
 import * as amf from "active-module-framework";
 import { Users } from "./User/UsersModule";
-import { ModuleMap } from "active-module-framework";
 import * as typeorm from "typeorm";
 
 @typeorm.Entity()
 class DatabaseConfigEntity extends typeorm.BaseEntity {
   @typeorm.PrimaryGeneratedColumn()
-  id?:number;
+  id?: number;
   @typeorm.Column()
   REMOTEDB_HOST?: string;
   @typeorm.Column()
@@ -26,12 +25,11 @@ export function Sleep(timeout: number): Promise<void> {
     }, timeout);
   });
 }
-export interface CustomMap extends ModuleMap {
+export interface CustomMap extends amf.ModuleMap {
   connect: [typeorm.Connection];
   disconnect: [];
 }
 export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
-
   private entities: (new () => unknown)[] = [];
   private localRepository?: typeorm.Repository<DatabaseConfigEntity>;
   public addEntity<T>(model: new () => T) {
@@ -54,7 +52,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
   public getConnection() {
     return this.connection;
   }
-  public async onCreateModule(){
+  public async onCreateModule() {
     this.getLocalDB().addEntity(DatabaseConfigEntity);
     return true;
   }
@@ -75,17 +73,15 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
   public async open() {
     await this.close();
 
-    if(!this.localRepository)
-      return false;;
+    if (!this.localRepository) return false;
     const config = await this.localRepository.findOne();
-    if(!config)
-      return false;
+    if (!config) return false;
 
-    const host = config.REMOTEDB_HOST||"localhost";
-    const port = config.REMOTEDB_PORT||0;
-    const database = config.REMOTEDB_DATABASE||"postgres";
-    const username = config.REMOTEDB_USER||"";
-    const password = config.REMOTEDB_PASSWORD||"";
+    const host = config.REMOTEDB_HOST || "localhost";
+    const port = config.REMOTEDB_PORT || 0;
+    const database = config.REMOTEDB_DATABASE || "postgres";
+    const username = config.REMOTEDB_USER || "";
+    const password = config.REMOTEDB_PASSWORD || "";
 
     //オープン前のフラグを設定
     //this.first = true;
@@ -103,7 +99,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
       logging: false,
       entities: [...this.entities]
     });
-    if (this.connection) this.callEvent("connect",this.connection);
+    if (this.connection) this.callEvent("connect", this.connection);
     return true;
   }
   public async close() {
@@ -122,18 +118,15 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
   public async JS_getConfig() {
     if (!this.isAdmin()) return null;
 
-
-    if(!this.localRepository)
-      return false;;
+    if (!this.localRepository) return false;
     const config = await this.localRepository.findOne();
-    if(!config)
-      return false;
+    if (!config) return false;
 
-    const host = config.REMOTEDB_HOST||"localhost";
-    const port = config.REMOTEDB_PORT||0;
-    const database = config.REMOTEDB_DATABASE||"postgres";
-    const username = config.REMOTEDB_USER||"";
-    const password = config.REMOTEDB_PASSWORD||"";
+    const host = config.REMOTEDB_HOST || "localhost";
+    const port = config.REMOTEDB_PORT || 0;
+    const database = config.REMOTEDB_DATABASE || "postgres";
+    const username = config.REMOTEDB_USER || "";
+    const password = config.REMOTEDB_PASSWORD || "";
 
     const result = {
       REMOTEDB_HOST: host,
@@ -146,8 +139,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
   }
   public async JS_setConfig(config: DatabaseConfigEntity) {
     if (!this.isAdmin()) return null;
-    if(!this.localRepository)
-      return null;
+    if (!this.localRepository) return null;
     await this.localRepository.clear();
     await this.localRepository.save(config);
     return this.connect();
