@@ -272,7 +272,7 @@ export class Files extends amf.Module {
       kind: 1,
       value: buffer
     };
-    repository.save((file as unknown) as FileEntity);
+    await repository.save((file as unknown) as FileEntity);
     return file;
   }
   public async downloadFile(res: express.Response, fileId: number) {
@@ -349,7 +349,7 @@ export class Files extends amf.Module {
       parent: { id: pid },
       value
     };
-    repository.save(file);
+    await repository.save(file);
     return (<FileEntity>file).id;
   }
   public isAdmin() {

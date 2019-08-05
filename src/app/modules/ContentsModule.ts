@@ -295,7 +295,8 @@ export class Contents extends amf.Module {
         parent.children = children;
       }
     };
-    await getChildren(entity);
+    if(child)
+      await getChildren(entity);
     return entity;
   }
 
