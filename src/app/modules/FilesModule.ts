@@ -39,7 +39,7 @@ export interface FileData {
 }
 export interface FileInfo {
   id: number;
-  parent: number;
+  parentId: number;
   kind: number;
   name: string;
   size: number;
@@ -197,7 +197,7 @@ export class Files extends amf.Module {
     const result = await repository
       .createQueryBuilder()
       .select("id,kind,name,date,octet_length(value) as size")
-      .where({ parent: parentId })
+      .where({ parentId })
       .orderBy("kind,name")
       .getRawMany();
     return result;
@@ -209,7 +209,7 @@ export class Files extends amf.Module {
     const dirInfos = (await repository
       .createQueryBuilder()
       .select(
-        `id,"parentId" as parent,kind,name,date,octet_length(value) as size`
+        `id,"parentId",kind,name,date,octet_length(value) as size`
       )
       .where("kind=0")
       .orderBy("name")
@@ -222,9 +222,9 @@ export class Files extends amf.Module {
         hash.set(dir.id, dir);
       }
       for (const dir of hash.values()) {
-        const parent = dir.parent as number;
-        if (parent > 0) {
-          const p = hash.get(parent);
+        const parentId = dir.parentId as number;
+        if (parentId > 0) {
+          const p = hash.get(parentId);
           if (p && p.childs) p.childs.push(dir);
         }
       }
@@ -249,7 +249,7 @@ export class Files extends amf.Module {
     for (const name of dirs) {
       const result = await repository.findOne({
         select: ["id"],
-        where: { parent: id, name }
+        where: { parentId: id, name }
       });
       if (!result) return null;
       id = result.id;
@@ -261,7 +261,7 @@ export class Files extends amf.Module {
     if (!repository) return null;
     const check = await repository.findOne({
       select: ["id"],
-      where: { parent: parentId, name }
+      where: { parentId: parentId, name }
     });
     const file = {
       id: check ? check.id : undefined,
