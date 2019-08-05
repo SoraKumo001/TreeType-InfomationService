@@ -239,6 +239,7 @@ export class Files extends amf.Module {
     await repository.query("select setval ($1, 1, false)", [
       repository.metadata.tableName + "_id_seq"
     ]);
+    await repository.insert({ kind: 0, name: "[ROOT]" });
   }
   public async getDirId(parentId: number, path: string) {
     const repository = this.repository;

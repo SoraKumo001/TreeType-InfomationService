@@ -16,13 +16,12 @@ export class AppModule extends amf.Module {
       const connection = remoteDB.getConnection();
       if (connection) {
         this.appRepository = new AppRepository(connection);
-        await this.appRepository.init();
       }
     });
 
     return true;
   }
-  public getItem<T>(name: string, defValue?: T): T {
+  public async getItem<T>(name: string, defValue?: T): Promise<T> {
     if (!this.appRepository) return defValue as T;
     return this.appRepository.getItem(name, defValue);
   }
