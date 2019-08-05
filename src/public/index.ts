@@ -12,6 +12,7 @@ import { MainView } from "./View/MainView";
 import { UserModule, UserInfo } from "./modules/UserModule";
 import { UserEditWindow } from "./View/User/UserEditWindow";
 import "./index.scss";
+import { FileWindow } from './View/FileWindow/FileWindow';
 
 //全体で使用するアプリケーションマネージャを作成
 const appManager = new AppManager();
@@ -33,4 +34,5 @@ userModule.request();
 addEventListener("DOMContentLoaded", () => {
   //メイン画面の表示
   new MainView(appManager);
+ // new FileWindow(appManager);
 });

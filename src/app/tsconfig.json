@@ -6,7 +6,8 @@
     "sourceMap": true,
     "strict": true,
     "composite": true,
-  },"references": [
-		{"path": "../../node_modules/active-module-framework/src"}
-	]
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+  }
 }

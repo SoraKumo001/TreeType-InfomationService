@@ -23,7 +23,7 @@ contentsModule.addEventListener("drawContents", (client, id) => {
 
   const contents = contentsCacheModule.findTreeContents(id);
   if (contents) {
-    const childs = contents.childs;
+    const childs = contents.children;
     if (childs) {
       const table = document.createElement("table");
       const row = table.insertRow();

@@ -2,6 +2,7 @@ import { LocalDB } from "./LocalDB";
 import { Module } from "./Module";
 import { Manager } from "./Manager";
 import * as express from "express";
+import { SessionRepository } from "./entities/SessionEntity";
 
 export interface AdapterResult {
   value: { [keys: string]: unknown } | null;
@@ -25,12 +26,12 @@ export class Session {
   private globalHash: string | null = null;
   public result: AdapterResultFormat | null = null;
   private values: { [key: string]: unknown } = {};
-  private localDB: LocalDB | null = null;
   private modules: (Module)[] = [];
   private manager: Manager;
   private res?: Express.Response;
   private buffer?: Buffer;
   private returnFlag: boolean = true;
+  private sessionRepository!: SessionRepository;
   public constructor(manager: Manager) {
     this.manager = manager;
   }
@@ -56,11 +57,18 @@ export class Session {
     res: Express.Response,
     buffer?: Buffer
   ): Promise<void> {
-    this.localDB = db;
-    const [global, session] = await Promise.all([
-      db.startSession("GLOBAL", globalHash, 7 * 24 * 60 * 60),
-      db.startSession("SESSION", sessionHash, 60 * 60)
-    ]);
+    const sessionRepository = db.getCustomRepository(SessionRepository);
+    this.sessionRepository = sessionRepository;
+    const global = await sessionRepository.startSession(
+      "GLOBAL",
+      globalHash,
+      7 * 24 * 60 * 60
+    );
+    const session = await sessionRepository.startSession(
+      "SESSION",
+      sessionHash,
+      60 * 60
+    );
     this.globalHash = global.hash;
     this.sessionHash = session.hash;
     this.setValue("GLOBAL_ITEM", global.values);
@@ -78,20 +86,18 @@ export class Session {
    * @memberof Session
    */
   public async final(): Promise<void> {
-    if (this.localDB) {
-      if (this.sessionHash)
-        await this.localDB.endSession(this.sessionHash, this.getValue(
-          "SESSION_ITEM"
-        ) as {
-          [key: string]: unknown;
-        });
-      if (this.globalHash)
-        await this.localDB.endSession(this.globalHash, this.getValue(
-          "GLOBAL_ITEM"
-        ) as {
-          [key: string]: unknown;
-        });
-    }
+    if (this.sessionHash)
+      await this.sessionRepository.endSession(this.sessionHash, this.getValue(
+        "SESSION_ITEM"
+      ) as {
+        [key: string]: unknown;
+      });
+    if (this.globalHash)
+      await this.sessionRepository.endSession(this.globalHash, this.getValue(
+        "GLOBAL_ITEM"
+      ) as {
+        [key: string]: unknown;
+      });
   }
   /**
    *
@@ -239,15 +245,11 @@ export class Session {
     }
     return typeof items[name] === "undefined" ? defValue : items[name];
   }
-  public async initModule<T extends Module>(name: string): Promise<T | null> {
+  public async initModule<T extends Module>(type: string): Promise<T | null> {
     try {
-      const moduleSrc = this.manager.getModuleSync(name);
+      const moduleSrc = this.manager.getModuleSync(type);
       if (!moduleSrc) return null;
-      const moduleType = this.manager.getModuleType(name);
-      const module = Object.assign(
-        new moduleType(this.manager),
-        moduleSrc
-      ) as T;
+      const module = Object.assign(moduleSrc) as T;
       module.setSession(this);
       if (module.onStartSession) await module.onStartSession();
       this.modules.push(module);
@@ -278,19 +280,13 @@ export class Session {
     }
     try {
       const moduleSrc = this.manager.getModuleSync(type);
-      if (!moduleSrc) throw "Module not found";
-      let module;
-      if (typeof type === "string") {
-        const moduleType = this.manager.getModuleType(type);
-        module = Object.assign(new moduleType(this.manager), moduleSrc) as T;
-      } else {
-        module = Object.assign(new type(this.manager), moduleSrc) as T;
-      }
+      if (!moduleSrc) throw `Module not found: ${type.toString()}`;
+      const module = Object.assign(moduleSrc) as T;
       module.setSession(this);
       this.modules.push(module);
       return module;
     } catch (e) {
-      throw "Module not found";
+      throw `Module not found: ${type.toString()}`;
     }
   }
   public async releaseModules(): Promise<void> {

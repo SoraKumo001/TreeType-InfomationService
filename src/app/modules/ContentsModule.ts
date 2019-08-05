@@ -1,38 +1,60 @@
 import * as amf from "active-module-framework";
-import { Users } from "./UsersModule";
+import { Users } from "./User/UsersModule";
 import { RemoteDB } from "./RemoteDBModule";
-import { Files, FileData } from "./FilesModule";
+import { Files, FileData, FileEntity } from "./FilesModule";
 import { sprintf } from "sprintf";
 import * as express from "express";
+import * as typeorm from "typeorm";
+import { ExtendRepository } from "./ExtendRepository";
 
 interface TreeContents {
   id: number;
-  pid: number;
+  parentId: number;
   stat: boolean;
   type: string;
   date: string;
   update: string;
   title: string;
-  childs: TreeContents[];
+  children: TreeContents[];
 }
-export interface MainContents {
-  id: number;
-  pid: number;
-  priority: number;
-  stat: number;
-  type: string;
-  date: Date;
-  update: Date;
-  title_type: number;
-  title: string;
-  value_type: string;
-  value: string;
-  childs?: MainContents[];
+
+@typeorm.Entity()
+@typeorm.Tree("nested-set")
+export class MainContents {
+  @typeorm.PrimaryGeneratedColumn()
+  id!: number;
+
+  @typeorm.Column({ default: 1000 })
+  priority!: number;
+  @typeorm.Column({ default: true })
+  visible!: boolean;
+  @typeorm.Column({ default: "PAGE" })
+  type!: string;
+  @typeorm.Column({ default: () => "current_timestamp" })
+  date!: Date;
+  @typeorm.Column({ default: () => "current_timestamp" })
+  update!: Date;
+  @typeorm.Column({ default: 1 })
+  title_type!: number;
+  @typeorm.Column({ default: "New" })
+  title!: string;
+  @typeorm.Column({ default: "TEXT" })
+  value_type!: string;
+  @typeorm.Column({ default: "" })
+  value!: string;
   title2?: string;
+
+  @typeorm.Column({ nullable: true })
+  parentId!: number;
+
+  @typeorm.TreeChildren()
+  children!: MainContents[];
+  @typeorm.TreeParent()
+  parent?: MainContents;
 }
 export interface ConvertContents extends MainContents {
-  childs?: ConvertContents[];
-  files: FileData[];
+  files?: FileEntity[];
+  children: ConvertContents[];
 }
 
 /**
@@ -42,8 +64,10 @@ export interface ConvertContents extends MainContents {
  * @class Contents
  * @extends {amf.Module}
  */
+
 export class Contents extends amf.Module {
   private remoteDB?: RemoteDB;
+  private repository?: ExtendRepository<MainContents>;
   /**
    *モジュール作成時の初期化処理
    *
@@ -53,36 +77,21 @@ export class Contents extends amf.Module {
   public async onCreateModule(): Promise<boolean> {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
-    if (remoteDB) {
-      const files = await this.getModule(Files);
-      remoteDB.addEventListener(
-        "connect",
-        async (): Promise<void> => {
-          if (files) files.createDir(1, "Contents");
+    remoteDB.addEntity(MainContents);
 
-          if (!(await remoteDB.isTable("contents"))) {
-            remoteDB.run(
-              `create table contents(
-					contents_id SERIAL primary key,
-					contents_parent INTEGER references contents(contents_id),
-					contents_priority INTEGER,
-					contents_stat INTEGER,contents_type TEXT,
-					contents_date timestamp with time zone,contents_update timestamp with time zone,
-					contents_title_type integer,contents_title TEXT,contents_value TEXT,contents_value_type TEXT);
-          insert into contents values(default,null,1000,1,'PAGE',current_timestamp,current_timestamp,1,'Top','','TEXT')`
-            );
-          }
-        }
-      );
-      this.remoteDB = remoteDB;
-    }
+    const files = await this.getModule(Files);
+    remoteDB.addEventListener(
+      "connect",
+      async (connection): Promise<void> => {
+        if (files) files.createDir(1, "Contents");
 
-    const localDB = this.getLocalDB();
-    localDB.run(
-      "CREATE TABLE IF NOT EXISTS users (users_no integer primary key,users_enable boolean,\
-			users_id TEXT,users_password TEXT,users_name TEXT,users_info JSON,UNIQUE(users_id))"
+        const repository = new ExtendRepository(connection, MainContents);
+        this.repository = repository;
+        if (!(await repository.findOne(1)))
+          await repository.insert({ title: "TOP" });
+      }
     );
-
+    this.remoteDB = remoteDB;
     return true;
   }
 
@@ -94,19 +103,16 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async getParentPage(id: number): Promise<number> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return 0;
+    if (!this.repository) return 0;
     //PAGEタイプを持つ親を探す
-    for (;;) {
-      const value = await remoteDB.get(
-        "select contents_parent as pid,contents_type as type from contents where contents_id=$1",
-        id
-      );
-      if (!value) return 0;
-      if (value["type"] === "PAGE") break;
-      id = value["pid"] as number;
-    }
-    return id;
+    let contents = await this.repository.getParent({ id } as MainContents, {
+      select: ["id", "type"]
+    });
+    let parent: (typeof contents) | undefined = contents;
+    do {
+      if (parent.type === "PAGE") return parent.id;
+    } while ((parent = contents.parent));
+    return 0;
   }
   /**
    *親IDを返す
@@ -116,12 +122,12 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async getParent(id: number): Promise<number | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
-    return (await remoteDB.get2(
-      "select contents_parent from contents where contents_id = $1",
-      id
-    )) as number | null;
+    if (!this.repository) return 0;
+    const contents = await this.repository.findOne(id);
+    if (!contents) return 0;
+    const parents = await this.repository.findAncestors(contents);
+    if (parents && parents.length) return parents[0].id;
+    return null;
   }
   /**
    *コンテンツの上位に対象のIDがあるかチェックする
@@ -155,9 +161,9 @@ export class Contents extends amf.Module {
     ) {
       date = value.date;
     }
-    const childs = value.childs;
-    if (childs) {
-      for (const child of childs) {
+    const children = value.children;
+    if (children) {
+      for (const child of children) {
         if (child.type !== "PAGE") date = this.getMaxDate(child, date);
       }
     }
@@ -170,48 +176,40 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async getPage(): Promise<MainContents[] | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
+    if (!this.repository) return null;
 
     //ページを構成するのにに必要なデータを抽出
-    const values = (await remoteDB.all(
-      `select contents_id as id,contents_parent as pid,contents_stat as stat,
-			to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,
-			to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,
-			contents_type as type,contents_title as title,contents_value as value from contents where contents_stat=1`
-    )) as MainContents[];
-    if (values === null) return null;
-    const items: { [key: number]: MainContents } = {};
-    //ID参照用データの作成
-    for (const value of values) {
-      items[value.id] = value;
-    }
-    //親子関係の作成
-    for (const key of Object.keys(items)) {
-      const item = items[(key as unknown) as number];
-      const pid = item.pid;
-      if (pid !== null && items[pid]) {
-        const parent = items[pid];
-        if (!parent.childs) parent.childs = [];
-        parent.childs.push(item);
-      }
-    }
+    const values = await this.repository.findTrees();
+    if (!values) return null;
 
-    const pages = [];
-    for (const key of Object.keys(items)) {
-      const value = items[(key as unknown) as number];
-      if (value.type !== "PAGE") continue;
-      //作成日を調整
-      value["date"] = this.getMaxDate(value);
-      //タイトルの調整
-      let title = value.title;
-      let p = value;
-      while (p.pid && (p = items[p.pid])) {
-        if (p.id != 1) title += " ～ " + p.title;
-      }
-      value.title2 = title;
-      pages.push(value);
-    }
+    //ページの抽出
+    const pages: MainContents[] = [];
+    const getPage = (contents: MainContents) => {
+      if (contents.type === "PAGE") pages.push(contents);
+      contents.children.forEach(getPage);
+    };
+    values.forEach(getPage);
+    //ページの更新日時を設定
+    const getUpdate = function(
+      this: MainContents | void,
+      contents: MainContents
+    ) {
+      const that = this || contents;
+      if (contents.date.getTime() > that.date.getTime())
+        that.date = contents.date;
+      contents.children.forEach(getUpdate, this || contents);
+    };
+    pages.forEach(getUpdate);
+
+    //階層タイトルの設定
+    pages.forEach(page => {
+      let title = "";
+      let parent: MainContents | undefined = page;
+      do {
+        title += " ～ " + parent.title;
+      } while ((parent = parent.parent));
+      page.title2 = title;
+    });
 
     //日付でソート
     pages.sort((a, b): number => {
@@ -227,23 +225,13 @@ export class Contents extends amf.Module {
    * @returns {(Promise<{ id: number; title: string }[] | null>)}
    * @memberof Contents
    */
-  public async getBreadcrumb(
-    id: number
-  ): Promise<{ id: number; title: string }[] | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
-    const bread = [];
-    while (id) {
-      let value = (await remoteDB.get(
-        "select contents_parent as pid,contents_title as title,contents_type as type from contents where contents_id=$1",
-        id
-      )) as { pid: number; type: string; title: string };
-      if (!value) return null;
-      if (value.type === "PAGE") {
-        bread.push({ id, title: value.title });
-      }
-      id = value.pid;
-    }
+  public async getBreadcrumb(id: number): Promise<MainContents | null> {
+    const repository = this.repository;
+    if (!repository) return null;
+
+    const bread = await repository.getParent(["id=:id", { id }], {
+      select: ["id", "title"]
+    });
     return bread;
   }
   /**
@@ -264,13 +252,12 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async getPages(admin: boolean): Promise<MainContents[] | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
-    const visible = admin ? "" : "and contents_stat=1";
-
-    return (await remoteDB.all(
-      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value_type as value_type,contents_value as value from contents where contents_type='PAGE' ${visible}`
-    )) as MainContents[] | null;
+    const repository = this.repository;
+    if (!repository) return null;
+    let param = {};
+    if (admin) param = {};
+    else param = { where: { visible: true } };
+    return repository.find(param);
   }
   /**
    *コンテンツを返す
@@ -285,57 +272,33 @@ export class Contents extends amf.Module {
     id: number,
     child?: boolean,
     admin?: boolean
-  ): Promise<MainContents | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
+  ): Promise<MainContents | undefined> {
+    const repository = this.repository;
+    if (!repository) return undefined;
 
-    const visible = admin ? "" : "and contents_stat=1";
+    let where: { visible?: boolean; type?: string; parentId?: number } = admin
+      ? {}
+      : { visible: true };
+    const entity = await repository.findOne(id, { where });
+    if (!entity) return;
 
-    const value = (await remoteDB.get(
-      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value_type as value_type,contents_value as value from contents where contents_id=$1 ${visible}`,
-      id
-    )) as MainContents | null;
-    if (value && child) {
-      const childValue = await this.getChildContents(id, admin ? true : false);
-      if (childValue) value.childs = childValue;
-    }
-    return value;
+    where.type = "ITEM";
+    const getChildren = async (parent: MainContents) => {
+      where.parentId = parent.id;
+      const children = await repository.find({ where, order: { priority: 1 } });
+      if (children) {
+        const promise = [];
+        for (const child of children) {
+          promise.push(getChildren(child));
+        }
+        await Promise.all(promise);
+        parent.children = children;
+      }
+    };
+    await getChildren(entity);
+    return entity;
   }
 
-  /**
-   *親IDを指定し、子コンテンツを返す
-   *
-   * @param {number} pid
-   * @param {boolean} admin
-   * @returns {Promise<MainContents[]>}
-   * @memberof Contents
-   */
-  public async getChildContents(
-    pid: number,
-    admin: boolean
-  ): Promise<MainContents[]> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return [];
-    const visible = admin ? "" : "and contents_stat=1";
-
-    //親Idを元にコンテンツを抽出
-    const values = (await remoteDB.all(
-      `select contents_id as id,contents_parent as pid,contents_priority as priority,contents_stat as stat,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') as update,contents_title_type as title_type,contents_title as title,contents_value_type as value_type,contents_value as value from contents where contents_parent=$1 and contents_type != 'PAGE' ${visible} order by contents_priority`,
-      pid
-    )) as MainContents[];
-    //子コンテンツを抽出(非同期)
-    const promise = [];
-    for (const value of values) {
-      promise.push(this.getChildContents(value.id, admin));
-    }
-    const childValues = await Promise.all(promise);
-    //非同期で取得した結果を設定
-    let index = 0;
-    for (const value of values) {
-      value.childs = childValues[index++];
-    }
-    return values;
-  }
   /**
    *親コンテンツのIDを返す
    *
@@ -344,12 +307,15 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async getContentsParent(id: number): Promise<number | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
-    return (await remoteDB.get2(
-      "select contents_parent from contents where contents_id=$1",
-      id
-    )) as number | null;
+    const repository = this.repository;
+    if (!repository) return null;
+    const result = await repository
+      .createQueryBuilder()
+      .select("parentId as id")
+      .where({ id })
+      .getRawOne();
+    if (!result) return null;
+    return result.id;
   }
   /**
    *コンテンツの表示優先度を返す
@@ -359,12 +325,11 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async getContentsPriority(id: number): Promise<number | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
-    return remoteDB.get2(
-      "select contents_priority from contents where contents_id=$1",
-      id
-    ) as Promise<number>;
+    const repository = this.repository;
+    if (!repository) return null;
+    const result = await repository.findOne(id, { select: ["priority"] });
+    if (!result) return null;
+    return result.priority;
   }
   /**
    *PAGEタイプまでの深さを探索
@@ -374,17 +339,18 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async getDeeps(id: number): Promise<number | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
+    const repository = this.repository;
+    if (!repository) return null;
     let count = 0;
-    for (;;) {
-      id = (await remoteDB.get2(
-        "select contents_parent as type from contents where contents_id=$1 and contents_type!='PAGE'",
-        id
-      )) as number;
-      if (id === null) break;
+    const result = await repository.getParent(["id=:id", { id }], {
+      select: ["id", "type"]
+    });
+    if (!result) return null;
+    let parent: MainContents | undefined = result;
+    do {
+      if (parent.type !== "PAGE") break;
       count++;
-    }
+    } while ((parent = parent.parent));
     return count;
   }
   /**
@@ -395,24 +361,20 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async updatePriority(id: number): Promise<boolean | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
+    const repository = this.repository;
+    if (!repository) return null;
 
-    const values = (await remoteDB.all(
-      "select contents_id from contents where contents_parent=$1 order by contents_type='PAGE',contents_priority",
-      id
-    )) as { contents_id: number }[];
-    let sql = "";
-    if (!values) return null;
+    const values = await repository
+      .createQueryBuilder()
+      .select(["id"])
+      .where({ parent: id })
+      .orderBy("type='PAGE',priority")
+      .getMany();
     let key = 0;
     for (const value of values) {
-      sql += sprintf(
-        "update contents SET contents_priority=%d where contents_id=%d;\n",
-        ++key * 1000,
-        value["contents_id"]
-      );
+      value.priority = ++key * 1000;
+      repository.save(value);
     }
-    if (sql !== "") remoteDB.run(sql);
     return true;
   }
 
@@ -436,8 +398,8 @@ export class Contents extends amf.Module {
     pid: number;
     id: number;
   } | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
+    const repository = this.repository;
+    if (!repository) return null;
 
     let cid = 0;
     let pid = 0;
@@ -465,16 +427,14 @@ export class Contents extends amf.Module {
       if (count == 0) titleType = 2;
       else titleType = 3;
     }
-    const result = await remoteDB.get(
-      `insert into contents values(default,$1,$2,-1,$3,
-				current_timestamp,current_timestamp,$4,'New','','TEXT') RETURNING contents_id`,
-      pid,
+    const result = await repository.save({
+      parent: { id: pid },
       priority,
       type,
-      titleType
-    );
+      title_type: titleType
+    });
     if (!result) return null;
-    cid = result.contents_id as number;
+    cid = result.id as number;
     this.updatePriority(pid);
     return { pid: pid, id: cid };
   }
@@ -490,9 +450,9 @@ export class Contents extends amf.Module {
     id: number,
     flag?: boolean
   ): Promise<boolean | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
-    if (flag || flag === undefined) await remoteDB.run("begin");
+    const repository = this.repository;
+    if (!repository) return null;
+    //if (flag || flag === undefined) await remoteDB.run("begin");
 
     const promise: Promise<unknown>[] = [];
     //関連ファイルの削除
@@ -505,26 +465,23 @@ export class Contents extends amf.Module {
     promise.push(fileDelete());
     //コンテンツ削除
     const contentsDelete = async () => {
-      const ids = (await remoteDB.all(
-        "select contents_id from contents where contents_parent=$1",
-        id
-      )) as { contents_id: number }[] | null;
+      const ids = await repository.find({
+        where: { parentId: id },
+        select: ["id"]
+      });
       if (ids) {
         const promise: Promise<unknown>[] = [];
-        for (const cid of ids)
-          promise.push(this.deleteContents(cid.contents_id, false));
+        for (const cid of ids) promise.push(this.deleteContents(cid.id, false));
         await Promise.all(promise);
       }
     };
     await contentsDelete();
 
     if (id !== 1) {
-      promise.push(
-        remoteDB.run("delete from contents where contents_id=$1", id)
-      );
+      promise.push(repository.delete(id));
     }
     Promise.all(promise);
-    if (flag || flag === undefined) await remoteDB.run("commit");
+    //if (flag || flag === undefined) await remoteDB.run("commit");
     //コンテンツの削除
     return true;
   }
@@ -546,21 +503,10 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async updateContents(contents: MainContents): Promise<boolean | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
+    const repository = this.repository;
+    if (!repository) return null;
 
-    return remoteDB.run(
-      `update contents SET contents_stat=$1,contents_date=$2,contents_type=$3,contents_update=current_timestamp,
-			contents_title_type=$4,contents_title=$5,contents_value_type=$6,contents_value=$7 where contents_id=$8`,
-      contents.stat,
-      contents.date,
-      contents.type,
-      contents.title_type,
-      contents.title,
-      contents.value_type,
-      contents.value,
-      contents.id
-    );
+    return !!repository.save(contents);
   }
   /**
    *子コンテンツのIDから兄弟の表示優先順位を正規化する
@@ -570,23 +516,29 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async updatePriorityFromChild(id: number): Promise<boolean | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
-    const values = (await remoteDB.all(
-      "select contents_id as id from contents where contents_parent=(select contents_parent from contents where contents_id=$1) order by contents_type='PAGE',contents_priority",
-      id
-    )) as { id: number }[];
-    let sql = "";
+    const repository = this.repository;
+    if (!repository) return null;
+    const subQuery = repository
+      .createQueryBuilder()
+      .subQuery()
+      .select([`"parentId"`])
+      .from(repository.metadata.target, repository.metadata.targetName)
+      .where("id=:id")
+      .getQuery();
+    const values = (await repository
+      .createQueryBuilder()
+      .select("id")
+      .where('"parentId"=' + subQuery)
+      .orderBy("type='PAGE',priority")
+      .setParameters({id})
+      .getRawMany()) as undefined | { id: number }[];
+    if (!values) return false;
+
     let index = 0;
     for (const value of values) {
-      sql += sprintf(
-        "update contents SET contents_priority=%d where contents_id=%d;\n",
-        ++index * 10,
-        value.id
-      );
+      await repository.update(value.id, { priority: ++index * 10 });
     }
-    if (sql.length) return remoteDB.run(sql);
-    return false;
+    return true;
   }
   /**
    *表示優先順位の変更
@@ -597,15 +549,13 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async moveVector(id: number, vector: number): Promise<boolean | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
+    const repository = this.repository;
+    if (!repository) return null;
     const priority = (await this.getContentsPriority(id)) as number;
     if (!priority) return false;
-    await remoteDB.run(
-      "update contents set contents_priority = $1 where contents_id=$2",
-      priority + (vector < 0 ? -15 : 15),
-      id
-    );
+    await repository.update(id, {
+      priority: priority + (vector < 0 ? -15 : 15)
+    });
     await this.updatePriorityFromChild(id);
     const priority2 = await this.getContentsPriority(id);
     return priority !== priority2;
@@ -623,32 +573,16 @@ export class Contents extends amf.Module {
     id: number,
     admin: boolean
   ): Promise<TreeContents | null> {
-    const visible = admin ? "" : "where contents_stat=1";
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
-    const values = (await remoteDB.all(`select contents_id as id,contents_parent as pid,contents_stat as stat,contents_date as date,contents_update as update,
-			contents_type as type,contents_title as title from contents ${visible} order by contents_type='PAGE',contents_priority`)) as
-      | TreeContents[]
-      | null;
+    const visible = admin ? "" : " and visible=true";
+    const repository = this.repository;
+    if (!repository) return null;
+    const values = await repository.getChildren(["id=:id" + visible, { id }], {
+      select: ["id", "parentId", "visible", "date", "update", "type", "title"],
+      order: `treeEntity.type='PAGE',"treeEntity".priority`
+    });
     if (!values) return null;
-    //ID参照データの作成
-    const items = new Map<number, TreeContents>();
-    for (const value of values) {
-      items.set(value.id, value);
-    }
-    //親子関係ツリーの作成
-    for (const item of items.values()) {
-      const pid = item.pid;
-      if (pid && items.get(pid)) {
-        const parent = items.get(pid);
-        if (parent) {
-          if (!parent.childs) parent.childs = [];
-          parent.childs.push(item);
-        }
-      }
-    }
     //最上位データを返す
-    return items.get(id) || null;
+    return (values as unknown) as TreeContents;
   }
   /**
    *コンテンツの階層を移動する
@@ -662,17 +596,16 @@ export class Contents extends amf.Module {
     fromId: number,
     toId: number
   ): Promise<boolean | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
+    const repository = this.repository;
+    if (!repository) return null;
     //移動先が子だったら処理を行わない
     if (await this.isParent(toId, fromId)) return false;
 
     //親の組み替え
-    const flag = await remoteDB.run(
-      "update contents set contents_parent=$1,contents_priority=100000 where contents_id=$2",
-      toId,
-      fromId
-    );
+    const flag = !!(await repository.update(fromId, {
+      parentId: toId,
+      priority: 100000
+    }));
     this.updatePriority(toId);
     return flag;
   }
@@ -688,35 +621,33 @@ export class Contents extends amf.Module {
     pid: number | null,
     value: ConvertContents
   ): Promise<boolean | null> {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
+    const repository = this.repository;
+    if (!repository) return null;
     const fileModule = await this.getModule(Files);
     if (!fileModule) return null;
 
     //データの挿入
-    const cid = (await remoteDB.get2(
-      "insert into contents values(default,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING contents_id",
-      pid,
-      value["priority"],
-      value["stat"],
-      value["type"],
-      value["date"],
-      value["update"],
-      value["title_type"],
-      value["title"],
-      value["value"],
-      value["value_type"]
-    )) as number;
-    if (cid === null) return false;
+    if (pid) value.parent = { id: pid } as MainContents;
+
+    const v: any = value;
+    if (v.childs) v.children = v.childs;
+
+    (<{ id: unknown }>value).id = undefined;
+    await repository.save(value);
+
+    if (value.id === undefined) return false;
     //ファイルの復元処理
     const files = value.files;
     if (files && files.length) {
       const ids: { [key: number]: number } = {};
-      const path = this.getDirPath(cid);
+      const path = this.getDirPath(value.id);
       const dirId = await fileModule.createDir(1, path);
       if (dirId) {
         for (const file of files) {
-          if (!file) continue;
+          if (!file || !file.value) continue;
+          if (!(file.value instanceof Buffer)) {
+            file.value = Buffer.from(file.value, "base64");
+          }
           const id = (await fileModule.setFile(
             dirId,
             file.name,
@@ -734,18 +665,14 @@ export class Contents extends amf.Module {
             sprintf('src="?cmd=download&amp;id=%d"', destId)
           );
         }
-        await remoteDB.run(
-          "update contents set contents_value=$1 where contents_id=$2",
-          v,
-          cid
-        );
+        await repository.update(value.id, { value: v });
       }
     }
     //子データの挿入
-    const childs = value.childs;
-    if (childs) {
-      for (const child of childs) {
-        await this.importChild(cid, child);
+    const children = value.children;
+    if (children) {
+      for (const child of children) {
+        await this.importChild(value.id, child);
       }
     }
     return true;
@@ -765,9 +692,9 @@ export class Contents extends amf.Module {
     mode: number,
     src: string
   ): Promise<boolean | null> {
-    if (!id) return false;
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
+    if (!id) id = 1;
+    const repository = this.repository;
+    if (!repository) return null;
     const fileModule = await this.getModule(Files);
     if (!fileModule) return null;
 
@@ -776,34 +703,38 @@ export class Contents extends amf.Module {
     if (mode == 0) {
       if (id == 1) {
         //全データを削除
-        await remoteDB.run("begin");
-        await remoteDB.run(
-          "delete from contents;select setval ('contents_contents_id_seq', 1, false);"
-        );
-        //関連ファイルの削除
-        const fileId = await fileModule.getDirId(1, "/Contents");
-        if (fileId) await fileModule.deleteFile(fileId);
-        await fileModule.createDir(1, "Contents");
-        //インポート処理
+        // await remoteDB.run("begin");
+        await repository.metadata.connection.transaction(async () => {
+          await repository.clear();
+          await repository.query("select setval ($1, 1, false)", [
+            repository.metadata.tableName + "_id_seq"
+          ]);
+          //関連ファイルの削除
+          const fileId = await fileModule.getDirId(1, "/Contents");
+          if (fileId) await fileModule.deleteFile(fileId);
+          await fileModule.createDir(1, "Contents");
+          //インポート処理
 
-        await this.importChild(null, value);
-        await remoteDB.run("commit");
+          await this.importChild(null, value);
+        });
+
+        // await remoteDB.run("commit");
       } else {
         //上書き元のデータを取得
         const contents = await this.getContents(id, false, true);
         if (!contents) return null;
-        const pid = contents.pid;
+        const pid = contents.parent ? contents.parent.id : null;
         //上書き元のデータを削除
         this.deleteContents(id);
         value.priority = contents.priority;
-        await remoteDB.run("begin");
+        //await remoteDB.run("begin");
         await this.importChild(pid, value);
-        await remoteDB.run("commit");
+        //await remoteDB.run("commit");
       }
     } else {
-      await remoteDB.run("begin");
+      // await remoteDB.run("begin");
       await this.importChild(id, value);
-      await remoteDB.run("commit");
+      //await remoteDB.run("commit");
     }
     return true;
   }
@@ -816,33 +747,18 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async export(res: express.Response, id: number) {
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
+    const repository = this.repository;
+    if (!repository) return null;
     const fileModule = this.getSessionModule(Files);
-    const values = (await remoteDB.all(
-      "select contents_id as id,contents_parent as pid,contents_stat as stat,contents_priority as priority,contents_type as type,to_char(contents_date at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as date,to_char(contents_update at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as update,contents_title_type as title_type,contents_title as title,contents_value as value,contents_value_type as value_type from contents order by contents_type='PAGE',contents_priority"
-    )) as ConvertContents[];
+    const values = await repository.getChildren(["id=:id", { id }]);
     if (values === null) return null;
-    const items: { [key: number]: ConvertContents } = {};
-    for (const value of values) {
-      const id2 = value.id;
-      //ID参照用データの作成
-      items[id2] = value;
-    }
-    //親子関係の作成
-    for (const item of Object.values(items)) {
-      if (item.pid !== null) {
-        const parent = items[item.pid];
-        parent.childs ? parent.childs.push(item) : (parent.childs = [item]);
-      }
-    }
 
     const promise: Promise<unknown>[] = [];
     const fileLoad = async (contents: ConvertContents) => {
       const id = contents.id;
       //子データの取得開始
-      if (contents.childs) {
-        for (const child of contents.childs) {
+      if (contents.children) {
+        for (const child of contents.children) {
           promise.push(fileLoad(child));
         }
       }
@@ -855,14 +771,14 @@ export class Contents extends amf.Module {
           contents.files = [];
           for (const fileId of fileList) {
             await fileModule.getFile(fileId).then(fileData => {
-              if (fileData) contents.files.push(fileData);
+              if (fileData) contents.files!.push(fileData);
             });
           }
         }
       }
     };
     //必要なファイルデータの読み出し
-    promise.push(fileLoad(items[id]));
+    promise.push(fileLoad(values as ConvertContents));
     //読み出しが終わるまで待機
     await Promise.all(promise);
 
@@ -870,7 +786,7 @@ export class Contents extends amf.Module {
     this.setReturn(false);
     //res.contentType("text/json");
     res.header("Content-disposition", 'attachment; filename="export.json"');
-    res.json(items[id]);
+    res.json(values);
     res.end();
   }
 
@@ -883,14 +799,15 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async search(keyword: string, admin?: boolean) {
-    const visible = admin ? "" : "where contents_stat=1";
-    const remoteDB = this.remoteDB;
-    if (!remoteDB) return null;
-    const results = (await remoteDB.all(
-      "select contents_id as id,contents_title || ' ' ||contents_value as value from contents " +
-        visible +
-        " order by contents_date desc"
-    )) as { id: number; value: string }[] | null;
+    const visible = admin ? {} : { visible: true };
+    const repository = this.repository;
+    if (!repository) return null;
+    const results = (await repository
+      .createQueryBuilder()
+      .select("id,title || ' ' ||value as value")
+      .where(visible)
+      .orderBy({"date":"DESC"})
+      .getRawMany()) as { id: number; value: string }[] | null;
     if (!results) return null;
     const keywords = keyword
       .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
@@ -898,7 +815,6 @@ export class Contents extends amf.Module {
       })
       .toLowerCase()
       .split(/\s/);
-    console.log(keywords);
     if (keywords.length === 0) return null;
     const hits: number[] = [];
     for (const r of results) {
@@ -913,7 +829,6 @@ export class Contents extends amf.Module {
           return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
         })
         .toLowerCase();
-      console.log(msg);
       let flag = true;
       for (const key of keywords) {
         if (key.length === 0) continue;
@@ -1037,10 +952,10 @@ export class Contents extends amf.Module {
    * @returns {(Promise<MainContents | null>)}
    * @memberof Contents
    */
-  public async JS_getPage(id: number): Promise<MainContents | null> {
+  public async JS_getPage(id: number): Promise<MainContents | undefined> {
     const admin = this.isAdmin();
     const pid = await this.getParentPage(id);
-    if (pid === 0) return null;
+    if (pid === 0) return undefined;
     const contents = await this.getContents(pid, true, admin);
 
     // const images = this.getImages(contents, []);
@@ -1060,7 +975,7 @@ export class Contents extends amf.Module {
   public JS_getContents(
     id: number,
     child?: boolean
-  ): Promise<MainContents | null> {
+  ): Promise<MainContents | undefined> {
     const admin = this.isAdmin();
     return this.getContents(id, child, admin);
   }

@@ -3,12 +3,12 @@ import { AppModule, ModuleMap } from "../AppModule";
 export interface TreeContents {
   id: number;
   pid: number;
-  stat: boolean;
+  visible: boolean;
   date: Date;
   update: Date;
   type: string;
   title: string;
-  childs: TreeContents[];
+  children: TreeContents[];
   parent?: TreeContents;
   pageNew?: TreeContents;
 }
@@ -16,7 +16,7 @@ export interface MainContents {
   id: number;
   pid: number;
   priority?: number;
-  stat: number;
+  visible: boolean;
   type: string;
   date: Date;
   update?: Date;
@@ -24,7 +24,7 @@ export interface MainContents {
   title: string;
   value_type: string;
   value: string;
-  childs?: MainContents[];
+  children?: MainContents[];
 }
 export interface CustomMap extends ModuleMap {
   getTree: [TreeContents];
@@ -251,8 +251,8 @@ export class ContentsModule extends AppModule<CustomMap> {
         }
       }
     }
-    if (treeContents.childs) {
-      for (const child of treeContents.childs) {
+    if (treeContents.children) {
+      for (const child of treeContents.children) {
         child.parent = treeContents;
         this.convertTreeContents(child, page);
       }
