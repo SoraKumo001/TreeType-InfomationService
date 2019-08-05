@@ -1,11 +1,11 @@
 import * as amf from "active-module-framework";
 import { HtmlCreater } from "active-module-framework";
-import { Contents } from "./ContentsModule";
-import { Params } from "./ParamsModule";
+import { Contents, ContentsEntity } from "./ContentsModule";
+import { AppModule } from "./App/AppModule";
 
 export class SeoModule extends amf.Module {
   public async onCreateHtml(creater: HtmlCreater) {
-    const paramsModule = await this.getModule(Params);
+    const paramsModule = await this.getModule(AppModule);
     const contentsModule = await this.getModule(Contents);
     if (!paramsModule || !contentsModule) return;
     const document = creater.getDocument();
@@ -29,20 +29,21 @@ export class SeoModule extends amf.Module {
     let title = "";
 
     //パンくずリスト作成
-    if (!breads || breads.length === 0) {
+    if (!breads) {
       //コンテンツが無かったらエラーコードを設定
       creater.setStatus(404);
       return;
     }
     //パンくずリストからページのIDを取得
-    const pageId = breads[0].id;
+    const pageId = breads.id;
 
     let srcUrl;
     if (basicData && basicData["url"]) srcUrl = basicData["url"];
     else srcUrl = `${req.protocol}://${req.hostname}${req.url}`;
     const url = srcUrl.replace(/\?.*$/, "").replace(/\/$/, "");
     const list = [];
-    for (const item of breads) {
+    let item: ContentsEntity | undefined = breads;
+    while ((item = item.parent)) {
       const bradcrumb = {
         "@type": "ListItem",
         position: 1,
@@ -77,8 +78,8 @@ export class SeoModule extends amf.Module {
         info = this.convertText(contents.value);
       }
       //サブタイトルを設定
-      if (contents.childs) {
-        for (const child of contents.childs) {
+      if (contents.children) {
+        for (const child of contents.children) {
           info += child.title + " ";
         }
       }

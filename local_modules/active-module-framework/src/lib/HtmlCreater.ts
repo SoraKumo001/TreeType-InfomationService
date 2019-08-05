@@ -12,46 +12,135 @@ interface FileInfo {
   date: Date;
 }
 
-export class HtmlTemplate {
-  private jsdomSerial: string = "";
-
-  public async init(
+/**
+ *トップページ用HTML作成クラス
+ *
+ * @export
+ * @class HtmlCreater
+ */
+export class HtmlCreater {
+  private status:number = 200;
+  private jsdom?: JSDOM;
+  private links: string[] = [];
+  private baseUrl?: string;
+  private req?: express.Request;
+  /**
+   *DOM操作用インスタンスの取得
+   *
+   * @returns {JSDOM}
+   * @memberof HtmlCreater
+   */
+  public getDom(): JSDOM {
+    return this.jsdom as JSDOM;
+  }
+  /**
+   *documentインスタンスの取得
+   *
+   * @returns {Document}
+   * @memberof HtmlCreater
+   */
+  public getDocument(): Document {
+    return this.getDom().window.document;
+  }
+  /**
+   *Requestインスタンスの取得
+   *
+   * @returns {express.Request}
+   * @memberof HtmlCreater
+   */
+  public getRequest(): express.Request {
+    return this.req as express.Request;
+  }
+  /**
+   *HTMLデータの出力
+   *
+   * @param {express.Request} req
+   * @param {express.Response} res
+   * @param {string} baseUrl 基本URL
+   * @param {string} rootPath データ取得元URL
+   * @param {string} indexPath HTMLテンプレートデータのパス
+   * @param {string[]} cssPath 自動ロード用スタイルシートのパス
+   * @param {string[]} jsPath 自動ロード用JavaScriptのパス
+   * @param {string[]} priorityJs 優先JavaScriptの名前
+   * @param {Module[]} modules モジュールリスト
+   * @returns {Promise<boolean>}
+   * @memberof HtmlCreater
+   */
+  public async output(
+    req: express.Request,
+    res: express.Response,
+    baseUrl: string,
     rootPath: string,
     indexPath: string,
     cssPath: string[],
     jsPath: string[],
-    priorityJs: string[]
-  ) {
-    const jsdom = await this.openTemplate(indexPath);
-    if (!jsdom) return false;
+    priorityJs: string[],
+    modules: Module[]
+  ): Promise<boolean> {
+    if (!(await this.openTemplate(indexPath))) return false;
+    this.req = req;
+    this.baseUrl = baseUrl;
     const cssFiles = this.getFileInfo(rootPath, cssPath, ".css");
     const jsFiles = this.getFileInfo(rootPath, jsPath, ".js");
 
     //JSを優先順位に従って並び替え
-    jsFiles.sort(
-      (a, b): number => {
-        const v1 = priorityJs.indexOf(a.name);
-        const v2 = priorityJs.indexOf(b.name);
-        return v2 - v1;
-      }
-    );
+    jsFiles.sort((a, b): number => {
+      const v1 = priorityJs.indexOf(a.name);
+      const v2 = priorityJs.indexOf(b.name);
+      return v2 - v1;
+    });
     //必要なファイルを追加
-    this.addScript(jsdom, jsFiles);
-    this.addCSS(jsdom, cssFiles);
+    this.addScript(jsFiles);
+    this.addCSS(cssFiles);
 
-    this.jsdomSerial = jsdom.serialize();
+    this.addLink(jsFiles.map((v): string => v.dir + "/" + v.name), "script");
+    this.addLink(cssFiles.map((v): string => v.dir + "/" + v.name), "style");
+
+    for (const module of modules) {
+      if (module.onCreateHtml) {
+        await module.onCreateHtml(this);
+      }
+    }
+
+    res.writeHead(this.status, {
+      "Content-Type": "text/html; charset=UTF-8",
+      link: this.links
+    });
+    if (this.jsdom){
+      res.write("<!DOCTYPE html>\n");
+      res.end(this.jsdom.window.document.documentElement.outerHTML);
+    }else
+      res.end();
+    return true;
   }
-  public getHtml() {
-    return this.jsdomSerial;
+  /**
+   *ステータスの設定
+   *
+   * @param {number} status
+   * @memberof HtmlCreater
+   */
+  public setStatus(status:number){
+    this.status = status;
   }
-  private async openTemplate(indexPath: string): Promise<JSDOM | null> {
+
+  private async openTemplate(indexPath: string): Promise<boolean> {
     try {
-      return await JSDOM.fromFile(indexPath);
+      const jsdom = await JSDOM.fromFile(indexPath);
+      this.jsdom = jsdom;
+      return true;
     } catch (e) {
-      return null;
+      return false;
     }
   }
-  private addScript(jsdom: JSDOM, files: FileInfo[]): void {
+  public addLink(files: string[], style: string): void {
+    const links = this.links;
+    const baseUrl = this.baseUrl;
+    for (const file of files) {
+      links.push(`<${baseUrl}${file}>;rel=preload;as=${style};`);
+    }
+  }
+  private addScript(files: FileInfo[]): void {
+    const jsdom = this.jsdom;
     if (!jsdom) return;
     const document = jsdom.window.document;
     const head = document.head;
@@ -62,7 +151,8 @@ export class HtmlTemplate {
       head.appendChild(node);
     }
   }
-  private addCSS(jsdom: JSDOM, files: FileInfo[]): void {
+  private addCSS(files: FileInfo[]): void {
+    const jsdom = this.jsdom;
     if (!jsdom) return;
     const document = jsdom.window.document;
     const head = document.head;
@@ -110,122 +200,5 @@ export class HtmlTemplate {
         date.getSeconds()
       );
     }
-  }
-}
-
-/**
- *トップページ用HTML作成クラス
- *
- * @export
- * @class HtmlCreater
- */
-export class HtmlCreater {
-  private status: number = 200;
-  private links: string[] = [];
-  private jsdom?: JSDOM;
-  private req?: express.Request;
-  /**
-   *DOM操作用インスタンスの取得
-   *
-   * @returns {JSDOM}
-   * @memberof HtmlCreater
-   */
-  public getDom(): JSDOM {
-    return this.jsdom as JSDOM;
-  }
-  /**
-   *documentインスタンスの取得
-   *
-   * @returns {Document}
-   * @memberof HtmlCreater
-   */
-  public getDocument(): Document {
-    return this.getDom().window.document;
-  }
-  /**
-   *Requestインスタンスの取得
-   *
-   * @returns {express.Request}
-   * @memberof HtmlCreater
-   */
-  public getRequest(): express.Request {
-    return this.req as express.Request;
-  }
-
-  /**
-   *HTMLデータの出力
-   *
-   * @param {express.Request} req
-   * @param {express.Response} res
-   * @param {string} baseUrl 基本URL
-   * @param {string} rootPath データ取得元URL
-   * @param {string} indexPath HTMLテンプレートデータのパス
-   * @param {string[]} cssPath 自動ロード用スタイルシートのパス
-   * @param {string[]} jsPath 自動ロード用JavaScriptのパス
-   * @param {string[]} priorityJs 優先JavaScriptの名前
-   * @param {Module[]} modules モジュールリスト
-   * @returns {Promise<boolean>}
-   * @memberof HtmlCreater
-   */
-  public async output(
-    req: express.Request,
-    res: express.Response,
-    baseUrl: string,
-    modules: Module[],
-    html: string
-  ): Promise<boolean> {
-    const jsdom = new JSDOM(html);
-    this.jsdom = jsdom;
-    this.req = req;
-
-    for (const module of modules) {
-      if (module.onCreateHtml) {
-        await module.onCreateHtml(this);
-      }
-    }
-
-    const scripts = jsdom.window.document.head.querySelectorAll("script");
-    for (const file of scripts) {
-      const src = file.src;
-      if (!src) continue;
-      if (src.indexOf(":") === -1 && src[0] !== "/")
-        this.addLink(baseUrl, src, "script");
-      else this.addLink("", src, "script");
-    }
-    const css = jsdom.window.document.head.querySelectorAll(
-      "link[rel=stylesheet]"
-    ) as NodeListOf<HTMLLinkElement>;
-    for (const file of css) {
-      const src = file.href;
-      if (!src) continue;
-      if (src.indexOf(":") === -1 && src[0] !== "/")
-        this.addLink(baseUrl, src, "style");
-      else this.addLink("", src, "style");
-    }
-
-    res.writeHead(this.status, {
-      "Content-Type": "text/html; charset=UTF-8",
-      link: this.links
-    });
-    if (this.jsdom) {
-      res.write("<!DOCTYPE html>\n");
-      res.end(this.jsdom.window.document.documentElement.outerHTML);
-    } else res.end();
-    res.end();
-    this.jsdom = undefined;
-    return true;
-  }
-  /**
-   *ステータスの設定
-   *
-   * @param {number} status
-   * @memberof HtmlCreater
-   */
-  public setStatus(status: number) {
-    this.status = status;
-  }
-
-  public addLink(baseUrl: string, file: string, style: string): void {
-    this.links.push(`<${baseUrl}${file}>;rel=preload;as=${style};`);
   }
 }

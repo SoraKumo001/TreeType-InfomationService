@@ -103,7 +103,7 @@ export class UserListView extends SettingView {
       );
     });
 
-    this.userModule.addEventListener("user_update", () => {
+    this.userModule.addEventListener("updateUser", () => {
       this.getUsers();
     });
 

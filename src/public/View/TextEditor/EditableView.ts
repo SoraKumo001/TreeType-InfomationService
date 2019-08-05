@@ -232,7 +232,6 @@ export class EditableView extends JWF.BaseView<CustomEvent> {
       event: value => {
         select.removeAllRanges();
         select.addRange(range);
-        console.log(value);
         document.execCommand("createLink", undefined, value);
         if (select.anchorNode && select.anchorNode.parentElement) {
           const parent = select.anchorNode.parentElement as HTMLAnchorElement;

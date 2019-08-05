@@ -132,7 +132,7 @@ export class ContentsEditWindow extends TextEditWindow {
       }
     });
     PanelControl.createControl(target, {
-      name: "stat",
+      name: "visible",
       type: "check",
       label: "表示"
     });
@@ -269,7 +269,7 @@ export class ContentsEditWindow extends TextEditWindow {
     if (contents) {
       const client = this.getClient();
       this.contents = contents;
-      PanelControl.setControlValue(client, "stat", contents.stat);
+      PanelControl.setControlValue(client, "visible", contents.visible);
       PanelControl.setControlValue(client, "type", contents.type);
       PanelControl.setControlValue(client, "title", contents.title);
       PanelControl.setControlValue(client, "title_type", contents.title_type);
@@ -298,7 +298,7 @@ export class ContentsEditWindow extends TextEditWindow {
     const newContents: MainContents = {
       id: contents.id,
       pid: contents.pid,
-      stat: PanelControl.getControlValue(client, "stat") ? 1 : 0,
+      visible: PanelControl.getControlValue(client, "visible")===true,
       type: (PanelControl.getControlValue(client, "type") as string) || "",
       title: (PanelControl.getControlValue(client, "title") as string) || "",
       title_type: parseInt(

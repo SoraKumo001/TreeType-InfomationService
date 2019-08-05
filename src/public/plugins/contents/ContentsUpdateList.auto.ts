@@ -18,7 +18,7 @@ function getContentsList(
   list?: (typeof treeContents)[]
 ) {
   if (!list) list = [];
-  const childs = treeContents.childs;
+  const childs = treeContents.children;
   if (childs) {
     for (const child of childs) {
       getContentsList(child, list);
