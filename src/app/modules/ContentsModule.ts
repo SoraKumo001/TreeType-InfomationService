@@ -1,7 +1,7 @@
 import * as amf from "active-module-framework";
 import { Users } from "./User/UsersModule";
 import { RemoteDB } from "./RemoteDBModule";
-import { Files, FileData, FileEntity } from "./FilesModule";
+import { Files,  FileEntity } from "./FilesModule";
 import { sprintf } from "sprintf";
 import * as express from "express";
 import * as typeorm from "typeorm";
@@ -20,7 +20,7 @@ interface TreeContents {
 
 @typeorm.Entity()
 @typeorm.Tree("nested-set")
-export class MainContents {
+export class ContentsEntity {
   @typeorm.PrimaryGeneratedColumn()
   id!: number;
 
@@ -48,11 +48,11 @@ export class MainContents {
   parentId!: number;
 
   @typeorm.TreeChildren()
-  children!: MainContents[];
+  children!: ContentsEntity[];
   @typeorm.TreeParent()
-  parent?: MainContents;
+  parent?: ContentsEntity;
 }
-export interface ConvertContents extends MainContents {
+export interface ConvertContents extends ContentsEntity {
   files?: FileEntity[];
   children: ConvertContents[];
 }
@@ -67,7 +67,7 @@ export interface ConvertContents extends MainContents {
 
 export class Contents extends amf.Module {
   private remoteDB?: RemoteDB;
-  private repository?: ExtendRepository<MainContents>;
+  private repository?: ExtendRepository<ContentsEntity>;
   /**
    *モジュール作成時の初期化処理
    *
@@ -77,7 +77,7 @@ export class Contents extends amf.Module {
   public async onCreateModule(): Promise<boolean> {
     //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
-    remoteDB.addEntity(MainContents);
+    remoteDB.addEntity(ContentsEntity);
 
     const files = await this.getModule(Files);
     remoteDB.addEventListener(
@@ -85,7 +85,7 @@ export class Contents extends amf.Module {
       async (connection): Promise<void> => {
         if (files) files.createDir(1, "Contents");
 
-        const repository = new ExtendRepository(connection, MainContents);
+        const repository = new ExtendRepository(connection, ContentsEntity);
         this.repository = repository;
         if (!(await repository.findOne(1)))
           await repository.insert({ title: "TOP" });
@@ -105,7 +105,7 @@ export class Contents extends amf.Module {
   public async getParentPage(id: number): Promise<number> {
     if (!this.repository) return 0;
     //PAGEタイプを持つ親を探す
-    let contents = await this.repository.getParent({ id } as MainContents, {
+    let contents = await this.repository.getParent({ id } as ContentsEntity, {
       select: ["id", "type"]
     });
     let parent: (typeof contents) | undefined = contents;
@@ -149,12 +149,12 @@ export class Contents extends amf.Module {
    *ページ内の最新更新時間を返す
    *
    * @private
-   * @param {MainContents} value
+   * @param {ContentsEntity} value
    * @param {Date} [date]
    * @returns {Date}
    * @memberof Contents
    */
-  private getMaxDate(value: MainContents, date?: Date): Date {
+  private getMaxDate(value: ContentsEntity, date?: Date): Date {
     if (
       !date ||
       (value.type !== "PAGE" && value.date.getTime() > date.getTime())
@@ -172,10 +172,10 @@ export class Contents extends amf.Module {
   /**
    *ページを構成するのにに必要なデータを返す
    *
-   * @returns {(Promise<MainContents[] | null>)}
+   * @returns {(Promise<ContentsEntity[] | null>)}
    * @memberof Contents
    */
-  public async getPage(): Promise<MainContents[] | null> {
+  public async getPage(): Promise<ContentsEntity[] | null> {
     if (!this.repository) return null;
 
     //ページを構成するのにに必要なデータを抽出
@@ -183,16 +183,16 @@ export class Contents extends amf.Module {
     if (!values) return null;
 
     //ページの抽出
-    const pages: MainContents[] = [];
-    const getPage = (contents: MainContents) => {
+    const pages: ContentsEntity[] = [];
+    const getPage = (contents: ContentsEntity) => {
       if (contents.type === "PAGE") pages.push(contents);
       contents.children.forEach(getPage);
     };
     values.forEach(getPage);
     //ページの更新日時を設定
     const getUpdate = function(
-      this: MainContents | void,
-      contents: MainContents
+      this: ContentsEntity | void,
+      contents: ContentsEntity
     ) {
       const that = this || contents;
       if (contents.date.getTime() > that.date.getTime())
@@ -204,7 +204,7 @@ export class Contents extends amf.Module {
     //階層タイトルの設定
     pages.forEach(page => {
       let title = "";
-      let parent: MainContents | undefined = page;
+      let parent: ContentsEntity | undefined = page;
       do {
         title += " ～ " + parent.title;
       } while ((parent = parent.parent));
@@ -225,7 +225,7 @@ export class Contents extends amf.Module {
    * @returns {(Promise<{ id: number; title: string }[] | null>)}
    * @memberof Contents
    */
-  public async getBreadcrumb(id: number): Promise<MainContents | null> {
+  public async getBreadcrumb(id: number): Promise<ContentsEntity | null> {
     const repository = this.repository;
     if (!repository) return null;
 
@@ -248,10 +248,10 @@ export class Contents extends amf.Module {
    *全ページデータを返す
    *
    * @param {boolean} admin
-   * @returns {(Promise<MainContents[] | null>)}
+   * @returns {(Promise<ContentsEntity[] | null>)}
    * @memberof Contents
    */
-  public async getPages(admin: boolean): Promise<MainContents[] | null> {
+  public async getPages(admin: boolean): Promise<ContentsEntity[] | null> {
     const repository = this.repository;
     if (!repository) return null;
     let param = {};
@@ -265,14 +265,14 @@ export class Contents extends amf.Module {
    * @param {number} id
    * @param {boolean} [child]
    * @param {boolean} [admin]
-   * @returns {(Promise<MainContents | null>)}
+   * @returns {(Promise<ContentsEntity | null>)}
    * @memberof Contents
    */
   public async getContents(
     id: number,
     child?: boolean,
     admin?: boolean
-  ): Promise<MainContents | undefined> {
+  ): Promise<ContentsEntity | undefined> {
     const repository = this.repository;
     if (!repository) return undefined;
 
@@ -283,7 +283,7 @@ export class Contents extends amf.Module {
     if (!entity) return;
 
     where.type = "ITEM";
-    const getChildren = async (parent: MainContents) => {
+    const getChildren = async (parent: ContentsEntity) => {
       where.parentId = parent.id;
       const children = await repository.find({ where, order: { priority: 1 } });
       if (children) {
@@ -346,7 +346,7 @@ export class Contents extends amf.Module {
       select: ["id", "type"]
     });
     if (!result) return null;
-    let parent: MainContents | undefined = result;
+    let parent: ContentsEntity | undefined = result;
     do {
       if (parent.type !== "PAGE") break;
       count++;
@@ -498,11 +498,11 @@ export class Contents extends amf.Module {
   /**
    *コンテンツを更新する
    *
-   * @param {MainContents} contents
+   * @param {ContentsEntity} contents
    * @returns {(Promise<boolean | null>)}
    * @memberof Contents
    */
-  public async updateContents(contents: MainContents): Promise<boolean | null> {
+  public async updateContents(contents: ContentsEntity): Promise<boolean | null> {
     const repository = this.repository;
     if (!repository) return null;
 
@@ -627,10 +627,12 @@ export class Contents extends amf.Module {
     if (!fileModule) return null;
 
     //データの挿入
-    if (pid) value.parent = { id: pid } as MainContents;
+    if (pid) value.parent = { id: pid } as ContentsEntity;
 
     const v: any = value;
     if (v.childs) v.children = v.childs;
+    if(v.stat)
+      v.visible = v.stat === 1;
 
     (<{ id: unknown }>value).id = undefined;
     await repository.save(value);
@@ -949,10 +951,10 @@ export class Contents extends amf.Module {
    *一ページ分のコンテンツデータを返す
    *
    * @param {number} id
-   * @returns {(Promise<MainContents | null>)}
+   * @returns {(Promise<ContentsEntity | null>)}
    * @memberof Contents
    */
-  public async JS_getPage(id: number): Promise<MainContents | undefined> {
+  public async JS_getPage(id: number): Promise<ContentsEntity | undefined> {
     const admin = this.isAdmin();
     const pid = await this.getParentPage(id);
     if (pid === 0) return undefined;
@@ -969,13 +971,13 @@ export class Contents extends amf.Module {
    *
    * @param {number} id
    * @param {boolean} [child]
-   * @returns {(Promise<MainContents | null>)}
+   * @returns {(Promise<ContentsEntity | null>)}
    * @memberof Contents
    */
   public JS_getContents(
     id: number,
     child?: boolean
-  ): Promise<MainContents | undefined> {
+  ): Promise<ContentsEntity | undefined> {
     const admin = this.isAdmin();
     return this.getContents(id, child, admin);
   }
@@ -995,11 +997,11 @@ export class Contents extends amf.Module {
   /**
    *コンテンツの更新
    *
-   * @param {MainContents} contents
+   * @param {ContentsEntity} contents
    * @returns
    * @memberof Contents
    */
-  public async JS_updateContents(contents: MainContents) {
+  public async JS_updateContents(contents: ContentsEntity) {
     const users = await this.getSessionModule(Users);
     if (!users || !users.isAdmin()) return null;
     return this.updateContents(contents);

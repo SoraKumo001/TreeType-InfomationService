@@ -1,6 +1,6 @@
 import * as amf from "active-module-framework";
 import { HtmlCreater } from "active-module-framework";
-import { Contents, MainContents } from "./ContentsModule";
+import { Contents, ContentsEntity } from "./ContentsModule";
 import { AppModule } from "./App/AppModule";
 
 export class SeoModule extends amf.Module {
@@ -42,7 +42,7 @@ export class SeoModule extends amf.Module {
     else srcUrl = `${req.protocol}://${req.hostname}${req.url}`;
     const url = srcUrl.replace(/\?.*$/, "").replace(/\/$/, "");
     const list = [];
-    let item:MainContents|undefined = breads
+    let item:ContentsEntity|undefined = breads
     while (item = item.parent) {
       const bradcrumb = {
         "@type": "ListItem",
