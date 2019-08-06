@@ -13,6 +13,6 @@ new amf.Manager({
   jsPriority: [], //優先JSファイル設定
   cluster:-1, //クラスター使用時のプロセス数(-1:使用しない 0:CPU数 1～:指定した数)
   debug: false, //デバッグ用メッセージ出力
-  listen: 8080 //受付ポート/UNIXドメインソケット
-  //listen:'dist/sock/app.sock'
+  //listen: 8080 //受付ポート/UNIXドメインソケット
+  listen:'dist/sock/app.sock'
 });
