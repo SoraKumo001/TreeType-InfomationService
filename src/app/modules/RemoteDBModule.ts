@@ -96,7 +96,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
       password, // DBパスワード
       database, // DB名
       synchronize: true,
-      logging: true,
+      logging: false,
       entities: [...this.entities]
     });
     if (this.connection) this.callEvent("connect", this.connection);

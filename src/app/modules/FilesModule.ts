@@ -7,6 +7,7 @@ import * as typeorm from "typeorm";
 import { ExtendRepository } from "./ExtendRepository";
 @typeorm.Entity()
 @typeorm.Index(["parent", "name"], { unique: true })
+@typeorm.Tree("materialized-path")
 export class FileEntity {
   @typeorm.PrimaryGeneratedColumn()
   id!: number;
@@ -26,6 +27,7 @@ export class FileEntity {
   parent?: FileEntity;
   @typeorm.TreeChildren()
   children?: FileEntity[];
+
   size!: number;
 }
 export interface FileData {
@@ -62,7 +64,7 @@ export class Files extends amf.Module {
         );
         this.repository = repository;
         if (!(await repository.findOne(1)))
-          await repository.insert({ kind: 0, name: "[ROOT]" });
+          await repository.save({ kind: 0, name: "[ROOT]" });
       }
     );
     remoteDB.addEventListener("disconnect", () => {
@@ -239,7 +241,7 @@ export class Files extends amf.Module {
     await repository.query("select setval ($1, 1, false)", [
       repository.metadata.tableName + "_id_seq"
     ]);
-    await repository.insert({ kind: 0, name: "[ROOT]" });
+    await repository.save({ kind: 0, name: "[ROOT]" });
   }
   public async getDirId(parentId: number, path: string) {
     const repository = this.repository;
