@@ -19,7 +19,7 @@ interface TreeContents {
 }
 
 @typeorm.Entity()
-@typeorm.Tree("nested-set")
+@typeorm.Tree("materialized-path")
 export class ContentsEntity {
   @typeorm.PrimaryGeneratedColumn()
   id!: number;
@@ -88,7 +88,7 @@ export class Contents extends amf.Module {
         const repository = new ExtendRepository(connection, ContentsEntity);
         this.repository = repository;
         if (!(await repository.findOne(1)))
-          await repository.insert({ title: "TOP" });
+          await repository.save({ title: "TOP" });
       }
     );
     this.remoteDB = remoteDB;
@@ -108,6 +108,8 @@ export class Contents extends amf.Module {
     let contents = await this.repository.getParent({ id } as ContentsEntity, {
       select: ["id", "type"]
     });
+    if(!contents)
+      return 0;
     let parent: (typeof contents) | undefined = contents;
     do {
       if (parent.type === "PAGE") return parent.id;
@@ -222,12 +224,12 @@ export class Contents extends amf.Module {
    *パンくずリスト用データを返す
    *
    * @param {number} id
-   * @returns {(Promise<{ id: number; title: string }[] | null>)}
+   * @returns {(Promise<{ id: number; title: string }[] | undefined>)}
    * @memberof Contents
    */
-  public async getBreadcrumb(id: number): Promise<ContentsEntity | null> {
+  public async getBreadcrumb(id: number): Promise<ContentsEntity | undefined> {
     const repository = this.repository;
-    if (!repository) return null;
+    if (!repository) return undefined;
 
     const bread = await repository.getParent(["id=:id", { id }], {
       select: ["id", "title"]

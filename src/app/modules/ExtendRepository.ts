@@ -6,7 +6,6 @@ import {
   EntityRepository,
   ObjectLiteral,
   SelectQueryBuilder,
-  FindConditions
 } from "typeorm";
 import * as typeorm from "typeorm";
 import { AbstractSqliteDriver } from "typeorm/driver/sqlite-abstract/AbstractSqliteDriver";
@@ -65,7 +64,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
       parameters?: ObjectLiteral | undefined;
       order?: string | [string, "ASC" | "DESC", "NULLS FIRST" | "NULLS LAST"];
     }
-  ): Promise<Entity> {
+  ): Promise<Entity | undefined> {
     let builder: SelectQueryBuilder<Entity>;
 
     builder = this.createAncestorsQueryBuilder(
@@ -94,6 +93,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
     }
 
     const entitiesAndScalars = await builder.getRawAndEntities();
+    if (entitiesAndScalars.raw.length === 0) return undefined;
     const relationMaps = this.createRelationMaps(
       "treeEntity",
       entitiesAndScalars.raw
@@ -133,7 +133,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
       parameters?: ObjectLiteral | undefined;
       order?: string | [string, "ASC" | "DESC", "NULLS FIRST" | "NULLS LAST"];
     }
-  ): Promise<Entity> {
+  ): Promise<Entity | undefined> {
     let builder: SelectQueryBuilder<Entity>;
 
     builder = this.createDescendantsQueryBuilder(
@@ -162,6 +162,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
     }
 
     const entitiesAndScalars = await builder.getRawAndEntities();
+    if (entitiesAndScalars.raw.length === 0) return undefined;
     const relationMaps = this.createRelationMaps(
       "treeEntity",
       entitiesAndScalars.raw
