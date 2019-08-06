@@ -113,7 +113,7 @@ export class Contents extends amf.Module {
     let parent: (typeof contents) | undefined = contents;
     do {
       if (parent.type === "PAGE") return parent.id;
-    } while ((parent = contents.parent));
+    } while ((parent = parent.parent));
     return 0;
   }
   /**
