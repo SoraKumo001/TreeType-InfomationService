@@ -4,7 +4,7 @@ module.exports = {
       name: "ttis",
       script: "./dist/app/index.js",
       watch: ["./dist/app"],
-      instances: 2,
+      instances: 1,
       exec_mode: "cluster_mode",
       log_date_format: "YYYY-MM-DD HH:mm Z",
       merge_logs: true,
