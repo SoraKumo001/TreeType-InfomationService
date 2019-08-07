@@ -54,6 +54,10 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
   }
   public async onCreateModule() {
     this.getLocalDB().addEntity(DatabaseConfigEntity);
+    this.getManager().addEventListener("message",(e)=>{
+      if(e === "connect")
+        this.connect();
+    })
     return true;
   }
   public async onCreatedModule() {
@@ -142,6 +146,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
     if (!this.localRepository) return null;
     await this.localRepository.clear();
     await this.localRepository.save(config);
+    this.getManager().sendMessage("connect");
     return this.connect();
   }
 
