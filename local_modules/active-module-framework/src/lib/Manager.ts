@@ -71,6 +71,14 @@ export function Sleep(timeout: number): Promise<void> {
     }
   );
 }
+
+
+
+
+interface ManagerMap {
+  "message":[unknown]
+}
+
 /**
  *フレームワーク総合管理用クラス
  *
@@ -78,6 +86,10 @@ export function Sleep(timeout: number): Promise<void> {
  * @class Manager
  */
 export class Manager {
+  private listeners: {
+    [key: string]: unknown[];
+  } = {};
+
   private debug?: boolean;
   private localDB: LocalDB = new LocalDB();
   private stderr: string = "";
@@ -97,6 +109,66 @@ export class Manager {
     this.init(params);
   }
 
+  /**
+   *モジュール対応イベントの追加
+   *
+   * @template K
+   * @param {(K & string)} name
+   * @param {(...params: T[K]) => void} proc
+   * @returns {void}
+   * @memberof Module
+   */
+  public addEventListener(
+    name: keyof ManagerMap,
+    proc: (...params: ManagerMap[keyof ManagerMap]) => void
+  ): void {
+    const listener = this.listeners[name];
+    if (!listener) {
+      this.listeners[name as string] = [proc];
+      return;
+    }
+    if (listener.indexOf(proc) >= 0) return;
+    listener.push(proc);
+  }
+
+  /**
+   *モジュール対応イベントの削除
+   *
+   * @template K
+   * @param {(K & string)} name
+   * @param {(...params: T[K]) => void} proc
+   * @returns {void}
+   * @memberof Module
+   */
+  public removeEventListener(
+    name: keyof ManagerMap,
+    proc: (...params: ManagerMap[keyof ManagerMap]) => void
+  ): void {
+    const listener = this.listeners[name];
+    if (!listener) {
+      this.listeners[name as string] = [proc];
+      return;
+    }
+    const index = listener.indexOf(proc);
+    if (index < 0) return;
+    listener.splice(index, 1);
+  }
+  /**
+   *イベントを呼び出す
+   *
+   * @template K
+   * @param {(K & string)} name
+   * @param {...T[K]} params
+   * @memberof Module
+   */
+  public callEvent(name: keyof ManagerMap, ...params: ManagerMap[keyof ManagerMap]): void {
+    const listener = this.listeners[name];
+    if (listener) {
+      for (const proc of listener) {
+        (proc as ((...params: ManagerMap[keyof ManagerMap]) => unknown))(...params);
+      }
+    }
+  }
   /**
    *モジュールのコンストラクター一覧を返す
    *
@@ -121,7 +193,10 @@ export class Manager {
   public output(msg: string, ...params: unknown[]): void {
     if (this.debug) {
       // eslint-disable-next-line no-console
-      console.log(msg, ...params);
+      console.log(
+        (process.env.NODE_APP_INSTANCE || "0") + ":" + msg,
+        ...params
+      );
     }
   }
 
@@ -151,14 +226,30 @@ export class Manager {
         if (code !== -10) cluster.fork();
       });
 
+      //メッセージのルーティング
+      cluster.on("message", (worker, value) => {
+        if (value.type === "process:msg") {
+          for (const worker2 of Object.values(cluster.workers)) {
+            if (worker2 && worker.process.pid !== worker2.process.pid) {
+              worker2.send(value.data);
+            }
+          }
+        }
+      });
+
       //子プロセスを作成
       const numCPUs = params.cluster === 0 ? os.cpus().length : params.cluster;
       for (var i = 0; i < numCPUs; i++) {
         cluster.fork();
       }
     } else {
-      this.output("子プロセス起動");
       this.debug = params.debug;
+
+      process.on("message", e => {
+        this.callEvent("message",e);
+      });
+
+      this.output("子プロセス起動");
       this.output("--- Start Manager");
       //エラーメッセージをキャプチャ
       capcon.startCapture(
@@ -190,7 +281,7 @@ export class Manager {
       }
 
       //Expressの初期化
-      this.initExpress(params);
+      await this.initExpress(params);
       Manager.initFlag = true;
 
       if (params.test) {
@@ -202,7 +293,21 @@ export class Manager {
     }
     return true;
   }
-
+  public sendMessage(value:unknown){
+    return new Promise((resolve,reject)=>{
+      if (process.send) {
+        process.send({
+          type: "process:msg",
+          data: value
+        },undefined,undefined,(error)=>{
+          if(error)
+            reject(error);
+          else
+            resolve();
+        });
+      }
+    });
+  }
   /**
    *ディレクトリからモジュールを読み込む
    *
@@ -309,127 +414,131 @@ export class Manager {
    * @param {string} path				ドキュメントのパス
    * @memberof Manager
    */
-  private initExpress(params: ManagerParams): void {
-    const exp = express();
-    const commands = this.commands;
-    commands.exec = (req: express.Request, res: express.Response): void => {
-      this.exec(req, res);
-    };
-    commands.upload = (req: express.Request, res: express.Response): void => {
-      this.upload(req, res);
-    };
+  private initExpress(params: ManagerParams): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      const exp = express();
+      const commands = this.commands;
+      commands.exec = (req: express.Request, res: express.Response): void => {
+        this.exec(req, res);
+      };
+      commands.upload = (req: express.Request, res: express.Response): void => {
+        this.upload(req, res);
+      };
 
-    exp.options("*", function(req, res) {
-      res.header("Access-Control-Allow-Headers", "content-type");
-      res.sendStatus(200);
-      res.end();
-    });
-    //バイナリファイルの扱い設定
-    exp.use(
-      bodyParser.raw({ type: "application/octet-stream", limit: "300mb" })
-    );
-    exp.use(bodyParser.json({ type: "application/json", limit: "3mb" }));
-    //クライアント接続時の処理
-    exp.all(
-      params.remotePath,
-      async (
-        req: express.Request,
-        res: express.Response,
-        next
-      ): Promise<void> => {
-        //初期化が完了しているかどうか
-        if (!Manager.initFlag) {
-          res.header("Content-Type", "text/plain; charset=utf-8");
-          res.end(this.stderr);
-          return;
-        }
-        //コマンドパラメータの解析
-        const cmd = req.query.cmd as string;
-        if (cmd != null) {
-          const command = commands[cmd];
-          if (command != null) {
-            command(req, res);
-          } else {
-            res.json({ error: "リクエストエラー" });
-            res.end();
+      exp.options("*", function(req, res) {
+        res.header("Access-Control-Allow-Headers", "content-type");
+        res.sendStatus(200);
+        res.end();
+      });
+      //バイナリファイルの扱い設定
+      exp.use(
+        bodyParser.raw({ type: "application/octet-stream", limit: "300mb" })
+      );
+      exp.use(bodyParser.json({ type: "application/json", limit: "3mb" }));
+      //クライアント接続時の処理
+      exp.all(
+        params.remotePath,
+        async (
+          req: express.Request,
+          res: express.Response,
+          next
+        ): Promise<void> => {
+          //初期化が完了しているかどうか
+          if (!Manager.initFlag) {
+            res.header("Content-Type", "text/plain; charset=utf-8");
+            res.end(this.stderr);
+            return;
           }
-        } else {
-          const path =
-            (req.header("location_path") || `https://${req.hostname}`) +
-            params.remotePath;
-          this.output(path);
-          const htmlNode = new HtmlCreater();
-          if (
-            !htmlNode.output(
-              req,
-              res,
-              path,
-              params.rootPath,
-              params.indexPath,
-              params.cssPath,
-              params.jsPath,
-              params.jsPriority,
-              Object.values(this.modulesInstance)
+          //コマンドパラメータの解析
+          const cmd = req.query.cmd as string;
+          if (cmd != null) {
+            const command = commands[cmd];
+            if (command != null) {
+              command(req, res);
+            } else {
+              res.json({ error: "リクエストエラー" });
+              res.end();
+            }
+          } else {
+            const path =
+              (req.header("location_path") || `https://${req.hostname}`) +
+              params.remotePath;
+            this.output(path);
+            const htmlNode = new HtmlCreater();
+            if (
+              !htmlNode.output(
+                req,
+                res,
+                path,
+                params.rootPath,
+                params.indexPath,
+                params.cssPath,
+                params.jsPath,
+                params.jsPriority,
+                Object.values(this.modulesInstance)
+              )
             )
-          )
-            next();
-        }
-      }
-    );
-    //一般コンテンツの対応付け
-    exp.use(params.remotePath, express.static(params.rootPath));
-
-    //待ち受けポートの設定
-    let port = 0;
-    let path = "";
-    if (typeof params.listen === "number") {
-      port = params.listen; // + parseInt(process.env.NODE_APP_INSTANCE || "0");
-    } else {
-      path = params.listen; // + "." + (process.env.NODE_APP_INSTANCE || "0");
-    }
-
-    //終了時の処理(Windowsでは動作しない)
-    const onExit: NodeJS.SignalsListener = async (): Promise<void> => {
-      await this.destory();
-      if (path) this.removeSock(path); //ソケットファイルの削除
-      process.exit(0);
-    };
-    process.on("SIGINT", onExit);
-    process.on("SIGTERM", onExit);
-
-    if (port) {
-      //ソケットの待ち受け設定
-      exp.listen(
-        port,
-        (): void => {
-          this.output("localhost:%d", port);
-          if (params.listened) params.listened(port);
+              next();
+          }
         }
       );
-    } else {
-      const listen = (flag: boolean) => {
+      //一般コンテンツの対応付け
+      exp.use(params.remotePath, express.static(params.rootPath));
+
+      //待ち受けポートの設定
+      let port = 0;
+      let path = "";
+      if (typeof params.listen === "number") {
+        port = params.listen; // + parseInt(process.env.NODE_APP_INSTANCE || "0");
+      } else {
+        path = params.listen; // + "." + (process.env.NODE_APP_INSTANCE || "0");
+      }
+
+      //終了時の処理(Windowsでは動作しない)
+      const onExit: NodeJS.SignalsListener = async (): Promise<void> => {
+        await this.destory();
+        if (path) this.removeSock(path); //ソケットファイルの削除
+        process.exit(0);
+      };
+      process.on("SIGINT", onExit);
+      process.on("SIGTERM", onExit);
+
+      if (port) {
         //ソケットの待ち受け設定
         exp.listen(
-          path,
+          port,
           (): void => {
-            this.output(path);
-            try {
-              fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
-              if (params.listened) params.listened(path);
-            } catch (e) {
-              //初回かどうか識別
-              if (flag) {
-                //ソケットファイルの削除
-                this.removeSock(path);
-                //リトライ
-                listen(false);
+            this.output("http://localhost:%d", port);
+            if (params.listened) params.listened(port);
+            resolve(true);
+          }
+        );
+      } else {
+        const listen = (flag: boolean) => {
+          //ソケットの待ち受け設定
+          exp.listen(
+            path,
+            (): void => {
+              this.output(path);
+              try {
+                fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
+                if (params.listened) params.listened(path);
+                resolve(true);
+              } catch (e) {
+                //初回かどうか識別
+                if (flag) {
+                  //ソケットファイルの削除
+                  this.removeSock(path);
+                  //リトライ
+                  listen(false);
+                }
               }
             }
-          }
-        ); //ソケットの待ち受け設定
-      };
-      listen(true);
-    }
+          ); //ソケットの待ち受け設定
+        };
+        listen(true);
+      }
+    });
   }
 
   /**
@@ -572,9 +681,9 @@ export class Manager {
         const className = name[0];
         //クラスインスタンスを取得
         let classPt = null;
-        try{
-        classPt = await session.getModule(className);
-        }catch{
+        try {
+          classPt = await session.getModule(className);
+        } catch {
           result.error = util.format("クラスが存在しない: %s", func.function);
           continue;
         }

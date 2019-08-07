@@ -113,7 +113,7 @@ export class Contents extends amf.Module {
     let parent: (typeof contents) | undefined = contents;
     do {
       if (parent.type === "PAGE") return parent.id;
-    } while ((parent = contents.parent));
+    } while ((parent = parent.parent));
     return 0;
   }
   /**
@@ -631,7 +631,7 @@ export class Contents extends amf.Module {
     const fileModule = await this.getModule(Files);
     if (!fileModule) return null;
 
-    const entity = Object.assign({},value,{parent:{id:pid}});
+    const entity = Object.assign({},value);
 
     //データの挿入
     const v: any = value;
@@ -639,6 +639,10 @@ export class Contents extends amf.Module {
     if (v.stat) v.visible = v.stat === 1;
 
     (<{ id: unknown }>entity).id = undefined;
+    (<{ parentId: unknown }>entity).parentId = undefined;
+    if(pid)
+      (<{ parent:{id:number}}>entity).parent = {id:pid};
+
     await repository.save(entity);
     const id = entity.id;
 
