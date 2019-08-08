@@ -5,7 +5,7 @@ import {
   getManager,
   EntityRepository,
   ObjectLiteral,
-  SelectQueryBuilder,
+  SelectQueryBuilder
 } from "typeorm";
 import * as typeorm from "typeorm";
 import { AbstractSqliteDriver } from "typeorm/driver/sqlite-abstract/AbstractSqliteDriver";
@@ -123,9 +123,13 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
    * @memberof ExtendRepository
    */
   async getChildren(
-    entity: Entity | [string, { [key: string]: string | number | boolean }],
+    entity:
+      | Entity
+      | [string, { [key: string]: string | number | boolean }]
+      | number,
     options?: {
       select?: (keyof Entity)[];
+      level?: number;
       where?:
         | string
         | typeorm.Brackets
@@ -180,6 +184,44 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
       relationMaps
     );
     return entitiesAndScalars.entities[index];
+  }
+  protected buildChildrenEntityTree(
+    entity: any,
+    entities: any[],
+    relationMaps: { id: any; parentId: any }[]
+  ): void {
+    const map: { [key: number]: any } = {};
+    entities.forEach(e => {
+      const id = this.metadata.primaryColumns[0].getEntityValue(e);
+      map[id] = e;
+    });
+    const childProperty = this.metadata.treeChildrenRelation!.propertyName;
+    relationMaps.forEach(e => {
+      if (e.parentId != null) {
+        const parent = map[e.parentId];
+        if (!parent[childProperty]) parent[childProperty] = [];
+        parent[childProperty].push(map[e.id]);
+      }
+    });
+    if(entity.id != null)
+      Object.assign(entity,map[entity.id]);
+
+    /*
+    const childProperty = this.metadata.treeChildrenRelation!.propertyName;
+    const parentEntityId = this.metadata.primaryColumns[0].getEntityValue(
+      entity
+    );
+    const childRelationMaps = relationMaps.filter(
+      relationMap => relationMap.parentId === parentEntityId
+    );
+    const childIds = childRelationMaps.map(relationMap => relationMap.id);
+    entity[childProperty] = entities.filter(
+      entity => childIds.indexOf(entity.id) !== -1
+    );
+    entity[childProperty].forEach((childEntity: any) => {
+      this.buildChildrenEntityTree(childEntity, entities, relationMaps);
+    });
+    */
   }
   public createAncestorsQueryBuilder(
     alias: string,
@@ -328,7 +370,10 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
   public createDescendantsQueryBuilder(
     alias: string,
     closureTableAlias: string,
-    entity: Entity | [string, { [key: string]: string | number | boolean }]
+    entity:
+      | Entity
+      | [string, { [key: string]: string | number | boolean }]
+      | number
   ): SelectQueryBuilder<Entity> {
     // create shortcuts for better readability
     const escape = (alias: string) =>
@@ -368,9 +413,11 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
                 .getQuery()
             );
           } else {
-            parameters[
-              column.referencedColumn!.propertyName
-            ] = column.referencedColumn!.getEntityValue(entity);
+            const value =
+              typeof entity === "number"
+                ? entity
+                : column.referencedColumn!.getEntityValue(entity);
+            parameters[column.referencedColumn!.propertyName] = value;
             return (
               escape(closureTableAlias) +
               "." +
@@ -424,9 +471,11 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
                 .getQuery()
             );
           } else {
-            parameters[
-              parameterName
-            ] = joinColumn.referencedColumn!.getEntityValue(entity);
+            const value =
+              typeof entity === "number"
+                ? entity
+                : joinColumn.referencedColumn!.getEntityValue(entity);
+            parameters[parameterName] = value;
             return (
               "joined." +
               joinColumn.referencedColumn!.propertyPath +
@@ -455,9 +504,13 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
             "path"
           )
           .from(this.metadata.target, this.metadata.targetName);
-        if (entity instanceof Array) subQuery.where(entity[0], entity[1]);
-        else subQuery.whereInIds(this.metadata.getEntityIdMap(entity));
-
+        if (entity instanceof Array) {
+          subQuery.where(entity[0], entity[1]);
+        } else if (typeof entity === "number") {
+          subQuery.whereInIds(entity);
+        } else {
+          subQuery.whereInIds(this.metadata.getEntityIdMap(entity));
+        }
         qb.setNativeParameters(subQuery.expressionMap.nativeParameters);
         if (this.manager.connection.driver instanceof AbstractSqliteDriver) {
           return `${alias}.${

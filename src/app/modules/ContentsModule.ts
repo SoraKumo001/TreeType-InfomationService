@@ -258,7 +258,7 @@ export class Contents extends amf.Module {
     if (!repository) return null;
     let param = {};
     if (admin) param = {};
-    else param = { where: { visible: true } };
+    else param = { where: { visible: true ,type:'PAGE'} };
     return repository.find(param);
   }
   /**
