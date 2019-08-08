@@ -1,11 +1,11 @@
 /**
  *目次表示用プラグイン
  */
-import { appManager } from "../../AppManager";
-import { ContentsModule } from "../../modules/ContentsModule";
+import { ContentsModule } from "../../Contents/ContentsModule";
 import { sprintf } from "javascript-window-framework";
 import "./ContentsTable.auto.scss";
 import { ContentsCacheModule } from "./ContentsCache.auto";
+import { appManager } from "../../Manager/AppManager";
 
 const contentsModule = appManager.getModule(ContentsModule);
 const contentsCacheModule = appManager.getModule(ContentsCacheModule);
