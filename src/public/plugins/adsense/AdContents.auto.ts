@@ -3,9 +3,9 @@
  *
  */
 
-import { ParamsModule } from "../../modules/ParamsModule";
-import { ContentsModule } from "../../modules/ContentsModule";
-import { appManager } from "../../AppManager";
+import { ParamsModule } from "../../Manager/ParamsModule";
+import { ContentsModule } from "../../Contents/ContentsModule";
+import { appManager } from "../../Manager/AppManager";
 
 declare var adsbygoogle: unknown;
 /**

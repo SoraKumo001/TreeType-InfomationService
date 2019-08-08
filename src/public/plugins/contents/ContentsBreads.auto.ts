@@ -2,10 +2,10 @@
  *表示用パンくずリストプラグイン
  */
 
-import { appManager } from "../../AppManager";
-import { ContentsModule, TreeContents } from "../../modules/ContentsModule";
+import { ContentsModule, TreeContents } from "../../Contents/ContentsModule";
 import "./ContentsBreads.auto.scss";
 import { ContentsCacheModule } from "./ContentsCache.auto";
+import { appManager } from "../../Manager/AppManager";
 
 const contentsModule = appManager.getModule(ContentsModule);
 const contentsCacheModule = appManager.getModule(ContentsCacheModule);

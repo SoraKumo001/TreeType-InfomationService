@@ -5,10 +5,10 @@ import {
   TreeContents,
   MainContents,
   ContentsModule
-} from "../../modules/ContentsModule";
+} from "../../Contents/ContentsModule";
 import { sprintf } from "javascript-window-framework";
-import { appManager } from "../../AppManager";
 import { ContentsCacheModule } from "./ContentsCache.auto";
+import { appManager } from "../../Manager/AppManager";
 
 const contentsModule = appManager.getModule(ContentsModule);
 const contentsCacheModule = appManager.getModule(ContentsCacheModule);

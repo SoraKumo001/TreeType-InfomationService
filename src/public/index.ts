@@ -7,12 +7,13 @@
 import 'core-js/features/object';
 import 'core-js/features/promise'
 
-import { AppManager } from "./AppManager";
-import { MainView } from "./View/MainView";
-import { UserModule, UserInfo } from "./modules/UserModule";
-import { UserEditWindow } from "./View/User/UserEditWindow";
+
+import { MainView } from "./Main/MainView";
+import { UserModule, UserInfo } from "./User/UserModule";
+import { UserEditWindow } from "./User/UserEditWindow";
 import "./index.scss";
-import { FileWindow } from './View/FileWindow/FileWindow';
+import { FileWindow } from './File/FileWindow';
+import { AppManager } from './Manager/AppManager';
 
 //全体で使用するアプリケーションマネージャを作成
 const appManager = new AppManager();

@@ -2,8 +2,8 @@
  *検索ボタン表示用プラグイン
  */
 
-import { appManager, AppManager } from "../../AppManager";
-import { ContentsModule, TreeContents } from "../../modules/ContentsModule";
+
+import { ContentsModule, TreeContents } from "../../Contents/ContentsModule";
 import {
   FrameWindow,
   ListView,
@@ -12,8 +12,9 @@ import {
   TextBox,
   sprintf
 } from "javascript-window-framework";
-import { RouterModule } from "../../modules/RouterModule";
+import { RouterModule } from "../../Manager/RouterModule";
 import { ContentsCacheModule } from "./ContentsCache.auto";
+import { appManager, AppManager } from "../../Manager/AppManager";
 
 const contentsModule = appManager.getModule(ContentsModule);
 const contentsCacheModule = appManager.getModule(ContentsCacheModule);

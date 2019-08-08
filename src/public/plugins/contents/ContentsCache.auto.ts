@@ -3,9 +3,9 @@
  *
  */
 
-import { appManager, AppManager } from "../../AppManager";
-import { ContentsModule, TreeContents } from "../../modules/ContentsModule";
-import { AppModule } from "../../AppModule";
+import { ContentsModule, TreeContents } from "../../Contents/ContentsModule";
+import { AppModule } from "../../Manager/AppModule";
+import { AppManager, appManager } from "../../Manager/AppManager";
 
 
 export class ContentsCacheModule extends AppModule {

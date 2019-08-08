@@ -5,9 +5,9 @@
 
 import * as JWF from "javascript-window-framework";
 
-import { SettingView, SettingModule } from "../../modules/SettingModule";
-import { AppManager, appManager } from "../../AppManager";
-import { ParamsModule } from "../../modules/ParamsModule";
+import { SettingView, SettingModule } from "../../Setting/SettingModule";
+import { ParamsModule } from "../../Manager/ParamsModule";
+import { AppManager, appManager } from "../../Manager/AppManager";
 
 export class AdSettingView extends SettingView {
   private paramsModule: ParamsModule;
