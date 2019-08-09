@@ -2,7 +2,7 @@ import * as JWF from "javascript-window-framework";
 import { SettingView, SettingModule } from "../SettingModule";
 import { UserModule } from "../../User/UserModule";
 import { UserEditWindow } from "../../User/UserEditWindow";
-import { AppManager, appManager } from "../../Manager/AppManager";
+import { AppManager, appManager } from "../../Manager/FrontManager";
 
 export interface UserInfo {
   no: number;

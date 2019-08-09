@@ -8,7 +8,7 @@ import {
 } from "../../Contents/ContentsModule";
 import { sprintf } from "javascript-window-framework";
 import { ContentsCacheModule } from "./ContentsCache.auto";
-import { appManager } from "../../Manager/AppManager";
+import { appManager } from "../../Manager/FrontManager";
 
 const contentsModule = appManager.getModule(ContentsModule);
 const contentsCacheModule = appManager.getModule(ContentsCacheModule);

@@ -1,8 +1,10 @@
-import * as JWF from "javascript-window-framework";
 import "./scss/TextEditWindow.scss";
 import { EditableView } from "./EditableView";
-import { TextArea } from "javascript-window-framework";
 import { PanelCreateParam } from "./PanelControl";
+import { FrameWindow } from "../FrameWindow";
+import { TimerProc } from "../Libs";
+import { TextArea } from "../TextArea";
+import { Splitter } from "../Splitter";
 
 /**
  *
@@ -11,9 +13,9 @@ import { PanelCreateParam } from "./PanelControl";
  * @class TextEditWindow
  * @extends {JWF.FrameWindow}
  */
-export class TextEditWindow extends JWF.FrameWindow {
-  private htmlTimer: JWF.TimerProc;
-  private textTimer: JWF.TimerProc;
+export class TextEditWindow extends FrameWindow {
+  private htmlTimer: TimerProc;
+  private textTimer: TimerProc;
   private editableView:EditableView;
   private textArea:TextArea;
 
@@ -23,7 +25,7 @@ export class TextEditWindow extends JWF.FrameWindow {
     this.setJwfStyle("TextEditWindow");
     this.setSize(800, 600);
 
-    const splitter = new JWF.Splitter();
+    const splitter = new Splitter();
     this.addChild(splitter, "client");
     splitter.setSplitterPos(600);
     this.setPos();
@@ -35,7 +37,7 @@ export class TextEditWindow extends JWF.FrameWindow {
       this.htmlTimer.call();
     });
 
-    const textArea = new JWF.TextArea();
+    const textArea = new TextArea();
     this.textArea = textArea;
     splitter.addChild(1, textArea, "client");
     textArea.addEventListener("updateText", () => {
@@ -43,10 +45,10 @@ export class TextEditWindow extends JWF.FrameWindow {
     });
 
     //時間差更新処理
-    this.htmlTimer = new JWF.TimerProc(() => {
+    this.htmlTimer = new TimerProc(() => {
       textArea.setText(editableView.getHtml());
     }, 500);
-    this.textTimer = new JWF.TimerProc(() => {
+    this.textTimer = new TimerProc(() => {
       editableView.setHtml(textArea.getText());
     }, 500);
   }

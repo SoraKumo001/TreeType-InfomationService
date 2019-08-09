@@ -3,7 +3,7 @@ import { FileModule, FileInfo } from "./FileModule";
 import { DirView } from "./DirView";
 import { FileView } from "./FileView";
 import "./scss/FileWindow.scss";
-import { AppManager } from "../Manager/AppManager";
+import { AppManager } from "../Manager/FrontManager";
 interface CustomMap extends JWF.WINDOW_EVENT_MAP {
   enterFile: [{ fileInfo: FileInfo; enter: boolean }];
 }

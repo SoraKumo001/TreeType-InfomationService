@@ -1,8 +1,8 @@
 import * as JWF from "javascript-window-framework";
 import { SettingView, SettingModule } from "../SettingModule";
-import { AppModule } from "../../Manager/AppModule";
+import { BaseModule } from "../../Manager/BaseModule";
 import "./DatabaseView.scss";
-import { AppManager, appManager } from "../../Manager/AppManager";
+import { AppManager, appManager } from "../../Manager/FrontManager";
 interface DatabaseInfo {
   connect: boolean;
   database: string;
@@ -16,7 +16,7 @@ interface DATABASE_CONFIG {
   REMOTEDB_USER: number;
   REMOTEDB_PASSWORD?: string;
 }
-export class DatabaseModule extends AppModule {
+export class DatabaseModule extends BaseModule {
   public getInfo(): Promise<DatabaseInfo> {
     const adapter = this.getAdapter();
     return adapter.exec("RemoteDB.getInfo");

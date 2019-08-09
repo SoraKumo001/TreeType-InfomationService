@@ -1,5 +1,5 @@
-import { AppModule, ModuleMap } from "./AppModule";
-import { AppManager } from "./AppManager";
+import { BaseModule, ModuleMap } from "./BaseModule";
+import { AppManager } from "./FrontManager";
 
 export interface CustomMap extends ModuleMap {
   goLocation: [{ [key: string]: string }]; //parameter
@@ -10,9 +10,9 @@ export interface CustomMap extends ModuleMap {
  *
  * @export
  * @class RouterModule
- * @extends {AppModule<CustomMap>}
+ * @extends {BaseModule<CustomMap>}
  */
-export class RouterModule extends AppModule<CustomMap> {
+export class RouterModule extends BaseModule<CustomMap> {
   private lastParams: string;
   public constructor(manager: AppManager) {
     super(manager);

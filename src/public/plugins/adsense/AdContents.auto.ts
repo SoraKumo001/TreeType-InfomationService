@@ -5,7 +5,7 @@
 
 import { ParamsModule } from "../../Manager/ParamsModule";
 import { ContentsModule } from "../../Contents/ContentsModule";
-import { appManager } from "../../Manager/AppManager";
+import { appManager } from "../../Manager/FrontManager";
 
 declare var adsbygoogle: unknown;
 /**

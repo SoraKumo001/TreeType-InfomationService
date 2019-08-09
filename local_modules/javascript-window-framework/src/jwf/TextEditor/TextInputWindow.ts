@@ -1,8 +1,11 @@
-import * as JWF from "javascript-window-framework";
+import { FrameWindow } from "../FrameWindow";
+import { TextBox } from "../TextBox";
+import { Label } from "../Label";
+import { Button } from "../Button";
 
-export class TextInputWindow extends JWF.FrameWindow {
-  private msg:JWF.Label
-  private text:JWF.TextBox;
+export class TextInputWindow extends FrameWindow {
+  private msg:Label
+  private text:TextBox;
   public constructor(params: {
     title?: string;
     message?: string;
@@ -15,11 +18,11 @@ export class TextInputWindow extends JWF.FrameWindow {
     this.setPos();
     this.setPadding(10);
     if (params.title) this.setTitle(params.title);
-    const msg = new JWF.Label(params.label || "");
+    const msg = new Label(params.label || "");
     this.msg = msg;
     this.addChild(msg, "top");
 
-    const text = new JWF.TextBox({
+    const text = new TextBox({
       label: params.value || "",
       text: params.value || ""
     });
@@ -29,12 +32,12 @@ export class TextInputWindow extends JWF.FrameWindow {
     });
     this.addChild(text, "top");
 
-    const okButton = new JWF.Button("OK");
+    const okButton = new Button("OK");
     this.addChild(okButton, "top");
     okButton.addEventListener("buttonClick", async () => {
       if (params.event) params.event(text.getText());
     });
-    const cancelButton = new JWF.Button("Cancel");
+    const cancelButton = new Button("Cancel");
     this.addChild(cancelButton, "top");
     cancelButton.addEventListener("buttonClick", () => {
       this.close();

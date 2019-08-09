@@ -5,7 +5,7 @@ import { UserInfo, UserModule } from "../User/UserModule";
 import { LoginWindow } from "../User/LoginWindow";
 import { SettingWindow } from "../Setting/SettingWindow";
 import { ParamsModule } from "../Manager/ParamsModule";
-import { AppManager } from "../Manager/AppManager";
+import { AppManager } from "../Manager/FrontManager";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LogoImage = require("../images/sorakumo_logo.svg");
@@ -18,12 +18,9 @@ export class TopMenu extends JWF.BaseView {
 
     const titleLogo = document.createElement("img");
     client.appendChild(titleLogo);
-    //titleLogo.src = LogoImage;
 
     const titleNode = document.createElement("div");
     client.appendChild(titleNode);
-    titleNode.dataset.type = "title";
-    //titleNode.textContent = "空雲リファレンス";
 
     const optionNode = document.createElement("div");
     client.appendChild(optionNode);

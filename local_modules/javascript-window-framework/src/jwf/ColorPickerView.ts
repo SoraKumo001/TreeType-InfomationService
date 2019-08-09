@@ -3,9 +3,10 @@
  *
  */
 
-import * as JWF from "javascript-window-framework";
-import "./ColorPickerView.scss";
-import { WINDOW_EVENT_MAP, sprintf } from "javascript-window-framework";
+import "./scss/ColorPickerView.scss";
+import { WINDOW_EVENT_MAP, BaseView } from "./BaseView";
+import { FrameWindow } from "./FrameWindow";
+import { sprintf } from "./Libs";
 
 export interface Color {
   r: number;
@@ -16,7 +17,7 @@ interface CustomEvent extends WINDOW_EVENT_MAP {
   color: [Color];
 }
 
-export class ColorView extends JWF.BaseView<CustomEvent> {
+export class ColorView extends BaseView<CustomEvent> {
   private triangleCanvas: HTMLCanvasElement;
   private trianglePoinst: { x: number; y: number }[] = [];
   private targetSize = 40;
@@ -236,7 +237,7 @@ export class ColorView extends JWF.BaseView<CustomEvent> {
   }
 }
 
-export class ColorPickerWindow extends JWF.FrameWindow<CustomEvent> {
+export class ColorPickerWindow extends FrameWindow<CustomEvent> {
   private cell?: HTMLElement;
   private colorsArea :HTMLElement;
   private colorValues : Color[];
@@ -256,7 +257,7 @@ export class ColorPickerWindow extends JWF.FrameWindow<CustomEvent> {
       localStorage.getItem(this.getStrageName("Colors")) || "[]"
     );
     this.colorValues = colorValues;
-    const colorSelector = new JWF.BaseView();
+    const colorSelector = new BaseView();
     colorSelector.setJwfStyle("ColorSelector");
     colorSelector.setWidth(120);
     this.addChild(colorSelector, "left");

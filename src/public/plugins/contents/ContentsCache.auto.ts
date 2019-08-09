@@ -4,11 +4,11 @@
  */
 
 import { ContentsModule, TreeContents } from "../../Contents/ContentsModule";
-import { AppModule } from "../../Manager/AppModule";
-import { AppManager, appManager } from "../../Manager/AppManager";
+import { BaseModule } from "../../Manager/BaseModule";
+import { AppManager, appManager } from "../../Manager/FrontManager";
 
 
-export class ContentsCacheModule extends AppModule {
+export class ContentsCacheModule extends BaseModule {
   private treeContents?: TreeContents;
   public constructor(manager: AppManager) {
     super(manager);

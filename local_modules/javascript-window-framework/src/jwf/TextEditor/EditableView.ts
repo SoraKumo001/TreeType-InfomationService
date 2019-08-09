@@ -1,14 +1,13 @@
-import * as JWF from "javascript-window-framework";
 import { TextInputWindow } from "./TextInputWindow";
 import { PanelControl, PanelCreateParam } from "./PanelControl";
-import { ColorPickerWindow } from "../ColorPicker/ColorPickerView";
+import { WINDOW_EVENT_MAP, BaseView } from "../BaseView";
 
-export interface CustomEvent extends JWF.WINDOW_EVENT_MAP {
+export interface CustomEvent extends WINDOW_EVENT_MAP {
   updateText: [];
   insertFile: [{ fileList: FileList; enter: boolean }];
 }
 
-export class EditableView extends JWF.BaseView<CustomEvent> {
+export class EditableView extends BaseView<CustomEvent> {
   private htmlArea: HTMLDivElement;
   private panel?: HTMLElement;
   private keepRange?: Range;

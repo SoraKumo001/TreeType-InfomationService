@@ -1,6 +1,6 @@
 import * as JWF from "javascript-window-framework";
 import { UserModule } from "./UserModule";
-import { AppManager } from "../Manager/AppManager";
+import { AppManager } from "../Manager/FrontManager";
 const LOGIN_ID_SVG = require("./images/login_id.svg");
 const LOGIN_PASS_SVG = require("./images/login_pass.svg");
 /**

@@ -11,9 +11,8 @@ import 'core-js/features/promise'
 import { MainView } from "./Main/MainView";
 import { UserModule, UserInfo } from "./User/UserModule";
 import { UserEditWindow } from "./User/UserEditWindow";
+import { AppManager } from './Manager/FrontManager';
 import "./index.scss";
-import { FileWindow } from './File/FileWindow';
-import { AppManager } from './Manager/AppManager';
 
 //全体で使用するアプリケーションマネージャを作成
 const appManager = new AppManager();

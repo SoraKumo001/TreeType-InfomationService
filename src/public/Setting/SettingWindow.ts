@@ -4,7 +4,7 @@ import {
   SettingData,
   SettingView
 } from "./SettingModule";
-import { AppManager } from "../Manager/AppManager";
+import { AppManager } from "../Manager/FrontManager";
 
 export class SettingWindow extends JWF.FrameWindow {
   private treeView: JWF.TreeView;

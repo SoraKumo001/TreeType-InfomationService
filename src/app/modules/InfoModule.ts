@@ -7,7 +7,7 @@ import * as amf from "active-module-framework";
  * @class TestModule
  * @extends {amf.Module}
  */
-export class TestModule extends amf.Module {
+export class InfoModule extends amf.Module {
   public static getModuleInfo(): amf.ModuleInfo {
     return {
       className: this.name,
