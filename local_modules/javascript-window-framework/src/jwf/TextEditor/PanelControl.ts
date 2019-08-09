@@ -1,5 +1,6 @@
-import { ColorPickerWindow, Color } from "../ColorPicker/ColorPickerView";
-import { sprintf } from "javascript-window-framework";
+
+import { Color, ColorPickerWindow } from "../ColorPickerView";
+import { sprintf } from "../Libs";
 
 export interface PanelCreateParam {
   type?: string;

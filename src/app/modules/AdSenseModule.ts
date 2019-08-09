@@ -1,6 +1,6 @@
 import * as amf from "active-module-framework";
 import { HtmlCreater } from "active-module-framework";
-import { AppModule } from "./App/AppModule";
+import { AppModule } from "./App/ParamModule";
 
 /**
  *アドセンス初期設定用クラス

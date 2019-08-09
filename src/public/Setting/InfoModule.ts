@@ -1,4 +1,4 @@
-import { AppModule} from "../Manager/AppModule";
+import { BaseModule} from "../Manager/BaseModule";
 
 export interface ModuleInfo {
     className: string;
@@ -13,9 +13,9 @@ export interface ModuleInfo {
  *
  * @export
  * @class InfoModule
- * @extends {AppModule}
+ * @extends {BaseModule}
  */
-export class InfoModule extends AppModule {
+export class InfoModule extends BaseModule {
   public getInfo():Promise<ModuleInfo[]>{
     const adapter = this.getAdapter();
     //ユーザ情報の要求

@@ -4,17 +4,17 @@
  */
 
 import * as JWF from "javascript-window-framework";
-import { AppManager} from "./AppManager";
+import { AppManager} from "./FrontManager";
 
 export interface ModuleMap{
   [key:string]:unknown[]
 }
 
-export class AppModuleRemover implements JWF.WindowRemover{
-  private module:AppModule;
+export class BaseModuleRemover implements JWF.WindowRemover{
+  private module:BaseModule;
   private name:string;
   private proc:(...params: unknown[]) => void;
-  public constructor(module:AppModule,name:string,proc:(...params: unknown[]) => void){
+  public constructor(module:BaseModule,name:string,proc:(...params: unknown[]) => void){
     this.module = module;
     this.name = name;
     this.proc = proc;
@@ -23,7 +23,7 @@ export class AppModuleRemover implements JWF.WindowRemover{
     this.module.removeEventListener(this.name,this.proc);
   }
 }
-export class AppModule<T extends ModuleMap=ModuleMap> {
+export class BaseModule<T extends ModuleMap=ModuleMap> {
   private listeners: ModuleMap = {};
   private manager: AppManager;
   public constructor(manager: AppManager) {
@@ -35,13 +35,13 @@ export class AppModule<T extends ModuleMap=ModuleMap> {
   public getAdapter() {
     return this.manager.getAdapter();
   }
-  public addEventListener<K extends keyof T>(name: K, proc: (...params: T[K]) => void):AppModuleRemover {
+  public addEventListener<K extends keyof T>(name: K, proc: (...params: T[K]) => void):BaseModuleRemover {
     const listener = this.listeners[name as string];
     if (!listener) {
       this.listeners[name as string] = [proc];
     }else if (listener.indexOf(proc) === -1)
       listener.push(proc);
-    return new AppModuleRemover(this,name as string,proc as (...params: unknown[]) => void);
+    return new BaseModuleRemover(this,name as string,proc as (...params: unknown[]) => void);
   }
   public removeEventListener<K extends keyof T>(name: K, proc:(...params: T[K]) => void): void {
     const listener = this.listeners[name as string];

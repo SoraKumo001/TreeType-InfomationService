@@ -1,4 +1,4 @@
-import { AppModule, ModuleMap } from "../Manager/AppModule";
+import { BaseModule, ModuleMap } from "../Manager/BaseModule";
 
 export interface FileInfo {
   id: number;
@@ -23,9 +23,9 @@ export interface CustomMap extends ModuleMap {
  *
  * @export
  * @class FileModule
- * @extends {AppModule<CustomMap>}
+ * @extends {BaseModule<CustomMap>}
  */
-export class FileModule extends AppModule<CustomMap> {
+export class FileModule extends BaseModule<CustomMap> {
   public getDirs() {
     const adapter = this.getAdapter();
     return adapter.exec("Files.getDirList") as Promise<FileInfo>;

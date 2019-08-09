@@ -4,7 +4,7 @@ import { SettingView, SettingModule } from "../SettingModule";
 import { ParamsModule } from "../../Manager/ParamsModule";
 import { FileWindow } from "../../File/FileWindow";
 import { MessageBox } from "javascript-window-framework";
-import { AppManager, appManager } from "../../Manager/AppManager";
+import { AppManager, appManager } from "../../Manager/FrontManager";
 
 export class BasicView extends SettingView {
   private paramsModule: ParamsModule;

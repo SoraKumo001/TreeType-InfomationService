@@ -1,5 +1,5 @@
 import * as JWF from "javascript-window-framework";
-import { AppModule } from "./AppModule";
+import { BaseModule } from "./BaseModule";
 
 export let appManager:AppManager;
 /**
@@ -9,7 +9,7 @@ export let appManager:AppManager;
  * @class AppManager
  */
 export class AppManager {
-  private modules: [typeof AppModule, AppModule][] = [];
+  private modules: [typeof BaseModule, BaseModule][] = [];
   private adapter: JWF.Adapter;
   /**
    *Creates an instance of AppManager.
@@ -23,7 +23,7 @@ export class AppManager {
   public getAdapter() {
     return this.adapter;
   }
-  public getModule<T extends AppModule>(moduleType: {
+  public getModule<T extends BaseModule>(moduleType: {
     new (manager: AppManager): T;
   }): T {
     const modules = this.modules;
@@ -33,7 +33,7 @@ export class AppManager {
         return modules[i][1] as T;
     }
     const module = new moduleType(this);
-    this.modules.push([moduleType as typeof AppModule,module]);
+    this.modules.push([moduleType as typeof BaseModule,module]);
     return module;
   }
 }

@@ -6,7 +6,7 @@
 import * as JWF from "javascript-window-framework";
 import { ContentsModule } from "./ContentsModule";
 import "./scss/ContentsImportWindow.scss";
-import { AppManager } from "../Manager/AppManager";
+import { AppManager } from "../Manager/FrontManager";
 export class ContentsImportWindow extends JWF.FrameWindow {
   public constructor(manager: AppManager, pid: number) {
     super();

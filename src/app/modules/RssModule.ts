@@ -3,7 +3,7 @@ import express = require("express");
 import { Contents } from "./ContentsModule";
 import * as xml2js from "xml2js";
 import { HtmlCreater } from "active-module-framework";
-import { AppModule } from "./App/AppModule";
+import { AppModule } from "./App/ParamModule";
 
 export class Rss extends amf.Module {
   public async onCreateModule(): Promise<boolean> {

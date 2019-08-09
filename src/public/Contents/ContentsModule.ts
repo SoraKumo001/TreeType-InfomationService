@@ -1,4 +1,4 @@
-import { AppModule, ModuleMap } from "../Manager/AppModule";
+import { BaseModule, ModuleMap } from "../Manager/BaseModule";
 
 export interface TreeContents {
   id: number;
@@ -50,9 +50,9 @@ type ValueTypeProc = (
  *
  * @export
  * @class ContentsModule
- * @extends {AppModule<CustomMap>}
+ * @extends {BaseModule<CustomMap>}
  */
-export class ContentsModule extends AppModule<CustomMap> {
+export class ContentsModule extends BaseModule<CustomMap> {
   private contentsValueTypes: { [name: string]: ValueTypeProc } = {};
   public async createContents(pid: number, vector: number, type: string) {
     const adapter = this.getAdapter();

@@ -1,7 +1,7 @@
 import { SettingView, SettingModule } from "../SettingModule";
 import { InfoModule } from "../InfoModule";
 import "./ModuleView.scss";
-import { AppManager, appManager } from "../../Manager/AppManager";
+import { AppManager, appManager } from "../../Manager/FrontManager";
 
 export class ModuleView extends SettingView {
   public constructor(manager: AppManager) {

@@ -14,7 +14,7 @@ import {
 } from "javascript-window-framework";
 import { RouterModule } from "../../Manager/RouterModule";
 import { ContentsCacheModule } from "./ContentsCache.auto";
-import { appManager, AppManager } from "../../Manager/AppManager";
+import { appManager, AppManager } from "../../Manager/FrontManager";
 
 const contentsModule = appManager.getModule(ContentsModule);
 const contentsCacheModule = appManager.getModule(ContentsCacheModule);

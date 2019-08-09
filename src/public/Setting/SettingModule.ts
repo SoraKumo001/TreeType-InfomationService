@@ -1,6 +1,6 @@
-import { AppModule} from "../Manager/AppModule";
+import { BaseModule} from "../Manager/BaseModule";
 import { BaseView } from "javascript-window-framework";
-import { AppManager } from "../Manager/AppManager";
+import { AppManager } from "../Manager/FrontManager";
 
 /**
  *基本データ設定用モジュール
@@ -24,7 +24,7 @@ export interface SettingData{
   view:typeof SettingView|null,
   child:SettingData[]
 }
-export class SettingModule extends AppModule {
+export class SettingModule extends BaseModule {
   private settings:SettingData[] = [];
 
   public addSetting(name:string,view?:typeof SettingView){

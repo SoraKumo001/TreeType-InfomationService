@@ -3,12 +3,12 @@
  *
  */
 import * as JWF from "javascript-window-framework";
-import { TextEditWindow } from "../TextEditor/TextEditWindow";
-import { PanelControl } from "../TextEditor/PanelControl";
 import { ContentsModule, MainContents } from "./ContentsModule";
 import { FileWindow } from "../File/FileWindow";
 import { FileModule } from "../File/FileModule";
-import { AppManager } from "../Manager/AppManager";
+import { AppManager } from "../Manager/FrontManager";
+import { TextEditWindow } from "javascript-window-framework";
+import { PanelControl } from "javascript-window-framework";
 
 /**
  *コンテンツ編集用ウインドウクラス

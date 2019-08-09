@@ -7,7 +7,7 @@ import { RouterModule } from "../Manager/RouterModule";
 import { UserModule } from "../User/UserModule";
 import { TreeItem } from "javascript-window-framework";
 import "analytics-gtag";
-import { AppManager } from "../Manager/AppManager";
+import { AppManager } from "../Manager/FrontManager";
 
 export class MainView extends JWF.BaseView {
   private routerModule: RouterModule;

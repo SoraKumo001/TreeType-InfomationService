@@ -1,5 +1,5 @@
-import { AppModule, ModuleMap } from "../Manager/AppModule";
-import { AppManager } from "../Manager/AppManager";
+import { BaseModule, ModuleMap } from "../Manager/BaseModule";
+import { AppManager } from "../Manager/FrontManager";
 
 
 export interface UserInfo {
@@ -20,9 +20,9 @@ export interface CustomMap extends ModuleMap {
  *
  * @export
  * @class UserModule
- * @extends {AppModule<CustomMap>}
+ * @extends {BaseModule<CustomMap>}
  */
-export class UserModule extends AppModule<CustomMap> {
+export class UserModule extends BaseModule<CustomMap> {
   private userInfo?: UserInfo;
 
   public constructor(manager: AppManager) {
