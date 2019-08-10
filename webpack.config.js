@@ -2,12 +2,13 @@ const path = require('path');
 const glob = require("glob");
 const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const srcDir = "src/front";
 const config = {
   //mode: 'production',
   mode: 'development',
   entry: [
-    path.resolve(__dirname, 'src/public/index.ts'),
-  ].concat(glob.sync("./src/public/**/*.auto.ts")),
+    path.resolve(__dirname, srcDir+'/index.ts'),
+  ].concat(glob.sync(srcDir+"/**/*.auto.ts")),
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist/public/js')

@@ -2,7 +2,7 @@ import * as amf from "active-module-framework";
 import { AppEntity, AppRepository } from "./AppEntity";
 import { Users } from "../User/UsersModule";
 import { RemoteDB } from "../RemoteDBModule";
-export class AppModule extends amf.Module {
+export class ParamModule extends amf.Module {
   private appRepository!: AppRepository;
 
   public async onCreateModule() {

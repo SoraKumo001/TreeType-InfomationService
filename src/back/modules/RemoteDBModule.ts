@@ -30,9 +30,9 @@ export interface CustomMap extends amf.ModuleMap {
   disconnect: [];
 }
 export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
-  private entities: (new () => unknown)[] = [];
+  private entities: (( new () => T)|Function)[] = [];
   private localRepository?: typeorm.Repository<DatabaseConfigEntity>;
-  public addEntity<T>(model: new () => T) {
+  public addEntity<T>(model:( new () => T)|Function) {
     this.entities.push(model);
   }
   public getRepository<T>(model: new () => T): typeorm.Repository<T> {
