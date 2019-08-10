@@ -34,5 +34,4 @@ userModule.request();
 addEventListener("DOMContentLoaded", () => {
   //メイン画面の表示
   new MainView(appManager);
- // new FileWindow(appManager);
 });

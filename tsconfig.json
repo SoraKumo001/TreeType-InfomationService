@@ -5,7 +5,7 @@
   },
   "references": [
     {
-      "path": "./src/app"
+      "path": "./src/backend"
     }
   ],
   "exclude": [

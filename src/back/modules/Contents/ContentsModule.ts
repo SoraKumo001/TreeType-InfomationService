@@ -1,11 +1,11 @@
 import * as amf from "active-module-framework";
-import { Users } from "./User/UsersModule";
-import { RemoteDB } from "./RemoteDBModule";
-import { Files, FileEntity } from "./FilesModule";
+import { Users } from "../User/UsersModule";
+import { RemoteDB } from "../RemoteDBModule";
+import { Files, FileEntity } from "../FilesModule";
 import { sprintf } from "sprintf";
 import * as express from "express";
 import * as typeorm from "typeorm";
-import { ExtendRepository } from "./ExtendRepository";
+import { ExtendRepository } from "../ExtendRepository";
 
 interface TreeContents {
   id: number;
