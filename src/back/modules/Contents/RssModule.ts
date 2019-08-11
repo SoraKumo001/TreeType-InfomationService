@@ -3,7 +3,7 @@ import express = require("express");
 import { Contents } from "./ContentsModule";
 import * as xml2js from "xml2js";
 import { HtmlCreater } from "active-module-framework";
-import { AppModule } from "../App/ParamModule";
+import { ParamModule } from "../App/ParamModule";
 
 export class Rss extends amf.Module {
   public async onCreateModule(): Promise<boolean> {
@@ -18,7 +18,7 @@ export class Rss extends amf.Module {
     return true;
   }
   public async onCreateHtml(creater: HtmlCreater) {
-    const params = await this.getModule(AppModule);
+    const params = await this.getModule(ParamModule);
     let url = "";
     if (params) {
       const p = (await params.getGlobalParam("BASIC_DATA")) as {
@@ -39,7 +39,7 @@ export class Rss extends amf.Module {
     document.head.appendChild(node);
   }
   public async createRss() {
-    const params = await this.getModule(AppModule);
+    const params = await this.getModule(ParamModule);
     const contents = await this.getModule(Contents);
     if (!contents || !params) return "";
     const p = (await params.getGlobalParam("BASIC_DATA")) as {

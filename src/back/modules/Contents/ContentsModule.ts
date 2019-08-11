@@ -45,7 +45,7 @@ export class ContentsEntity {
   title2?: string;
 
   @typeorm.Column({ nullable: true })
-  parentId!: number;
+  parentId?: number;
 
   @typeorm.TreeChildren()
   children!: ContentsEntity[];
@@ -314,7 +314,7 @@ export class Contents extends amf.Module {
     if (!repository) return null;
     const result = await repository
       .createQueryBuilder()
-      .select("parentId as id")
+      .select('"parentId" as id')
       .where({ id })
       .getRawOne();
     if (!result) return null;
