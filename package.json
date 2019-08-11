@@ -12,7 +12,7 @@
     "watch:jwf": "npx webpack -b -w --config local_modules/javascript-window-framework/src/webpack.config.js",
     "build:amf": "npx tsc -b local_modules/active-module-framework/src/",
     "watch:amf": "npx tsc -b -w local_modules/active-module-framework/src/",
-    "build:all": "npm run -p build-:* & npm run -p build-back & npm run -p build-jwf & npm run -p build-front",
+    "build:all": "npm run -p build:amf & npm run -p build:back & npm run -p build:jwf & npm run -p build:front",
     "start": "node dist/app/index.js"
   },
   "keywords": [],
@@ -47,7 +47,7 @@
     "node-sass": "^4.12.0",
     "parse5": "^5.1.0",
     "prettier": "^1.18.2",
-    "sass-loader": "^7.1.0",
+    "sass-loader": "^7.2.0",
     "source-map-loader": "^0.2.4",
     "sprintf": "^0.1.5",
     "style-loader": "^1.0.0",
@@ -62,7 +62,7 @@
     "active-module-framework": "file:local_modules/active-module-framework",
     "capture-console": "^1.0.1",
     "jsdom": "^15.1.1",
-    "pg": "^7.12.0",
+    "pg": "^7.12.1",
     "sqlite3": "^4.0.9",
     "typeorm": "^0.2.18",
     "xml2js": "^0.4.19"
