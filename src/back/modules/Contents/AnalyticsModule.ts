@@ -1,6 +1,6 @@
 import * as amf from "active-module-framework";
 import { HtmlCreater } from "active-module-framework";
-import { AppModule } from "../App/ParamModule";
+import { ParamModule } from "../App/ParamModule";
 
 /**
  *アナリティクス初期設定用クラス
@@ -11,7 +11,7 @@ import { AppModule } from "../App/ParamModule";
  */
 export class Analytics extends amf.Module {
   public async onCreateHtml(creater: HtmlCreater): Promise<void> {
-    const paramsModule = await this.getModule(AppModule);
+    const paramsModule = await this.getModule(ParamModule);
 
     if (!paramsModule) return;
     const basicData = (await paramsModule.getGlobalParam("BASIC_DATA")) as {

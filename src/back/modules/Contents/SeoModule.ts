@@ -1,11 +1,11 @@
 import * as amf from "active-module-framework";
 import { HtmlCreater } from "active-module-framework";
 import { Contents, ContentsEntity } from "./ContentsModule";
-import { AppModule } from "../App/ParamModule";
+import { ParamModule } from "../App/ParamModule";
 
 export class SeoModule extends amf.Module {
   public async onCreateHtml(creater: HtmlCreater) {
-    const paramsModule = await this.getModule(AppModule);
+    const paramsModule = await this.getModule(ParamModule);
     const contentsModule = await this.getModule(Contents);
     if (!paramsModule || !contentsModule) return;
     const document = creater.getDocument();
