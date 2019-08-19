@@ -163,7 +163,7 @@ export class InfoTreeView extends JWF.TreeView {
       for (let i = 0; value.children[i]; i++) {
         const child = value.children[i];
         // if (/*Contents.visible || */ child["stat"])
-        this.setTreeItem(item.addItem("", flag||level<1), child);
+        this.setTreeItem(item.addItem("", flag), child);
       }
     }
   }
