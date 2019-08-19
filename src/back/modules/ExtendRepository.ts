@@ -54,9 +54,13 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
    * @memberof ExtendRepository
    */
   async getParent(
-    entity: Entity | [string, { [key: string]: string | number | boolean }],
+    entity:
+      | Entity
+      | [string, { [key: string]: string | number | boolean }]
+      | number,
     options?: {
       select?: (keyof Entity)[];
+      level?: number;
       where?:
         | string
         | typeorm.Brackets
@@ -199,34 +203,21 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
     relationMaps.forEach(e => {
       if (e.parentId != null) {
         const parent = map[e.parentId];
-        if (!parent[childProperty]) parent[childProperty] = [];
-        parent[childProperty].push(map[e.id]);
+        if (parent) {
+          if (!parent[childProperty]) parent[childProperty] = [];
+          parent[childProperty].push(map[e.id]);
+        }
       }
     });
-    if(entity.id != null)
-      Object.assign(entity,map[entity.id]);
-
-    /*
-    const childProperty = this.metadata.treeChildrenRelation!.propertyName;
-    const parentEntityId = this.metadata.primaryColumns[0].getEntityValue(
-      entity
-    );
-    const childRelationMaps = relationMaps.filter(
-      relationMap => relationMap.parentId === parentEntityId
-    );
-    const childIds = childRelationMaps.map(relationMap => relationMap.id);
-    entity[childProperty] = entities.filter(
-      entity => childIds.indexOf(entity.id) !== -1
-    );
-    entity[childProperty].forEach((childEntity: any) => {
-      this.buildChildrenEntityTree(childEntity, entities, relationMaps);
-    });
-    */
+    if (entity.id != null) Object.assign(entity, map[entity.id]);
   }
   public createAncestorsQueryBuilder(
     alias: string,
     closureTableAlias: string,
-    entity: Entity | [string, { [key: string]: string | number | boolean }]
+    entity:
+      | Entity
+      | [string, { [key: string]: string | number | boolean }]
+      | number
   ): SelectQueryBuilder<Entity> {
     if (this.metadata.treeType === "closure-table") {
       const joinCondition = this.metadata.closureJunctionTable.ancestorColumns
@@ -262,9 +253,11 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
                 .getQuery()
             );
           } else {
-            parameters[
-              column.referencedColumn!.propertyName
-            ] = column.referencedColumn!.getEntityValue(entity);
+            const value =
+              typeof entity === "number"
+                ? entity
+                : column.referencedColumn!.getEntityValue(entity);
+            parameters[column.referencedColumn!.propertyName] = value;
             return (
               escape(closureTableAlias) +
               "." +
@@ -318,9 +311,11 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
                 .getQuery()
             );
           } else {
-            parameters[
-              parameterName
-            ] = joinColumn.referencedColumn!.getEntityValue(entity);
+            const value =
+              typeof entity === "number"
+                ? entity
+                : joinColumn.referencedColumn!.getEntityValue(entity);
+            parameters[parameterName] = value;
             return (
               "joined." +
               joinColumn.referencedColumn!.propertyPath +
@@ -349,8 +344,13 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
             "path"
           )
           .from(this.metadata.target, this.metadata.targetName);
-        if (entity instanceof Array) subQuery.where(entity[0], entity[1]);
-        else subQuery.whereInIds(this.metadata.getEntityIdMap(entity));
+        if (entity instanceof Array) {
+          subQuery.where(entity[0], entity[1]);
+        } else if (typeof entity === "number") {
+          subQuery.whereInIds(entity);
+        } else {
+          subQuery.whereInIds(this.metadata.getEntityIdMap(entity));
+        }
 
         qb.setNativeParameters(subQuery.expressionMap.nativeParameters);
         if (this.manager.connection.driver instanceof AbstractSqliteDriver) {

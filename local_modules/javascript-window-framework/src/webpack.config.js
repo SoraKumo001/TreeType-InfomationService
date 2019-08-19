@@ -48,7 +48,9 @@ const config = {
     ]
   },
   resolve: {
-    extensions: [".ts", ".js", ".scss", "css", ".svg"]
+    symlinks: false,
+    extensions: [".ts", ".js", ".scss", "css", ".svg"],
+    moduleExtensions: ['node_modules']
   },
   devtool: "source-map",
   plugins: [

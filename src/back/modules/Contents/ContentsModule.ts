@@ -108,8 +108,7 @@ export class Contents extends amf.Module {
     let contents = await this.repository.getParent({ id } as ContentsEntity, {
       select: ["id", "type"]
     });
-    if(!contents)
-      return 0;
+    if (!contents) return 0;
     let parent: (typeof contents) | undefined = contents;
     do {
       if (parent.type === "PAGE") return parent.id;
@@ -258,7 +257,7 @@ export class Contents extends amf.Module {
     if (!repository) return null;
     let param = {};
     if (admin) param = {};
-    else param = { where: { visible: true ,type:'PAGE'} };
+    else param = { where: { visible: true, type: "PAGE" } };
     return repository.find(param);
   }
   /**
@@ -297,8 +296,7 @@ export class Contents extends amf.Module {
         parent.children = children;
       }
     };
-    if(child)
-      await getChildren(entity);
+    if (child) await getChildren(entity);
     return entity;
   }
 
@@ -345,13 +343,13 @@ export class Contents extends amf.Module {
     const repository = this.repository;
     if (!repository) return null;
     let count = 0;
-    const result = await repository.getParent(["id=:id", { id }], {
+    const result = await repository.getParent(id, {
       select: ["id", "type"]
     });
     if (!result) return null;
     let parent: ContentsEntity | undefined = result;
     do {
-      if (parent.type !== "PAGE") break;
+      if (parent.type === "PAGE") break;
       count++;
     } while ((parent = parent.parent));
     return count;
@@ -434,6 +432,7 @@ export class Contents extends amf.Module {
       parent: { id: pid },
       priority,
       type,
+      visible: false,
       title_type: titleType
     });
     if (!result) return null;
@@ -631,7 +630,7 @@ export class Contents extends amf.Module {
     const fileModule = await this.getModule(Files);
     if (!fileModule) return null;
 
-    const entity = Object.assign({},value);
+    const entity = Object.assign({}, value);
 
     //データの挿入
     const v: any = value;
@@ -640,8 +639,7 @@ export class Contents extends amf.Module {
 
     (<{ id: unknown }>entity).id = undefined;
     (<{ parentId: unknown }>entity).parentId = undefined;
-    if(pid)
-      (<{ parent:{id:number}}>entity).parent = {id:pid};
+    if (pid) (<{ parent: { id: number } }>entity).parent = { id: pid };
 
     await repository.save(entity);
     const id = entity.id;
