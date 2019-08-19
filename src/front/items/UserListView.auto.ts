@@ -1,8 +1,6 @@
 import * as JWF from "javascript-window-framework";
-import { SettingView, SettingModule } from "../SettingModule";
-import { UserModule } from "../../User/UserModule";
-import { UserEditWindow } from "../../User/UserEditWindow";
-import { AppManager, appManager } from "../../Manager/FrontManager";
+import { SettingView, UserModule, Manager, UserEditWindow, SettingModule } from "@jswf/manager";
+import { getManager } from "..";
 
 export interface UserInfo {
   no: number;
@@ -23,7 +21,7 @@ export class UserListView extends SettingView {
   private listView: JWF.ListView;
   private userModule: UserModule;
   private local: boolean;
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super(manager);
     this.local = true;
     this.userModule = manager.getModule(UserModule);
@@ -124,5 +122,5 @@ export class UserListView extends SettingView {
   }
 }
 
-const settingModule = appManager.getModule(SettingModule);
+const settingModule = getManager().getModule(SettingModule);
 settingModule.addSetting("システム/ユーザ設定", UserListView);

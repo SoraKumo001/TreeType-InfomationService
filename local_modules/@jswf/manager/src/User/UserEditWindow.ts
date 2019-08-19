@@ -1,8 +1,8 @@
 import * as JWF from "javascript-window-framework";
 import { UserModule } from "./UserModule";
-import { AppManager } from "../Manager/FrontManager";
-const LOGIN_ID_SVG = require("./images/login_id.svg");
-const LOGIN_PASS_SVG = require("./images/login_pass.svg");
+import { Manager } from "../Manager/Manager";
+import LOGIN_ID_SVG from "../../resource/User/images/login_id.svg";
+import LOGIN_PASS_SVG from "../../resource/User/images/login_pass.svg";
 /**
  *ユーザ編集用クラス
  *
@@ -13,7 +13,7 @@ const LOGIN_PASS_SVG = require("./images/login_pass.svg");
 export class UserEditWindow extends JWF.FrameWindow {
   private textUserID?: JWF.TextBox;
   private textUserPass?: JWF.TextBox;
-  public constructor(manager: AppManager, no?: number, id?: string, name?: string, pass?: string, local?: boolean) {
+  public constructor(manager: Manager, no?: number, id?: string, name?: string, pass?: string, local?: boolean) {
     super();
 
     const userModule = manager.getModule(UserModule);

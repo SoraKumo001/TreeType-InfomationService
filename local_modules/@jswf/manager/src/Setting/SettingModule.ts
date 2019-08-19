@@ -1,7 +1,6 @@
-import { BaseModule} from "../Manager/BaseModule";
 import { BaseView } from "javascript-window-framework";
-import { AppManager } from "../Manager/FrontManager";
-
+import { BaseModule } from "../Manager/BaseModule";
+import { Manager } from "../Manager/Manager";
 /**
  *基本データ設定用モジュール
  *
@@ -10,8 +9,8 @@ import { AppManager } from "../Manager/FrontManager";
  * @extends {BaseView}
  */
 export class SettingView extends BaseView{
-  private manager:AppManager;
-  public constructor(manager:AppManager){
+  private manager:Manager;
+  public constructor(manager:Manager){
     super();
     this.manager = manager;
   }

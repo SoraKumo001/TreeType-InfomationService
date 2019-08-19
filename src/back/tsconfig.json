@@ -6,8 +6,9 @@
     "sourceMap": true,
     "strict": true,
     "composite": true,
+    "moduleResolution": "node",
+    "preserveSymlinks": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-
   }
 }

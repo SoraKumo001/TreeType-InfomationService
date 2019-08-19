@@ -8,7 +8,8 @@ import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
 import "./scss/InfoContentsView.scss";
 import "highlight.js/styles/tomorrow-night-eighties.css";
-import { AppManager } from "../Manager/FrontManager";
+import { Manager } from "@jswf/manager";
+
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const highlight = require("highlight.js/lib/highlight");
@@ -39,7 +40,7 @@ export class InfoContentsView extends JWF.BaseView {
   private contentsNode: { [key: number]: ContentsArea } = {};
   private timerHandle?: number;
   private selectId: number = 0;
-  private manager: AppManager;
+  private manager: Manager;
   private scrollFlag: boolean = false;
   private pageId: number = 0;
 
@@ -48,7 +49,7 @@ export class InfoContentsView extends JWF.BaseView {
    * @param {AppManager} manager
    * @memberof InfoContentsView
    */
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super();
     this.manager = manager;
     this.setJwfStyle("InfoContentsView");

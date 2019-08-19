@@ -2,8 +2,8 @@ import * as JWF from "javascript-window-framework";
 import { FileModule, FileInfo } from "./FileModule";
 import { DirView } from "./DirView";
 import { FileView } from "./FileView";
-import "./scss/FileWindow.scss";
-import { AppManager } from "../Manager/FrontManager";
+import "../../resource/File/scss/FileWindow.scss";
+import { Manager } from "../Manager/Manager";
 interface CustomMap extends JWF.WINDOW_EVENT_MAP {
   enterFile: [{ fileInfo: FileInfo; enter: boolean }];
 }
@@ -15,7 +15,7 @@ interface CustomMap extends JWF.WINDOW_EVENT_MAP {
  * @extends {JWF.FrameWindow}
  */
 export class FileWindow<T extends CustomMap> extends JWF.FrameWindow<T> {
-  public constructor(manager: AppManager,dirId?:number) {
+  public constructor(manager: Manager,dirId?:number) {
     super();
     this.setJwfStyle("FileWindow");
 

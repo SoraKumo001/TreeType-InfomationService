@@ -3,16 +3,15 @@ import { TopMenu } from "./TopMenu";
 import { InfoTreeView } from "../Contents/InfoTreeView";
 import { ContentsModule } from "../Contents/ContentsModule";
 import { InfoContentsView } from "../Contents/InfoContentsView";
-import { RouterModule } from "../Manager/RouterModule";
-import { UserModule } from "../User/UserModule";
 import { TreeItem } from "javascript-window-framework";
 import "analytics-gtag";
-import { AppManager } from "../Manager/FrontManager";
+import { Manager, RouterModule, UserModule } from "@jswf/manager";
+
 
 export class MainView extends JWF.BaseView {
   private routerModule: RouterModule;
   private infoTreeView: InfoTreeView;
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super({ overlap: true });
     this.setMaximize(true);
     this.setJwfStyle("MainView");

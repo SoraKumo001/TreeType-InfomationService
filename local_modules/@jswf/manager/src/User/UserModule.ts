@@ -1,5 +1,5 @@
 import { BaseModule, ModuleMap } from "../Manager/BaseModule";
-import { AppManager } from "../Manager/FrontManager";
+import { Manager } from "../Manager/Manager";
 
 
 export interface UserInfo {
@@ -10,7 +10,7 @@ export interface UserInfo {
   admin: boolean;
 }
 
-export interface CustomMap extends ModuleMap {
+interface CustomMap extends ModuleMap {
   loginUser: [UserInfo];
   updateUser: [{no:number}];
 }
@@ -25,7 +25,7 @@ export interface CustomMap extends ModuleMap {
 export class UserModule extends BaseModule<CustomMap> {
   private userInfo?: UserInfo;
 
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super(manager);
     const adapter = this.getAdapter();
     const value = sessionStorage.getItem(adapter.getKeyName() + "UserInfo");

@@ -4,12 +4,12 @@ import {
   SettingData,
   SettingView
 } from "./SettingModule";
-import { AppManager } from "../Manager/FrontManager";
+import { Manager } from "../Manager/Manager";
 
 export class SettingWindow extends JWF.FrameWindow {
   private treeView: JWF.TreeView;
-  private manager: AppManager;
-  public constructor(manager: AppManager) {
+  private manager: Manager;
+  public constructor(manager: Manager) {
     super();
     this.setJwfStyle("SettingWindow");
     this.manager = manager;

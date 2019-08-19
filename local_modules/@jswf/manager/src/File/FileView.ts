@@ -2,10 +2,8 @@ import * as JWF from "javascript-window-framework";
 import { FileModule, FileInfo } from "./FileModule";
 import { FileEditWindow } from "./FileEditWindow";
 import { WINDOW_EVENT_MAP } from "javascript-window-framework";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const IMAGE_FILE = require("./images/file.svg");
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const IMAGE_FOLDER = require("./images/folder.svg");
+import IMAGE_FILE from "../../resource/File/images/file.svg";
+import IMAGE_FOLDER from "../../resource/File/images/folder.svg";
 
 export interface CustomMap extends WINDOW_EVENT_MAP {
   selectDir: [number]; //parameter

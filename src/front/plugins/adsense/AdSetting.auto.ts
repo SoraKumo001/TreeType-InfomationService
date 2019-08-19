@@ -4,15 +4,15 @@
  */
 
 import * as JWF from "javascript-window-framework";
+import { SettingView, ParamsModule, Manager, SettingModule } from "@jswf/manager";
+import { getManager } from "../..";
 
-import { SettingView, SettingModule } from "../../Setting/SettingModule";
-import { ParamsModule } from "../../Manager/ParamsModule";
-import { AppManager, appManager } from "../../Manager/FrontManager";
+
 
 export class AdSettingView extends SettingView {
   private paramsModule: ParamsModule;
   private form: JWF.TableFormView;
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super(manager);
     this.setJwfStyle("AdSettingView");
 
@@ -56,5 +56,5 @@ export class AdSettingView extends SettingView {
   }
 }
 
-const settingModule = appManager.getModule(SettingModule);
+const settingModule = getManager().getModule(SettingModule);
 settingModule.addSetting("Google AdSense", AdSettingView);
