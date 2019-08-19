@@ -4,7 +4,7 @@
  */
 
 import * as JWF from "javascript-window-framework";
-import { AppManager} from "./FrontManager";
+import { Manager} from "./Manager";
 
 export interface ModuleMap{
   [key:string]:unknown[]
@@ -25,8 +25,8 @@ export class BaseModuleRemover implements JWF.WindowRemover{
 }
 export class BaseModule<T extends ModuleMap=ModuleMap> {
   private listeners: ModuleMap = {};
-  private manager: AppManager;
-  public constructor(manager: AppManager) {
+  private manager: Manager;
+  public constructor(manager: Manager) {
     this.manager = manager;
   }
   public getManager() {

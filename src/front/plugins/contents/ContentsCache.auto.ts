@@ -4,13 +4,13 @@
  */
 
 import { ContentsModule, TreeContents } from "../../Contents/ContentsModule";
-import { BaseModule } from "../../Manager/BaseModule";
-import { AppManager, appManager } from "../../Manager/FrontManager";
+import { BaseModule, Manager } from "@jswf/manager";
+import { getManager } from "../..";
 
 
 export class ContentsCacheModule extends BaseModule {
   private treeContents?: TreeContents;
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super(manager);
     const contentsModule = manager.getModule(ContentsModule);
     contentsModule.addEventListener("getTree", treeContents => {
@@ -63,7 +63,7 @@ export class ContentsCacheModule extends BaseModule {
 
 }
 //起動直後に呼ばれるように自分自身を作成
-appManager.getModule(ContentsCacheModule);
+getManager().getModule(ContentsCacheModule);
 
 /*
 export interface CustomMap extends ModuleMap {

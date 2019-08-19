@@ -19,10 +19,10 @@ class DtsBundlePlugin {
 const config = {
   mode: "development",
   //mode: "production",
-  entry: [path.resolve(__dirname, "jwf/javascript-window-framework.ts")],
+  entry: [path.resolve(__dirname, "index.ts")],
   output: {
-    library: "javascript-window-framework",
-    libraryTarget: "amd",
+    library: "@jswf/manager",
+    libraryTarget: "commonjs",
     filename: "index.js",
     path: path.resolve(__dirname, "../dist")
   },
@@ -48,15 +48,13 @@ const config = {
     ]
   },
   resolve: {
-    symlinks: false,
-    extensions: [".ts", ".js", ".scss", "css", ".svg"],
-    moduleExtensions: ['node_modules']
+    extensions: [".ts", ".js", ".scss", "css", ".svg"]
   },
   devtool: "source-map",
   plugins: [
     new DtsBundlePlugin({
-      name: "javascript-window-framework",
-      main: path.resolve(__dirname, "../dist/javascript-window-framework.d.ts"),
+      name: "@jswf/manager",
+      main: path.resolve(__dirname, "../dist/index.d.ts"),
       out: path.resolve(__dirname, "../dist/index.d.ts"),
       removeSource: true,
       outputAsModuleFolder: false

@@ -36,6 +36,7 @@ const config = {
     ]
   },
   resolve: {
+    symlinks: false,
     extensions: ['.ts', '.js', '.scss', 'css', '.svg'],
     moduleExtensions: ['node_modules']
   },

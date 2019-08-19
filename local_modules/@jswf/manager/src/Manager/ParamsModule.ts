@@ -1,6 +1,6 @@
 import { BaseModule, ModuleMap} from "./BaseModule";
 
-export interface CustomMap extends ModuleMap {
+interface CustomMap extends ModuleMap {
   updateParam: [string, unknown]; //name,value
   updateGlobalParam: [string, unknown]; //name,value
 }

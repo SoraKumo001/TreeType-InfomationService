@@ -12,12 +12,11 @@ import {
   TextBox,
   sprintf
 } from "javascript-window-framework";
-import { RouterModule } from "../../Manager/RouterModule";
 import { ContentsCacheModule } from "./ContentsCache.auto";
-import { appManager, AppManager } from "../../Manager/FrontManager";
-
-const contentsModule = appManager.getModule(ContentsModule);
-const contentsCacheModule = appManager.getModule(ContentsCacheModule);
+import { getManager } from "../..";
+import { RouterModule, Manager } from "@jswf/manager";
+const contentsModule = getManager().getModule(ContentsModule);
+const contentsCacheModule = getManager().getModule(ContentsCacheModule);
 
 contentsModule.addEventListener("drawContents", (client, id) => {
   const contentsPage = client.querySelector(
@@ -33,17 +32,17 @@ contentsModule.addEventListener("drawContents", (client, id) => {
   search.style.borderRadius = "1em";
   search.innerText = "検索";
   search.addEventListener("click", () => {
-    new ContentsSearchWindow(appManager);
+    new ContentsSearchWindow(getManager());
   });
   contentsPage.insertBefore(search, contentsPage.firstChild);
 });
 
-const routerModule = appManager.getModule(RouterModule);
+const routerModule = getManager().getModule(RouterModule);
 
 export class ContentsSearchWindow extends FrameWindow {
   private searchBox: TextBox;
   private listView: ListView;
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super();
     this.setTitle("検索");
     this.setSize(600, 400);
@@ -112,7 +111,7 @@ export class ContentsSearchWindow extends FrameWindow {
 routerModule.addEventListener("goLocation",()=>{
   const keyword = routerModule.getLocationParam("search");
   if(keyword){
-    const searchWindow = new ContentsSearchWindow(appManager);
+    const searchWindow = new ContentsSearchWindow(getManager());
     searchWindow.search(keyword);
     searchWindow.foreground();
   }

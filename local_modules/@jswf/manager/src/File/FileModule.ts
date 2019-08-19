@@ -11,7 +11,7 @@ export interface FileInfo {
   childs: FileInfo[];
 }
 
-export interface CustomMap extends ModuleMap {
+export interface FileModuleMap extends ModuleMap {
   update_dir: [number, number]; //parentId,dirId
   delete_file: [number | number[]]; //fileId
   update_file: [number]; //fileId
@@ -25,7 +25,7 @@ export interface CustomMap extends ModuleMap {
  * @class FileModule
  * @extends {BaseModule<CustomMap>}
  */
-export class FileModule extends BaseModule<CustomMap> {
+export class FileModule extends BaseModule<FileModuleMap> {
   public getDirs() {
     const adapter = this.getAdapter();
     return adapter.exec("Files.getDirList") as Promise<FileInfo>;
