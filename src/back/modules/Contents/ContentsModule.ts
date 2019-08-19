@@ -125,10 +125,8 @@ export class Contents extends amf.Module {
   public async getParent(id: number): Promise<number | null> {
     if (!this.repository) return 0;
     const contents = await this.repository.findOne(id);
-    if (!contents) return 0;
-    const parents = await this.repository.findAncestors(contents);
-    if (parents && parents.length) return parents[0].id;
-    return null;
+    if (!contents || !contents.parentId) return 0;
+    return contents.parentId
   }
   /**
    *コンテンツの上位に対象のIDがあるかチェックする
