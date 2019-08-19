@@ -1,8 +1,8 @@
 import * as JWF from "javascript-window-framework";
-import { SettingView, SettingModule } from "../SettingModule";
-import { BaseModule } from "../../Manager/BaseModule";
 import "./DatabaseView.scss";
-import { AppManager, appManager } from "../../Manager/FrontManager";
+import { BaseModule, SettingView, Manager, SettingModule } from "@jswf/manager";
+import { getManager } from "..";
+
 interface DatabaseInfo {
   connect: boolean;
   database: string;
@@ -34,7 +34,7 @@ export class DatabaseModule extends BaseModule {
 export class DatabaseView extends SettingView {
   private statusView: JWF.BaseView;
   private databaseModule: DatabaseModule;
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super(manager);
 
     //DB操作モジュールの読み出し
@@ -128,5 +128,5 @@ export class DatabaseView extends SettingView {
   }
 }
 
-const settingModule = appManager.getModule(SettingModule);
+const settingModule = getManager().getModule(SettingModule);
 settingModule.addSetting("システム/データベース設定", DatabaseView);

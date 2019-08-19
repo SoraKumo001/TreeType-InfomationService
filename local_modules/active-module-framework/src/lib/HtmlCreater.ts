@@ -2,7 +2,7 @@ import { JSDOM } from "jsdom";
 import * as util from "util";
 import * as fs from "fs";
 import * as path from "path";
-import { sprintf } from "sprintf";
+import { sprintf } from "sprintf-js";
 import express = require("express");
 import { Module } from "./Module";
 

@@ -6,9 +6,9 @@
 import * as JWF from "javascript-window-framework";
 import { ContentsModule } from "./ContentsModule";
 import "./scss/ContentsImportWindow.scss";
-import { AppManager } from "../Manager/FrontManager";
+import { Manager } from "@jswf/manager";
 export class ContentsImportWindow extends JWF.FrameWindow {
-  public constructor(manager: AppManager, pid: number) {
+  public constructor(manager: Manager, pid: number) {
     super();
     this.setJwfStyle("ContentsImportWindow");
     const client = this.getClient();

@@ -1,16 +1,12 @@
 import * as JWF from "javascript-window-framework";
 
 import "./TopMenu.scss";
-import { UserInfo, UserModule } from "../User/UserModule";
-import { LoginWindow } from "../User/LoginWindow";
-import { SettingWindow } from "../Setting/SettingWindow";
-import { ParamsModule } from "../Manager/ParamsModule";
-import { AppManager } from "../Manager/FrontManager";
+import { Manager, SettingWindow, LoginWindow, UserModule, ParamsModule, UserInfo } from "@jswf/manager";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LogoImage = require("../images/sorakumo_logo.svg");
 export class TopMenu extends JWF.BaseView {
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super();
     this.setJwfStyle("TopMenu");
     this.setHeight(80);

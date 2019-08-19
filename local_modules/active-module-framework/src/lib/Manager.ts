@@ -40,7 +40,7 @@ export interface ManagerParams {
   jsPath: string[];
   jsPriority: string[];
   cluster?: number;
-  debug?: boolean;
+  debug?: boolean | number;
   listen: number | string;
   test?: boolean;
   listened?: (port: string | number) => void;
@@ -72,11 +72,8 @@ export function Sleep(timeout: number): Promise<void> {
   );
 }
 
-
-
-
 interface ManagerMap {
-  "message":[unknown]
+  message: [unknown];
 }
 
 /**
@@ -90,7 +87,7 @@ export class Manager {
     [key: string]: unknown[];
   } = {};
 
-  private debug?: boolean;
+  private debug?: number | boolean;
   private localDB: LocalDB = new LocalDB();
   private stderr: string = "";
   private modulesList: Module[] = [];
@@ -161,11 +158,16 @@ export class Manager {
    * @param {...T[K]} params
    * @memberof Module
    */
-  public callEvent(name: keyof ManagerMap, ...params: ManagerMap[keyof ManagerMap]): void {
+  public callEvent(
+    name: keyof ManagerMap,
+    ...params: ManagerMap[keyof ManagerMap]
+  ): void {
     const listener = this.listeners[name];
     if (listener) {
       for (const proc of listener) {
-        (proc as ((...params: ManagerMap[keyof ManagerMap]) => unknown))(...params);
+        (proc as ((...params: ManagerMap[keyof ManagerMap]) => unknown))(
+          ...params
+        );
       }
     }
   }
@@ -246,7 +248,7 @@ export class Manager {
       this.debug = params.debug;
 
       process.on("message", e => {
-        this.callEvent("message",e);
+        this.callEvent("message", e);
       });
 
       this.output("子プロセス起動");
@@ -293,18 +295,21 @@ export class Manager {
     }
     return true;
   }
-  public sendMessage(value:unknown){
-    return new Promise((resolve,reject)=>{
+  public sendMessage(value: unknown) {
+    return new Promise((resolve, reject) => {
       if (process.send) {
-        process.send({
-          type: "process:msg",
-          data: value
-        },undefined,undefined,(error)=>{
-          if(error)
-            reject(error);
-          else
-            resolve();
-        });
+        process.send(
+          {
+            type: "process:msg",
+            data: value
+          },
+          undefined,
+          undefined,
+          error => {
+            if (error) reject(error);
+            else resolve();
+          }
+        );
       }
     });
   }
@@ -717,7 +722,7 @@ export class Manager {
           //戻り値の受け取り
           const funcResult = funcPt.call(classPt, ...func.params);
           result.value = await funcResult;
-          if (this.debug)
+          if (this.debug && this.debug !== 2)
             this.output("実行結果: %s", JSON.stringify(result.value));
         } catch (e) {
           // eslint-disable-next-line no-console
@@ -731,7 +736,7 @@ export class Manager {
     }
     //クライアントに返すデータを設定
     if (session.isReturn()) {
-      res.json(session.result);
+      res.json(session.result).on("error", () => {});
       res.end();
     }
   }

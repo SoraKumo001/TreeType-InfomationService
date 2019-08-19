@@ -1,9 +1,9 @@
 import * as JWF from "javascript-window-framework";
 import { UserModule } from "./UserModule";
-import { AppManager } from "../Manager/FrontManager";
+import { Manager } from "../Manager/Manager";
 
-const LOGIN_ID_SVG = require("./images/login_id.svg");
-const LOGIN_PASS_SVG = require("./images/login_pass.svg");
+import LOGIN_ID_SVG from "../../resource/User/images/login_id.svg";
+import LOGIN_PASS_SVG from "../../resource/User/images/login_pass.svg";
 
 /**
  *ログインウインドウ用クラス
@@ -14,7 +14,7 @@ const LOGIN_PASS_SVG = require("./images/login_pass.svg");
  */
 export class LoginWindow extends JWF.FrameWindow {
   public constructor(
-    manager: AppManager,
+    manager: Manager,
     userId?: string,
     userPass?: string,
     local?: boolean

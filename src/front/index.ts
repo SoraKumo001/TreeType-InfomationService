@@ -9,13 +9,15 @@ import 'core-js/features/promise'
 
 
 import { MainView } from "./Main/MainView";
-import { UserModule, UserInfo } from "./User/UserModule";
-import { UserEditWindow } from "./User/UserEditWindow";
-import { AppManager } from './Manager/FrontManager';
 import "./index.scss";
+import { Manager, UserModule, UserInfo, UserEditWindow } from '@jswf/manager';
+
+export function getManager(){
+  return appManager;
+}
 
 //全体で使用するアプリケーションマネージャを作成
-const appManager = new AppManager();
+const appManager = new Manager();
 
 const userModule = appManager.getModule(UserModule);
 userModule.addEventListener("loginUser", (userInfo: UserInfo) => {

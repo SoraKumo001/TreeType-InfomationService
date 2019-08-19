@@ -9,14 +9,14 @@ import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
 import { ContentsImportWindow } from "./ContentsInportWindow";
 import "./scss/InfoTreeView.scss";
-import { AppManager } from "../Manager/FrontManager";
+import { Manager } from "@jswf/manager";
 
 export class InfoTreeView extends JWF.TreeView {
-  private manager: AppManager;
+  private manager: Manager;
   private contentsModule: ContentsModule;
   private selectId: number = 0;
   private overId: number = 0;
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super();
     this.manager = manager;
     const contentsModule = manager.getModule(ContentsModule);
@@ -163,7 +163,7 @@ export class InfoTreeView extends JWF.TreeView {
       for (let i = 0; value.children[i]; i++) {
         const child = value.children[i];
         // if (/*Contents.visible || */ child["stat"])
-        this.setTreeItem(item.addItem("", flag||level<1), child);
+        this.setTreeItem(item.addItem("", flag), child);
       }
     }
   }

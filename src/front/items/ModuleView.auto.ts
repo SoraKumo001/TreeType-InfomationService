@@ -1,10 +1,10 @@
-import { SettingView, SettingModule } from "../SettingModule";
-import { InfoModule } from "../InfoModule";
 import "./ModuleView.scss";
-import { AppManager, appManager } from "../../Manager/FrontManager";
+import { SettingView, Manager, InfoModule, SettingModule } from "@jswf/manager";
+import { getManager } from "..";
+
 
 export class ModuleView extends SettingView {
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super(manager);
     this.setJwfStyle("ModuleView");
 
@@ -36,5 +36,5 @@ export class ModuleView extends SettingView {
   }
 }
 
-const settingModule = appManager.getModule(SettingModule);
+const settingModule = getManager().getModule(SettingModule);
 settingModule.addSetting("システム/モジュール確認",ModuleView);

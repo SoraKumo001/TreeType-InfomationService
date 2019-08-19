@@ -1,15 +1,14 @@
 import * as JWF from "javascript-window-framework";
-
-import { SettingView, SettingModule } from "../SettingModule";
-import { ParamsModule } from "../../Manager/ParamsModule";
-import { FileWindow } from "../../File/FileWindow";
+import { SettingView, Manager, ParamsModule, FileWindow, SettingModule } from "@jswf/manager";
 import { MessageBox } from "javascript-window-framework";
-import { AppManager, appManager } from "../../Manager/FrontManager";
+import { getManager } from "..";
+
+
 
 export class BasicView extends SettingView {
   private paramsModule: ParamsModule;
   private form: JWF.TableFormView;
-  public constructor(manager: AppManager) {
+  public constructor(manager: Manager) {
     super(manager);
     this.setJwfStyle("BasicView");
 
@@ -102,5 +101,5 @@ export class BasicView extends SettingView {
   }
 }
 
-const settingModule = appManager.getModule(SettingModule);
+const settingModule = getManager().getModule(SettingModule);
 settingModule.addSetting("システム/基本設定", BasicView);
