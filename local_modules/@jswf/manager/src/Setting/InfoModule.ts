@@ -1,4 +1,5 @@
-import { BaseModule} from "../Manager/BaseModule";
+import { BaseModule } from "../Manager/BaseModule";
+
 
 export interface ModuleInfo {
     className: string;
@@ -19,6 +20,6 @@ export class InfoModule extends BaseModule {
   public getInfo():Promise<ModuleInfo[]>{
     const adapter = this.getAdapter();
     //ユーザ情報の要求
-    return adapter.exec("TestModule.getModuleInfo") as Promise<ModuleInfo[]>;
+    return adapter.exec("InfoModule.getModuleInfo") as Promise<ModuleInfo[]>;
   }
 }

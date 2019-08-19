@@ -3,9 +3,9 @@
  *
  */
 
-import { ParamsModule } from "../../Manager/ParamsModule";
 import { ContentsModule } from "../../Contents/ContentsModule";
-import { appManager } from "../../Manager/FrontManager";
+import { ParamsModule } from "@jswf/manager";
+import { getManager } from "../..";
 
 declare var adsbygoogle: unknown;
 /**
@@ -17,7 +17,7 @@ declare interface Window {
 }
 declare var window: Window;
 
-const paramsModule = appManager.getModule(ParamsModule);
+const paramsModule = getManager().getModule(ParamsModule);
 
 //パラメータの読み出し
 let adSenseValue: { top: string; bottom: string } | null = null;
@@ -29,7 +29,7 @@ const loadAdParam = async () => {
 loadAdParam();
 
 //コンテンツモジュールに割り込み設定
-const contentsModule = appManager.getModule(ContentsModule);
+const contentsModule = getManager().getModule(ContentsModule);
 contentsModule.addEventListener("drawContents", (client) => {
   if (adSenseValue) {
    // let flag = false;

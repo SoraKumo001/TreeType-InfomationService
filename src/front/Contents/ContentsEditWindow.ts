@@ -4,11 +4,8 @@
  */
 import * as JWF from "javascript-window-framework";
 import { ContentsModule, MainContents } from "./ContentsModule";
-import { FileWindow } from "../File/FileWindow";
-import { FileModule } from "../File/FileModule";
-import { AppManager } from "../Manager/FrontManager";
-import { TextEditWindow } from "javascript-window-framework";
-import { PanelControl } from "javascript-window-framework";
+import { TextEditWindow,PanelControl } from "javascript-window-framework";
+import {Manager, FileModule, FileWindow} from "@jswf/manager";
 
 /**
  *コンテンツ編集用ウインドウクラス
@@ -18,17 +15,17 @@ import { PanelControl } from "javascript-window-framework";
  * @extends {TextEditWindow}
  */
 export class ContentsEditWindow extends TextEditWindow {
-  private manager: AppManager;
+  private manager: Manager;
   private contents?: MainContents;
   private panel: JWF.Panel[] = [];
   private contentsModule: ContentsModule;
   /**
    *Creates an instance of ContentsEditWindow.
-   * @param {AppManager} manager
+   * @param {Manager} manager
    * @param {number} [id]
    * @memberof ContentsEditWindow
    */
-  public constructor(manager: AppManager, id?: number) {
+  public constructor(manager: Manager, id?: number) {
     super();
     this.manager = manager;
     this.contentsModule = manager.getModule(ContentsModule);

@@ -1,5 +1,4 @@
-import * as amf from "active-module-framework";
-import { HtmlCreater } from "active-module-framework";
+import { HtmlCreater, Module } from "active-module-framework";
 import { ParamModule } from "../App/ParamModule";
 
 /**
@@ -9,7 +8,7 @@ import { ParamModule } from "../App/ParamModule";
  * @class AdSense
  * @extends {amf.Module}
  */
-export class AdSense extends amf.Module {
+export class AdSense extends Module {
   public async onCreateHtml(creater: HtmlCreater): Promise<void> {
     const paramsModule = await this.getModule(ParamModule);
 
