@@ -575,11 +575,12 @@ export class Contents extends amf.Module {
     id: number,
     admin: boolean
   ): Promise<TreeContents | null> {
-    const visible = admin ? "" : " and visible=true";
+    const visible = admin ? undefined : "visible=true";
     const repository = this.repository;
     if (!repository) return null;
-    const values = await repository.getChildren(["id=:id" + visible, { id }], {
+    const values = await repository.getChildren(["id=:id", { id }], {
       select: ["id", "parentId", "visible", "date", "update", "type", "title"],
+      where:visible,
       order: `treeEntity.type='PAGE',"treeEntity".priority`
     });
     if (!values) return null;
