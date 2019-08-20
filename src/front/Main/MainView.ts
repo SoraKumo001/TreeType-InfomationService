@@ -18,7 +18,7 @@ export class MainView extends JWF.BaseView {
 
     const splitter = new JWF.Splitter();
     this.addChild(splitter, "client");
-    splitter.setSplitterPos(300, "ew");
+    splitter.setSplitterPos(400, "ew");
     splitter.setOverlay(true, 600);
 
     splitter.addChild(0, new TopMenu(manager), "bottom");
