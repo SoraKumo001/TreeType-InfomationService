@@ -3,7 +3,7 @@
  *
  */
 
-import * as JWF from "javascript-window-framework";
+import * as JWF from "@jswf/core";
 import { ContentsModule } from "./ContentsModule";
 import "./scss/ContentsImportWindow.scss";
 import { Manager } from "@jswf/manager";

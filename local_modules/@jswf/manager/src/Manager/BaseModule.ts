@@ -3,7 +3,7 @@
  *通信アダプターやモジュールインスタンスを取り扱う
  */
 
-import * as JWF from "javascript-window-framework";
+import * as JWF from "@jswf/core";
 import { Manager} from "./Manager";
 
 export interface ModuleMap{

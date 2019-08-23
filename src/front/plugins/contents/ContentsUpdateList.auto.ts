@@ -6,7 +6,7 @@ import {
   MainContents,
   ContentsModule
 } from "../../Contents/ContentsModule";
-import { sprintf } from "javascript-window-framework";
+import { sprintf } from "@jswf/core";
 import { ContentsCacheModule } from "./ContentsCache.auto";
 import { getManager } from "../..";
 

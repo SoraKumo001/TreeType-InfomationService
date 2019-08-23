@@ -2,7 +2,7 @@
  *目次表示用プラグイン
  */
 import { ContentsModule } from "../../Contents/ContentsModule";
-import { sprintf } from "javascript-window-framework";
+import { sprintf } from "@jswf/core";
 import "./ContentsTable.auto.scss";
 import { ContentsCacheModule } from "./ContentsCache.auto";
 import { getManager } from "../..";

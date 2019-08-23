@@ -1,12 +1,11 @@
-import * as JWF from "javascript-window-framework";
+import * as JWF from "@jswf/core";
 import { TopMenu } from "./TopMenu";
 import { InfoTreeView } from "../Contents/InfoTreeView";
 import { ContentsModule } from "../Contents/ContentsModule";
 import { InfoContentsView } from "../Contents/InfoContentsView";
-import { TreeItem } from "javascript-window-framework";
+import { TreeItem } from "@jswf/core";
 import "analytics-gtag";
 import { Manager, RouterModule, UserModule } from "@jswf/manager";
-
 
 export class MainView extends JWF.BaseView {
   private routerModule: RouterModule;
@@ -45,8 +44,10 @@ export class MainView extends JWF.BaseView {
           AnalyticsUA: string;
         })["AnalyticsUA"];
         // eslint-disable-next-line no-undef
+        const page_location = `${location.protocol}://${location.host}${location.pathname}`;
         gtag("config", AnalyticsUA, {
           page_title: title,
+          page_location,
           page_path: "/?p=" + id
         });
       } catch (e) {

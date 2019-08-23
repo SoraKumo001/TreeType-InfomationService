@@ -3,7 +3,7 @@
  *
  */
 
-import { FrameWindow } from "javascript-window-framework";
+import { FrameWindow } from "@jswf/core";
 import "./scss/ContentsControleWindow.scss";
 export class ContentsControleWindow extends FrameWindow {
   public constructor() {

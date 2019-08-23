@@ -11,7 +11,7 @@ import {
   Button,
   TextBox,
   sprintf
-} from "javascript-window-framework";
+} from "@jswf/core";
 import { ContentsCacheModule } from "./ContentsCache.auto";
 import { getManager } from "../..";
 import { RouterModule, Manager } from "@jswf/manager";

@@ -55,11 +55,12 @@ const config = {
       })
     ]
   },
+  performance: { hints: false },
   plugins: [
     new HardSourceWebpackPlugin()
   ]
 };
-if (config.mode === "development") {
+//if (config.mode === "development") {
   config.devtool = 'source-map';
-}
+//}
 module.exports = config;

@@ -1,6 +1,6 @@
-import * as JWF from "javascript-window-framework";
+import * as JWF from "@jswf/core";
 import { SettingView, Manager, ParamsModule, FileWindow, SettingModule } from "@jswf/manager";
-import { MessageBox } from "javascript-window-framework";
+import { MessageBox } from "@jswf/core";
 import { getManager } from "..";
 
 

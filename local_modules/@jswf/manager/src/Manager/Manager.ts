@@ -1,4 +1,4 @@
-import * as JWF from "javascript-window-framework";
+import * as JWF from "@jswf/core";
 import { BaseModule } from "./BaseModule";
 import { RouterModule } from "./RouterModule";
 
@@ -38,12 +38,12 @@ export class Manager {
     return module;
   }
   public goLocation(
-    params: { [key: string]: string | number | null },
+    params: { [key: string]: string | number | null | undefined },
     history?: boolean
   ): void;
   public goLocation(
     name: string,
-    param: string | number | null,
+    param: string | number | null | undefined,
     history?: boolean
   ): void;
   public goLocation(): void;
