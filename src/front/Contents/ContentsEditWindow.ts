@@ -2,9 +2,8 @@
  *コンテンツ編集用ウインドウ
  *
  */
-import * as JWF from "javascript-window-framework";
 import { ContentsModule, MainContents } from "./ContentsModule";
-import { TextEditWindow,PanelControl } from "javascript-window-framework";
+import { TextEditWindow,PanelControl,Panel, sprintf, CalendarView } from "@jswf/core";
 import {Manager, FileModule, FileWindow} from "@jswf/manager";
 
 /**
@@ -17,7 +16,7 @@ import {Manager, FileModule, FileWindow} from "@jswf/manager";
 export class ContentsEditWindow extends TextEditWindow {
   private manager: Manager;
   private contents?: MainContents;
-  private panel: JWF.Panel[] = [];
+  private panel: Panel[] = [];
   private contentsModule: ContentsModule;
   /**
    *Creates an instance of ContentsEditWindow.
@@ -33,7 +32,7 @@ export class ContentsEditWindow extends TextEditWindow {
     this.setTitle("コンテンツ編集");
 
     for (let i = 0; i < 2; i++) {
-      const panel = new JWF.Panel();
+      const panel = new Panel();
       this.panel[i] = panel;
       this.addChild(panel, "top");
     }
@@ -50,7 +49,7 @@ export class ContentsEditWindow extends TextEditWindow {
         if (!contents) return;
         const id = contents.id;
         const fileModule = this.manager.getModule(FileModule);
-        const dir = JWF.sprintf(
+        const dir = sprintf(
           "/Contents/%04d/%02d",
           Math.floor(id / 100) * 100,
           id % 100
@@ -98,7 +97,7 @@ export class ContentsEditWindow extends TextEditWindow {
     if (!contents) return;
     const id = contents.id;
     const fileModule = this.manager.getModule(FileModule);
-    const path = JWF.sprintf(
+    const path = sprintf(
       "/Contents/%04d/%02d",
       Math.floor(id / 100) * 100,
       id % 100
@@ -152,7 +151,7 @@ export class ContentsEditWindow extends TextEditWindow {
       value: this.getDateString(new Date()),
       event: function(e) {
         const input = e as HTMLInputElement;
-        const calendar = new JWF.CalendarView({ frame: true });
+        const calendar = new CalendarView({ frame: true });
         calendar.setSelect(new Date(input.value));
 
         that.addFrameChild(calendar);
@@ -232,7 +231,7 @@ export class ContentsEditWindow extends TextEditWindow {
    * @memberof ContentsEditWindow
    */
   private getDateString(date: Date): string {
-    return JWF.sprintf(
+    return sprintf(
       "%d-%02d-%02d",
       date.getFullYear(),
       date.getMonth() + 1,
@@ -248,7 +247,7 @@ export class ContentsEditWindow extends TextEditWindow {
    * @memberof ContentsEditWindow
    */
   private getTimeString(date: Date): string {
-    return JWF.sprintf(
+    return sprintf(
       "%02d:%02d:%02d",
       date.getHours(),
       date.getMinutes(),

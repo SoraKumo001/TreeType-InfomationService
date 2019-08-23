@@ -1,0 +1,49 @@
+{
+  "name": "@jswf/core",
+  "version": "0.1.9",
+  "description": "JavaScript Window Framework",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -b ./src",
+    "watch": "tsc -b ./src -w",
+    "build-none-module": "npx webpack --config ./src/none-module-webpack.config.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "jswf",
+    "Front-end",
+    "Framework"
+  ],
+  "author": "SoraKumo",
+  "license": "MIT",
+  "bin": {
+    "init-jwf": "bin/init-jwf.js"
+  },
+  "dependencies": {
+    "fs-extra": "~8.1.0"
+  },
+  "devDependencies": {
+    "css-loader": "~3.2.0",
+    "dts-bundle": "~0.7.3",
+    "dts-module-filter": "~1.0.0",
+    "es6-promise": "~4.2.8",
+    "node-sass": "~4.12.0",
+    "sass-loader": "~7.3.1",
+    "source-map-loader": "~0.2.4",
+    "style-loader": "~1.0.0",
+    "ts-loader": "~6.0.4",
+    "typescript": "~3.5.3",
+    "url-loader": "~2.1.0",
+    "webpack": "~4.39.2",
+    "webpack-cli": "~3.3.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JavaScript-WindowFramework/core.git"
+  },
+  "homepage": "https://croud.jp"
+}

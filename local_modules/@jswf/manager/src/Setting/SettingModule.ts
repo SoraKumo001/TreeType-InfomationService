@@ -1,4 +1,4 @@
-import { BaseView } from "javascript-window-framework";
+import { BaseView } from "@jswf/core";
 import { BaseModule } from "../Manager/BaseModule";
 import { Manager } from "../Manager/Manager";
 /**

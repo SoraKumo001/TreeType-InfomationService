@@ -13,6 +13,6 @@
   "license": "MIT",
   "devDependencies": {
     "typescript": "~3.5.3",
-    "javascript-window-framework": "file:../../javascript-window-framework"
+    "@jswf/core": "file:../core"
   }
 }

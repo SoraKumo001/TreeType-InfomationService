@@ -2,7 +2,7 @@
  *コンテンツのページ表示用
  *
  */
-import * as JWF from "javascript-window-framework";
+import * as JWF from "@jswf/core";
 import { ContentsModule, MainContents } from "./ContentsModule";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";

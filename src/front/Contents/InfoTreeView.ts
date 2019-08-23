@@ -2,9 +2,9 @@
  *コンテンツのタイトルツリーの管理
  *
  */
-import * as JWF from "javascript-window-framework";
+import * as JWF from "@jswf/core";
 import { ContentsModule, TreeContents } from "./ContentsModule";
-import { TreeItem } from "javascript-window-framework";
+import { TreeItem } from "@jswf/core";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
 import { ContentsImportWindow } from "./ContentsInportWindow";

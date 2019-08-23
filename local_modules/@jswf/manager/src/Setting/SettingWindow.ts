@@ -1,4 +1,4 @@
-import * as JWF from "javascript-window-framework";
+import * as JWF from "@jswf/core";
 import {
   SettingModule,
   SettingData,

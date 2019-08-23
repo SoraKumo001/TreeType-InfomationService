@@ -1,7 +1,7 @@
-import * as JWF from "javascript-window-framework";
+import * as JWF from "@jswf/core";
 import { FileModule, FileInfo } from "./FileModule";
 import { FileEditWindow } from "./FileEditWindow";
-import { WINDOW_EVENT_MAP } from "javascript-window-framework";
+import { WINDOW_EVENT_MAP } from "@jswf/core";
 import IMAGE_FILE from "../../resource/File/images/file.svg";
 import IMAGE_FOLDER from "../../resource/File/images/folder.svg";
 
