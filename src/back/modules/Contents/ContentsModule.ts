@@ -51,6 +51,7 @@ export class ContentsEntity {
   children!: ContentsEntity[];
   @typeorm.TreeParent()
   parent?: ContentsEntity;
+  mpath?: string;
 }
 export interface ConvertContents extends ContentsEntity {
   files?: FileEntity[];
@@ -89,6 +90,7 @@ export class Contents extends amf.Module {
         this.repository = repository;
         if (!(await repository.findOne(1)))
           await repository.save({ title: "TOP" });
+        //await this.updateTree();
       }
     );
     this.remoteDB = remoteDB;
@@ -126,7 +128,7 @@ export class Contents extends amf.Module {
     if (!this.repository) return 0;
     const contents = await this.repository.findOne(id);
     if (!contents || !contents.parentId) return 0;
-    return contents.parentId
+    return contents.parentId;
   }
   /**
    *コンテンツの上位に対象のIDがあるかチェックする
@@ -365,15 +367,15 @@ export class Contents extends amf.Module {
 
     const values = await repository
       .createQueryBuilder()
-      .select(["id"])
-      .where({ parent: id })
+      .select()
+      .where({ parentId: id })
       .orderBy("type='PAGE',priority")
       .getMany();
     let key = 0;
     for (const value of values) {
       value.priority = ++key * 1000;
-      repository.save(value);
     }
+    await repository.save(values);
     return true;
   }
 
@@ -580,7 +582,7 @@ export class Contents extends amf.Module {
     if (!repository) return null;
     const values = await repository.getChildren(["id=:id", { id }], {
       select: ["id", "parentId", "visible", "date", "update", "type", "title"],
-      where:visible,
+      where: visible,
       order: `treeEntity.type='PAGE',"treeEntity".priority`
     });
     if (!values) return null;
@@ -609,8 +611,75 @@ export class Contents extends amf.Module {
       parentId: toId,
       priority: 100000
     }));
-    this.updatePriority(toId);
+    //親子関係のmpathを再構成
+    await this.updateTree(fromId);
+    //優先順位を直す
+    await this.updatePriority(toId);
     return flag;
+  }
+  // public async updateTree() {
+  //   const repository = this.repository;
+  //   if (!repository) return false;
+  //   const items = await repository.find({select:["id","parentId"]});
+  //   if(!items)
+  //     return false;
+  //   const map = new Map<number,ContentsEntity>();
+  //   for(const item of items){
+  //     map.set(item.id,item);
+  //   }
+  //   for(const item of items){
+  //     let mpath = item.id+".";
+  //     let parent:ContentsEntity|undefined = item;
+  //     while(parent!.parentId){
+  //       parent = map.get(parent!.parentId);
+  //       mpath = parent!.id + "." + mpath
+  //     }
+  //     await repository.createQueryBuilder().update().set({mpath}).where({id:item.id}).execute();
+  //   }
+  // }
+  public async updateTree(id: number) {
+    const repository = this.repository;
+    if (!repository) return false;
+    const item = await repository.getChildren(id, {
+      select: ["id", "parentId"]
+    });
+    if (!item) return false;
+    //親のmpathを取得
+    let mpath = "";
+    if (item.parentId) {
+      const parent = (await repository
+        .createQueryBuilder()
+        .select(["mpath"])
+        .where({ id: item.parentId })
+        .getRawOne()) as { mpath: string };
+      if (parent) mpath = parent.mpath;
+    }
+
+    //mpathを再構成
+    const createMpath = async (item: ContentsEntity, parentMpath: string) => {
+      const mpath = `${parentMpath}${item.id}.`;
+      const p: Promise<unknown>[] = [];
+      p.push(
+        repository
+          .createQueryBuilder()
+          .update()
+          .set({ mpath })
+          .where({ id: item.id })
+          .execute()
+      );
+      if (item.children) {
+        for (const child of item.children) {
+          p.push(createMpath(child, mpath));
+        }
+      }
+      await Promise.all(p);
+    };
+    await repository.metadata.connection.transaction(async () => {
+      await createMpath(item, mpath || "");
+    });
+
+    //再構成したmpathを保存
+    //await repository.save(items);
   }
   /**
    *コンテンツデータをインポートする
