@@ -11,7 +11,8 @@ export class SeoModule extends amf.Module {
     const document = creater.getDocument();
 
     const req = creater.getRequest();
-    const id = req.query.p || 1;
+    const uuid = req.query.uuid || "";
+    const id = uuid?await contentsModule.getIdFromUuid(uuid):1;
 
     //パラメータの読み出し
     let [basicData, breads, contents] = await Promise.all([
@@ -34,8 +35,6 @@ export class SeoModule extends amf.Module {
       creater.setStatus(404);
       return;
     }
-    //パンくずリストからページのIDを取得
-    const pageId = breads.id;
 
     let srcUrl;
     if (basicData && basicData["url"]) srcUrl = basicData["url"];
@@ -48,7 +47,7 @@ export class SeoModule extends amf.Module {
         "@type": "ListItem",
         position: 1,
         item: {
-          "@id": url + "/?p=" + item.id,
+          "@id": url + "/?uuid=" + item.uuid,
           name: item.title
         }
       };
@@ -89,7 +88,7 @@ export class SeoModule extends amf.Module {
     document.title = title;
 
     //正規URLの作成(正規IDはページのIDを設定)
-    const normalUrl = `${url}/?p=${pageId}`;
+    const normalUrl = `${url}/?uuid=${breads.uuid}`;
     const link = document.createElement("link");
     link.rel = "canonical";
     link.href = normalUrl;

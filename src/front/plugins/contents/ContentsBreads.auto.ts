@@ -10,7 +10,7 @@ import { getManager } from "../..";
 const contentsModule = getManager().getModule(ContentsModule);
 const contentsCacheModule = getManager().getModule(ContentsCacheModule);
 
-contentsModule.addEventListener("drawContents", (client, id) => {
+contentsModule.addEventListener("drawContents", (client, uuid) => {
   const contentsPage = client.querySelector("[data-type=ContentsPage]");
   if (contentsPage) {
     //パンくず領域の作成
@@ -19,16 +19,16 @@ contentsModule.addEventListener("drawContents", (client, id) => {
     let parent:
       | TreeContents
       | undefined
-      | null = contentsCacheModule.findTreeContents(id);
+      | null = contentsCacheModule.findTreeContents(uuid);
     if (!parent) return;
     while ((parent = parent.parent)) {
       //SEO対策のためaタグを生成
       const link = document.createElement("a");
-      const id = parent.id;
-      link.href = "?p="+id;
+      const uuid = parent.uuid;
+      link.href = "?uuid="+uuid;
       link.innerText = parent.title;
       link.addEventListener("click", (e) => {
-        contentsModule.selectContents(id);
+        contentsModule.selectContents(uuid);
         e.preventDefault();
       });
       breadContents.insertBefore(link, breadContents.firstChild);

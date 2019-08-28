@@ -35,11 +35,11 @@ function getContentsList(
 
 function contentsUpdate(
   body: HTMLDivElement,
-  pageId: number,
+  uuid: string,
   contents: MainContents
 ) {
   body.innerHTML = contents["value"];
-  const tree = contentsCacheModule.findTreeContents(pageId);
+  const tree = contentsCacheModule.findTreeContents(uuid);
   if (!tree) {
     return;
   }
@@ -53,13 +53,13 @@ function contentsUpdate(
   table.dataset.type = "UpdateTable";
   for (let i = 0; list[i] && i < 10; i++) {
     const t = list[i];
-    if(t.id === pageId)
+    if(t.uuid === uuid)
       continue;
     const row = table.insertRow();
 
     //クリックイベントの作成
     row.addEventListener("click", () => {
-      contentsModule.selectContents(t.id);
+      contentsModule.selectContents(t.uuid);
     });
 
     let cell: HTMLTableCellElement;
@@ -83,7 +83,7 @@ function contentsUpdate(
     cell = row.insertCell();
     let p: typeof t | undefined = pageNew||t;
     do {
-      if (p.id === pageId) break;
+      if (p.uuid === uuid) break;
       const title = document.createElement("span");
       title.innerText = p.title;
       cell.insertBefore(title,cell.firstChild);

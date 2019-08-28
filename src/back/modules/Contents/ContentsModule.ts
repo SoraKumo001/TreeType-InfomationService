@@ -6,6 +6,7 @@ import { sprintf } from "sprintf";
 import * as express from "express";
 import * as typeorm from "typeorm";
 import { ExtendRepository } from "../ExtendRepository";
+import { HtmlCreater } from "active-module-framework";
 
 interface TreeContents {
   id: number;
@@ -23,7 +24,8 @@ interface TreeContents {
 export class ContentsEntity {
   @typeorm.PrimaryGeneratedColumn()
   id!: number;
-
+  @typeorm.Column({ generated: "uuid", unique: true })
+  uuid?: string;
   @typeorm.Column({ default: 1000 })
   priority!: number;
   @typeorm.Column({ default: true })
@@ -94,7 +96,19 @@ export class Contents extends amf.Module {
       }
     );
     this.remoteDB = remoteDB;
+
     return true;
+  }
+  public async onCreateHtml(creater: HtmlCreater) {
+    const id = creater.getRequest().query.p;
+    if (id) {
+      if (!this.repository) return;
+      const entity = await this.repository.findOne(id);
+      if(entity){
+        creater.setStatus(301);
+        creater.addHeader("Location","?uuid="+entity.uuid);
+      }
+    }
   }
 
   /**
@@ -231,7 +245,7 @@ export class Contents extends amf.Module {
     if (!repository) return undefined;
 
     const bread = await repository.getParent(["id=:id", { id }], {
-      select: ["id", "title"]
+      select: ["id", "title","uuid"]
     });
     return bread;
   }
@@ -396,13 +410,11 @@ export class Contents extends amf.Module {
     vector: number,
     type: string
   ): Promise<{
-    pid: number;
-    id: number;
+    uuid: string;
   } | null> {
     const repository = this.repository;
     if (!repository) return null;
 
-    let cid = 0;
     let pid = 0;
     let priority = 0;
     switch (vector) {
@@ -436,9 +448,8 @@ export class Contents extends amf.Module {
       title_type: titleType
     });
     if (!result) return null;
-    cid = result.id as number;
     this.updatePriority(pid);
-    return { pid: pid, id: cid };
+    return { uuid: result.uuid! };
   }
   /**
    *コンテンツの削除(関連ファイルも削除)
@@ -581,7 +592,16 @@ export class Contents extends amf.Module {
     const repository = this.repository;
     if (!repository) return null;
     const values = await repository.getChildren(["id=:id", { id }], {
-      select: ["id", "parentId", "visible", "date", "update", "type", "title"],
+      select: [
+        "id",
+        "uuid",
+        "parentId",
+        "visible",
+        "date",
+        "update",
+        "type",
+        "title"
+      ],
       where: visible,
       order: `treeEntity.type='PAGE',"treeEntity".priority`
     });
@@ -880,10 +900,10 @@ export class Contents extends amf.Module {
     if (!repository) return null;
     const results = (await repository
       .createQueryBuilder()
-      .select("id,title || ' ' ||value as value")
+      .select("uuid,title || ' ' ||value as value")
       .where(visible)
       .orderBy({ date: "DESC" })
-      .getRawMany()) as { id: number; value: string }[] | null;
+      .getRawMany()) as { uuid: string; value: string }[] | null;
     if (!results) return null;
     const keywords = keyword
       .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
@@ -892,7 +912,7 @@ export class Contents extends amf.Module {
       .toLowerCase()
       .split(/\s/);
     if (keywords.length === 0) return null;
-    const hits: number[] = [];
+    const hits: string[] = [];
     for (const r of results) {
       //タグを削除、全角を半角に変換、小文字に変換
       const msg = r.value
@@ -913,10 +933,22 @@ export class Contents extends amf.Module {
           break;
         }
       }
-      if (flag) hits.push(r.id);
+      if (flag) hits.push(r.uuid);
     }
     return hits;
   }
+
+  public async getIdFromUuid(uuid: string) {
+    const repository = this.repository;
+    if (!repository) return 0;
+    const entity = await repository.findOne({
+      select: ["id"],
+      where: { uuid }
+    });
+    if (!entity) return 0;
+    return entity.id;
+  }
+
   /**
    *コンテンツのエクスポート
    *
@@ -924,8 +956,9 @@ export class Contents extends amf.Module {
    * @returns
    * @memberof Contents
    */
-  public JS_export(id: number) {
+  public async JS_export(uuid: string) {
     if (!this.isAdmin()) return null;
+    const id = await this.getIdFromUuid(uuid);
     return this.export(this.getResponse(), id);
   }
   /**
@@ -936,10 +969,11 @@ export class Contents extends amf.Module {
    * @returns {(Promise<boolean | null>)}
    * @memberof Contents
    */
-  public async JS_import(id: number, mode: number): Promise<boolean | null> {
+  public async JS_import(uuid: string, mode: number): Promise<boolean | null> {
     if (!this.isAdmin()) return null;
     const buffer = this.getSession().getBuffer();
     if (!buffer) return null;
+    const id = await this.getIdFromUuid(uuid);
     return this.import(id, mode, buffer.toString());
   }
   /**
@@ -963,9 +997,11 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async JS_moveContents(
-    fromId: number,
-    toId: number
+    fromUuid: string,
+    toUuid: string
   ): Promise<boolean | null> {
+    const fromId = await this.getIdFromUuid(fromUuid);
+    const toId = await this.getIdFromUuid(toUuid);
     if (this.isAdmin()) return this.moveContents(fromId, toId);
     return false;
   }
@@ -979,9 +1015,10 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async JS_moveVector(
-    id: number,
+    uuid: string,
     vector: number
   ): Promise<boolean | null> {
+    const id = await this.getIdFromUuid(uuid);
     if (!this.isAdmin()) return null;
     return this.moveVector(id, vector);
   }
@@ -998,16 +1035,16 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async JS_createContents(
-    id: number,
+    uuid: string,
     vector: number,
     type: string
   ): Promise<{
-    pid: number;
-    id: number;
+    uuid: string;
   } | null> {
     const remoteDB = this.remoteDB;
     if (!remoteDB) return null;
     if (!this.isAdmin()) return null;
+    const id = await this.getIdFromUuid(uuid);
     return this.createContents(id, vector, type);
   }
   /**
@@ -1017,8 +1054,9 @@ export class Contents extends amf.Module {
    * @returns {(Promise<TreeContents | null>)}
    * @memberof Contents
    */
-  public async JS_getTree(id: number): Promise<TreeContents | null> {
+  public async JS_getTree(uuid: string): Promise<TreeContents | null> {
     const admin = this.isAdmin();
+    const id = uuid ? await this.getIdFromUuid(uuid) : 1;
     return this.getTree(id, admin);
   }
   /**
@@ -1028,8 +1066,9 @@ export class Contents extends amf.Module {
    * @returns {(Promise<ContentsEntity | null>)}
    * @memberof Contents
    */
-  public async JS_getPage(id: number): Promise<ContentsEntity | undefined> {
+  public async JS_getPage(uuid: string): Promise<ContentsEntity | undefined> {
     const admin = this.isAdmin();
+    const id = uuid ? await this.getIdFromUuid(uuid) : 1;
     const pid = await this.getParentPage(id);
     if (pid === 0) return undefined;
     const contents = await this.getContents(pid, true, admin);
@@ -1048,10 +1087,11 @@ export class Contents extends amf.Module {
    * @returns {(Promise<ContentsEntity | null>)}
    * @memberof Contents
    */
-  public JS_getContents(
-    id: number,
+  public async JS_getContents(
+    uuid: string,
     child?: boolean
   ): Promise<ContentsEntity | undefined> {
+    const id = await this.getIdFromUuid(uuid);
     const admin = this.isAdmin();
     return this.getContents(id, child, admin);
   }

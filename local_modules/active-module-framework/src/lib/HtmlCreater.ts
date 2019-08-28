@@ -19,9 +19,10 @@ interface FileInfo {
  * @class HtmlCreater
  */
 export class HtmlCreater {
-  private status:number = 200;
+  private status: number = 200;
   private jsdom?: JSDOM;
   private links: string[] = [];
+  private headers: { [key: string]: string } = {};
   private baseUrl?: string;
   private req?: express.Request;
   /**
@@ -102,15 +103,17 @@ export class HtmlCreater {
       }
     }
 
-    res.writeHead(this.status, {
-      "Content-Type": "text/html; charset=UTF-8",
-      link: this.links
-    });
-    if (this.jsdom){
+    res.writeHead(
+      this.status,
+      Object.assign(this.headers, {
+        "Content-Type": "text/html; charset=UTF-8",
+        link: this.links
+      })
+    );
+    if (this.jsdom) {
       res.write("<!DOCTYPE html>\n");
       res.end(this.jsdom.window.document.documentElement.outerHTML);
-    }else
-      res.end();
+    } else res.end();
     return true;
   }
   /**
@@ -119,7 +122,7 @@ export class HtmlCreater {
    * @param {number} status
    * @memberof HtmlCreater
    */
-  public setStatus(status:number){
+  public setStatus(status: number) {
     this.status = status;
   }
 
@@ -138,6 +141,9 @@ export class HtmlCreater {
     for (const file of files) {
       links.push(`<${baseUrl}${file}>;rel=preload;as=${style};`);
     }
+  }
+  public addHeader(name: string, value: string) {
+    this.headers[name] = value;
   }
   private addScript(files: FileInfo[]): void {
     const jsdom = this.jsdom;

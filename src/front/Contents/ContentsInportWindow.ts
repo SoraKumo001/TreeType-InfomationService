@@ -8,7 +8,7 @@ import { ContentsModule } from "./ContentsModule";
 import "./scss/ContentsImportWindow.scss";
 import { Manager } from "@jswf/manager";
 export class ContentsImportWindow extends JWF.FrameWindow {
-  public constructor(manager: Manager, pid: number) {
+  public constructor(manager: Manager, uuid: string) {
     super();
     this.setJwfStyle("ContentsImportWindow");
     const client = this.getClient();
@@ -38,7 +38,7 @@ export class ContentsImportWindow extends JWF.FrameWindow {
           if (reader.result)
             if (
               await contentsModule.import(
-                pid,
+                uuid,
                 parseInt(select.value),
                 reader.result.toString()
               )

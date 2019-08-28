@@ -33,7 +33,7 @@ export class ContentsCacheModule extends BaseModule {
       }
     });
     contentsModule.addEventListener("updateContents", mainContents => {
-      const treeContents = this.findTreeContents(mainContents.id);
+      const treeContents = this.findTreeContents(mainContents.uuid);
       if(treeContents){
         treeContents.title = mainContents.title;
         treeContents.type = mainContents.type;
@@ -43,15 +43,15 @@ export class ContentsCacheModule extends BaseModule {
     });
   }
   public findTreeContents(
-    id: number,
+    uuid: string,
     tree?: TreeContents
   ): TreeContents | null {
     if (!tree) tree = this.treeContents;
     if (!tree) return null;
-    if (tree.id === id) return tree;
+    if (tree.uuid === uuid) return tree;
     if (tree.children) {
       for (const child of tree.children) {
-        const result = this.findTreeContents(id, child);
+        const result = this.findTreeContents(uuid, child);
         if (result) return result;
       }
     }

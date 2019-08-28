@@ -1,8 +1,8 @@
 import { ModuleMap, BaseModule } from "@jswf/manager";
 
 export interface TreeContents {
-  id: number;
-  pid: number;
+  id:number;
+  uuid:string;
   visible: boolean;
   date: Date;
   update: Date;
@@ -13,8 +13,8 @@ export interface TreeContents {
   pageNew?: TreeContents;
 }
 export interface MainContents {
-  id: number;
-  pid: number;
+  id:number;
+  uuid:string;
   priority?: number;
   visible: boolean;
   type: string;
@@ -28,20 +28,20 @@ export interface MainContents {
 }
 export interface CustomMap extends ModuleMap {
   getTree: [TreeContents];
-  selectPage: [number]; //pid
-  selectContents: [number, boolean | undefined]; //parameter
-  createContents: [number, number]; //pid,id
-  deleteContents: [number]; //id
-  updateContents: [MainContents]; //id
-  moveVector: [number, number]; //id,vector
-  moveContents: [number, number]; //fromId,toId
-  importContents: [number];
-  drawContents: [HTMLElement, number];
+  selectPage: [string]; //pid
+  selectContents: [string, boolean | undefined]; //parameter
+  createContents: [string, string]; //pid,id
+  deleteContents: [string]; //id
+  updateContents: [MainContents];
+  moveVector: [string, number]; //id,vector
+  moveContents: [string, string]; //fromId,toId
+  importContents: [string];
+  drawContents: [HTMLElement, string];
 }
 
 type ValueTypeProc = (
   body: HTMLDivElement,
-  pageId: number,
+  pageId: string,
   contents: MainContents
 ) => void;
 
@@ -54,14 +54,14 @@ type ValueTypeProc = (
  */
 export class ContentsModule extends BaseModule<CustomMap> {
   private contentsValueTypes: { [name: string]: ValueTypeProc } = {};
-  public async createContents(pid: number, vector: number, type: string) {
+  public async createContents(pid: string, vector: number, type: string) {
     const adapter = this.getAdapter();
     const result = (await adapter.exec(
       "Contents.createContents",
       pid,
       vector,
       type
-    )) as { pid: number; id: number } | null;
+    )) as { pid: string; id: string } | null;
     if (result) {
       this.callEvent("createContents", result.pid, result.id);
     }
@@ -71,15 +71,15 @@ export class ContentsModule extends BaseModule<CustomMap> {
   /**
    *ツリーデータを受け取る
    *
-   * @param {number} [id]
+   * @param {string} [id]
    * @returns
    * @memberof ContentsModule
    */
-  public async getTree(id?: number) {
+  public async getTree(uuid?: string) {
     const adapter = this.getAdapter();
     const treeContents = (await adapter.exec(
       "Contents.getTree",
-      id ? id : 1
+      uuid
     )) as TreeContents | null;
     if (treeContents) {
       this.convertTreeContents(treeContents);
@@ -91,18 +91,18 @@ export class ContentsModule extends BaseModule<CustomMap> {
   /**
    *コンテンツ表示用のページデータを読み出す
    *
-   * @param {number} id
+   * @param {string} id
    * @returns
    * @memberof ContentsModule
    */
-  public async getPage(id: number) {
+  public async getPage(uuid: string) {
     const adapter = this.getAdapter();
     const page = (await adapter.exec(
       "Contents.getPage",
-      id
+      uuid
     )) as MainContents | null;
     if (page) {
-      this.callEvent("selectPage", page.id);
+      this.callEvent("selectPage", page.uuid);
     }
     return page;
   }
@@ -110,27 +110,27 @@ export class ContentsModule extends BaseModule<CustomMap> {
   /**
    *ページを選択する
    *
-   * @param {number} id
+   * @param {number} uuid
    * @param {boolean} [tree]
    * @memberof ContentsModule
    */
-  public selectContents(id: number, tree?: boolean) {
-    this.callEvent("selectContents", id, tree);
+  public selectContents(uuid: string, tree?: boolean) {
+    this.callEvent("selectContents", uuid, tree);
   }
 
   /**
    *対象IDのコンテンツのみ取得
    *
-   * @param {number} id
+   * @param {number} uuid
    * @param {boolean} [child]
    * @returns
    * @memberof ContentsModule
    */
-  public getContents(id: number, child?: boolean) {
+  public getContents(uuid: string, child?: boolean) {
     const adapter = this.getAdapter();
     return adapter.exec(
       "Contents.getContents",
-      id,
+      uuid,
       child
     ) as Promise<MainContents | null>;
   }
@@ -138,17 +138,17 @@ export class ContentsModule extends BaseModule<CustomMap> {
   /**
    *コンテンツの削除
    *
-   * @param {number} id
+   * @param {number} uuid
    * @returns
    * @memberof ContentsModule
    */
-  public async deleteContents(id: number) {
+  public async deleteContents(uuid: string) {
     const adapter = this.getAdapter();
-    const flag = (await adapter.exec("Contents.deleteContents", id)) as Promise<
+    const flag = (await adapter.exec("Contents.deleteContents", uuid)) as Promise<
       boolean | null
     >;
     if (flag) {
-      this.callEvent("deleteContents", id);
+      this.callEvent("deleteContents", uuid);
     }
     return flag;
   }
@@ -166,15 +166,15 @@ export class ContentsModule extends BaseModule<CustomMap> {
     }
     return flag;
   }
-  public async moveVector(id: number, vector: number) {
+  public async moveVector(uuid: string, vector: number) {
     const adapter = this.getAdapter();
-    const flag = (await adapter.exec("Contents.moveVector", id, vector)) as
+    const flag = (await adapter.exec("Contents.moveVector", uuid, vector)) as
       | boolean
       | null;
-    if (flag) this.callEvent("moveVector", id, vector);
+    if (flag) this.callEvent("moveVector", uuid, vector);
     return flag;
   }
-  public async moveContents(fromId: number, toId: number) {
+  public async moveContents(fromId: string, toId: string) {
     const adapter = this.getAdapter();
     const flag = (await adapter.exec("Contents.moveContents", fromId, toId)) as
       | boolean
@@ -182,11 +182,11 @@ export class ContentsModule extends BaseModule<CustomMap> {
     if (flag) this.callEvent("moveContents", fromId, toId);
     return flag;
   }
-  public async export(id: number) {
+  public async export(uuid: string) {
     const adapter = this.getAdapter();
     const blob = (await adapter.execBinary(
       "Contents.export",
-      id
+      uuid
     )) as Blob | null;
     if (blob) {
       const link = document.createElement("a");
@@ -197,15 +197,15 @@ export class ContentsModule extends BaseModule<CustomMap> {
     return blob;
   }
 
-  public async import(id: number, mode: number, src: string) {
+  public async import(uuid: string, mode: number, src: string) {
     const adapter = this.getAdapter();
     const flag = (await adapter.upload(
       new Blob([src], { type: "text/plain" }),
       "Contents.import",
-      id,
+      uuid,
       mode
     )) as boolean;
-    if (flag) this.callEvent("importContents", id);
+    if (flag) this.callEvent("importContents", uuid);
     return flag;
   }
   public getContentsValueTypes() {
@@ -216,7 +216,7 @@ export class ContentsModule extends BaseModule<CustomMap> {
   }
   public createContentsValue(
     body: HTMLDivElement,
-    pageId: number,
+    pageId: string,
     contents: MainContents
   ) {
     const proc = this.contentsValueTypes[contents.value_type];
@@ -226,7 +226,7 @@ export class ContentsModule extends BaseModule<CustomMap> {
   }
   public async search(keyword: string) {
     const adapter = this.getAdapter();
-    return adapter.exec("Contents.search", keyword) as Promise<number[] | null>;
+    return adapter.exec("Contents.search", keyword) as Promise<string[] | null>;
   }
   /**
    *受け取ったツリーデータを扱いやすいように変換
