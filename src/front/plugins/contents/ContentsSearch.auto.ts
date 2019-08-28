@@ -67,8 +67,8 @@ export class ContentsSearchWindow extends FrameWindow {
     this.addChild(listView, "client");
     listView.addHeader([["更新", 100], "タイトル"]);
     listView.addEventListener("itemClick", e => {
-      const id = listView.getItemValue(e.itemIndex) as number;
-      contentsModule.selectContents(id);
+      const uuid = listView.getItemValue(e.itemIndex) as string;
+      contentsModule.selectContents(uuid);
     });
     this.addEventListener("closed", () => {
       routerModule.setLocationParams({ search: null });
@@ -96,10 +96,10 @@ export class ContentsSearchWindow extends FrameWindow {
           );
           let title = "";
           let parent: TreeContents | null = contents;
-          do {
+      //    do {
             if (title.length) title += " - ";
             title += parent.title;
-          } while ((parent = contentsCacheModule.findTreeContents(parent.pid)));
+      //    } while ((parent = contentsCacheModule.findTreeContents(parent.puuid)));
           listView.addItem([dateStr, title], r);
 
           routerModule.setLocationParams({ search: keyword });

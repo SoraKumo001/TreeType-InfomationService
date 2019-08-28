@@ -37,12 +37,12 @@ export interface ContentsArea extends HTMLDivElement {
 export class InfoContentsView extends JWF.BaseView {
   private contentsModule: ContentsModule;
   private contentsPage: HTMLDivElement;
-  private contentsNode: { [key: number]: ContentsArea } = {};
+  private contentsNode: { [key: string]: ContentsArea } = {};
   private timerHandle?: number;
-  private selectId: number = 0;
+  private selectId: string = '0';
   private manager: Manager;
   private scrollFlag: boolean = false;
-  private pageId: number = 0;
+  private pageId: string = '0';
 
   /**
    *Creates an instance of InfoContentsView.
@@ -58,7 +58,7 @@ export class InfoContentsView extends JWF.BaseView {
 
     contentsModule.addContentsValueType(
       "TEXT",
-      (body: HTMLDivElement, pageId: number, contents: MainContents) => {
+      (body: HTMLDivElement, pageId: string, contents: MainContents) => {
         body.innerHTML = contents["value"];
       }
     );
@@ -89,10 +89,10 @@ export class InfoContentsView extends JWF.BaseView {
       }
       if (nearNode) {
         const contents = nearNode.contents;
-        const id = contents.id;
-        if (this.selectId !== id) {
-          this.contentsModule.selectContents(id, true);
-          this.selectId = id;
+        const uuid = contents.uuid;
+        if (this.selectId !== uuid) {
+          this.contentsModule.selectContents(uuid, true);
+          this.selectId = uuid;
         }
       }
     });
@@ -113,16 +113,16 @@ export class InfoContentsView extends JWF.BaseView {
       }
     });
     contentsModule.addEventListener("updateContents", contents => {
-      const contentsNode = this.contentsNode[contents.id];
+      const contentsNode = this.contentsNode[contents.uuid];
       if (contentsNode) {
         if(contentsNode.contents.type !== contents.type)
-          this.loadPage(contents.id,true);
+          this.loadPage(contents.uuid,true);
         else
           contentsNode.update(contents);
       }
     });
-    contentsModule.addEventListener("moveVector", (id, vector) => {
-      this.moveVector(id, vector);
+    contentsModule.addEventListener("moveVector", (uuid, vector) => {
+      this.moveVector(uuid, vector);
     });
     contentsModule.addEventListener("moveContents", (fromId, toId) => {
       if (this.contentsNode[fromId] || this.contentsNode[toId])
@@ -167,7 +167,7 @@ export class InfoContentsView extends JWF.BaseView {
     }
     contentsArea.update = contents => {
       contentsArea.contents = contents;
-      this.contentsNode[contents.id] = contentsArea;
+      this.contentsNode[contents.uuid] = contentsArea;
       // if (contentsArea.dataset.contentsType === contents["type"]) {
       const titleTag = "H" + contents["title_type"];
       if (titleTag != title.nodeName) {
@@ -178,7 +178,7 @@ export class InfoContentsView extends JWF.BaseView {
         }
         title = newTitle;
         title.addEventListener("dblclick", e => {
-          new ContentsEditWindow(this.manager, contents.id);
+          new ContentsEditWindow(this.manager, contents.uuid);
           e.preventDefault();
           const selection = getSelection();
           if(selection)
@@ -229,28 +229,28 @@ export class InfoContentsView extends JWF.BaseView {
       contentsControle.setPos(x, 30);
 
       contentsControle.addMenu("編集", () => {
-        new ContentsEditWindow(this.manager, contents.id);
+        new ContentsEditWindow(this.manager, contents.uuid);
       });
       if (contents.type !== "PAGE") {
         contentsControle.addMenu("新規(上)", () => {
-          this.contentsModule.createContents(contents.id, 0, "ITEM");
+          this.contentsModule.createContents(contents.uuid, 0, "ITEM");
         });
         contentsControle.addMenu("新規(下)", () => {
-          this.contentsModule.createContents(contents.id, 1, "ITEM");
+          this.contentsModule.createContents(contents.uuid, 1, "ITEM");
         });
       }
       contentsControle.addMenu("新規(子上)", () => {
-        this.contentsModule.createContents(contents.id, 2, "ITEM");
+        this.contentsModule.createContents(contents.uuid, 2, "ITEM");
       });
       contentsControle.addMenu("新規(子下)", () => {
-        this.contentsModule.createContents(contents.id, 3, "ITEM");
+        this.contentsModule.createContents(contents.uuid, 3, "ITEM");
       });
       if (contents.type !== "PAGE") {
         contentsControle.addMenu("移動(上)", () => {
-          this.contentsModule.moveVector(contents.id, -1);
+          this.contentsModule.moveVector(contents.uuid, -1);
         });
         contentsControle.addMenu("移動(下)", () => {
-          this.contentsModule.moveVector(contents.id, 1);
+          this.contentsModule.moveVector(contents.uuid, 1);
         });
       }
     });
@@ -264,9 +264,9 @@ export class InfoContentsView extends JWF.BaseView {
    * @returns
    * @memberof InfoContentsView
    */
-  public async loadPage(id: number, reload?: boolean) {
-    if (!reload && this.contentsNode[id]) {
-      this.jumpContents(id);
+  public async loadPage(uuid: string, reload?: boolean) {
+    if (!reload && this.contentsNode[uuid]) {
+      this.jumpContents(uuid);
       return;
     }
     //既存コンテンツのクリア
@@ -276,17 +276,17 @@ export class InfoContentsView extends JWF.BaseView {
       contentsPage.removeChild(contentsPage.childNodes[0]);
     //ページ単位でコンテンツの読み出し
     const contentsModule = this.contentsModule;
-    const page = await contentsModule.getPage(id);
+    const page = await contentsModule.getPage(uuid);
     if (!page) return;
-    this.pageId = page.id;
+    this.pageId = page.uuid;
     const node = this.createContents(page);
     contentsPage.appendChild(node);
-    this.jumpContents(id);
+    this.jumpContents(uuid);
 
-    this.contentsModule.callEvent("drawContents", this.getClient(), page.id);
+    this.contentsModule.callEvent("drawContents", this.getClient(), page.uuid);
   }
-  public moveVector(id: number, vector: number) {
-    const node = this.contentsNode[id];
+  public moveVector(uuid: string, vector: number) {
+    const node = this.contentsNode[uuid];
     if (node == null) return;
     const parent = node.parentNode;
     if (!parent) return;
@@ -304,10 +304,10 @@ export class InfoContentsView extends JWF.BaseView {
       }
     }
   }
-  public async loadSubPage(pid: number, id: number) {
+  public async loadSubPage(pid: string, uuid: string) {
     //対象が存在しなければ全てを読み込みなおす
     const parent = this.contentsNode[pid];
-    if (!parent) this.loadPage(id, true);
+    if (!parent) this.loadPage(uuid, true);
 
     //部分的なコンテンツの読み出し
     const contentsModule = this.contentsModule;
@@ -316,8 +316,8 @@ export class InfoContentsView extends JWF.BaseView {
     const node = this.createContents(contents);
     if (parent.parentNode) parent.parentNode.replaceChild(node, parent);
   }
-  public jumpContents(id: number) {
-    const node = this.contentsNode[id];
+  public jumpContents(uuid: string) {
+    const node = this.contentsNode[uuid];
     if (node) {
       const y =
         node.getBoundingClientRect().top -

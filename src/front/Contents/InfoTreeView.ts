@@ -14,8 +14,8 @@ import { Manager } from "@jswf/manager";
 export class InfoTreeView extends JWF.TreeView {
   private manager: Manager;
   private contentsModule: ContentsModule;
-  private selectId: number = 0;
-  private overId: number = 0;
+  private selectId: string = "0";
+  private overId: string = "";
   public constructor(manager: Manager) {
     super();
     this.manager = manager;
@@ -34,23 +34,23 @@ export class InfoTreeView extends JWF.TreeView {
 
     this.addEventListener("itemSelect", e => {
       if (e.user)
-        contentsModule.selectContents(e.item.getItemValue() as number, false);
+        contentsModule.selectContents(e.item.getItemValue() as string, false);
     });
     this.addEventListener("itemDblClick", e => {
-      new ContentsEditWindow(this.manager, e.item.getItemValue() as number);
+      new ContentsEditWindow(this.manager, e.item.getItemValue() as string);
     });
     this.addEventListener("itemOver", e => {
       const item = e.item;
-      this.overId = item.getItemValue() as number;
+      this.overId = item.getItemValue() as string;
       item.getNode().childNodes[0].appendChild(optionNode);
       e.event.preventDefault();
     });
 
     this.addEventListener("itemDrop", e => {
-      if (typeof e.srcValue === "number")
+      if (typeof e.srcValue === "string")
         this.contentsModule.moveContents(
           e.srcValue,
-          e.item.getItemValue() as number
+          e.item.getItemValue() as string
         );
 
       e.event.preventDefault();
@@ -58,12 +58,12 @@ export class InfoTreeView extends JWF.TreeView {
     contentsModule.addEventListener("getTree", treeContents => {
       this.drawTree(treeContents);
     });
-    contentsModule.addEventListener("selectContents", id => {
-      this.selectId = id;
-      this.selectItemFromValue(id, true);
+    contentsModule.addEventListener("selectContents", uuid => {
+      this.selectId = uuid;
+      this.selectItemFromValue(uuid, true);
     });
-    contentsModule.addEventListener("createContents", (pid, id) => {
-      this.loadTree(id);
+    contentsModule.addEventListener("createContents", (pid, uuid) => {
+      this.loadTree(uuid);
     });
     contentsModule.addEventListener("moveContents", fromId => {
       this.loadTree(fromId, true);
@@ -73,12 +73,12 @@ export class InfoTreeView extends JWF.TreeView {
       if (item) item.removeItem();
     });
     contentsModule.addEventListener("updateContents", contents => {
-      const item = this.findItemFromValue(contents.id);
+      const item = this.findItemFromValue(contents.uuid);
       if (item) {
         const node = item.getNode();
         if (node.dataset.contentType !== contents.type) {
           //タイプ変更の場合はツリーを読み直す
-          this.loadTree(contents.pid ? contents.pid : 1,true);
+          this.loadTree(undefined ,true);
         } else {
           item.setItemText(contents.title);
           node.dataset.contentStat = contents.visible ? "true" : "false";
@@ -91,7 +91,7 @@ export class InfoTreeView extends JWF.TreeView {
       item.moveItem(vector);
     });
   }
-  public showEditMenu(id: number) {
+  public showEditMenu(uuid: string) {
     //管理者用編集メニュー
 
     const contentsControle = new ContentsControleWindow();
@@ -100,49 +100,49 @@ export class InfoTreeView extends JWF.TreeView {
     contentsControle.setPos(x, 30);
 
     contentsControle.addMenu("編集", () => {
-      new ContentsEditWindow(this.manager, id);
+      new ContentsEditWindow(this.manager, uuid);
     });
 
     contentsControle.addMenu("新規(上)", () => {
-      this.contentsModule.createContents(id, 0, "PAGE");
+      this.contentsModule.createContents(uuid, 0, "PAGE");
     });
     contentsControle.addMenu("新規(下)", () => {
-      this.contentsModule.createContents(id, 1, "PAGE");
+      this.contentsModule.createContents(uuid, 1, "PAGE");
     });
 
     contentsControle.addMenu("新規(子上)", () => {
-      this.contentsModule.createContents(id, 2, "PAGE");
+      this.contentsModule.createContents(uuid, 2, "PAGE");
     });
     contentsControle.addMenu("新規(子下)", () => {
-      this.contentsModule.createContents(id, 3, "PAGE");
+      this.contentsModule.createContents(uuid, 3, "PAGE");
     });
 
     contentsControle.addMenu("移動(上)", () => {
-      this.contentsModule.moveVector(id, -1);
+      this.contentsModule.moveVector(uuid, -1);
     });
     contentsControle.addMenu("移動(下)", () => {
-      this.contentsModule.moveVector(id, 1);
+      this.contentsModule.moveVector(uuid, 1);
     });
     contentsControle.addMenu("インポート", () => {
-      new ContentsImportWindow(this.manager, id);
+      new ContentsImportWindow(this.manager, uuid);
     });
     contentsControle.addMenu("エクスポート", async () => {
-      const value = await this.contentsModule.export(id);
+      const value = await this.contentsModule.export(uuid);
       if (value) console.log(value.size);
     });
   }
   public drawTree(value: TreeContents) {
-    const id = value.id;
+    const uuid = value.uuid;
     let item: TreeItem | null;
-    if (id === 1) item = this.getRootItem();
-    else item = this.findItemFromValue(id);
+    if (value.id === 1) item = this.getRootItem();
+    else item = this.findItemFromValue(uuid);
 
     if (!item) return;
     item.clearItem();
     if (value) this.setTreeItem(item, value);
     if (this.selectId) this.selectItemFromValue(this.selectId, true);
   }
-  public async loadTree(selectId?: number, reload?: boolean) {
+  public async loadTree(selectId?: string, reload?: boolean) {
     if (!reload && selectId && this.findItemFromValue(selectId)) {
       this.selectItemFromValue(selectId, true);
       return false;
@@ -153,9 +153,9 @@ export class InfoTreeView extends JWF.TreeView {
   }
   private setTreeItem(item: TreeItem, value: TreeContents) {
     const node = item.getNode();
-    const level = item.getTreeLevel();
+   // const level = item.getTreeLevel();
     item.setItemText(value.title);
-    item.setItemValue(value.id);
+    item.setItemValue(value.uuid);
     node.dataset.contentStat = value.visible ? "true" : "false";
     node.dataset.contentType = value["type"] === "PAGE" ? "PAGE" : "ITEM";
     if (value.children) {

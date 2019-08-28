@@ -10,7 +10,7 @@ import { getManager } from "../..";
 const contentsModule = getManager().getModule(ContentsModule);
 const contentsCacheModule = getManager().getModule(ContentsCacheModule);
 
-contentsModule.addEventListener("drawContents", (client, id) => {
+contentsModule.addEventListener("drawContents", (client, uuid) => {
   const contentsPage = client.querySelector("[data-type=ContentsPage]");
   if (!contentsPage) return;
 
@@ -21,7 +21,7 @@ contentsModule.addEventListener("drawContents", (client, id) => {
   const div = document.createElement("div");
   subContents.appendChild(div);
 
-  const contents = contentsCacheModule.findTreeContents(id);
+  const contents = contentsCacheModule.findTreeContents(uuid);
   if (contents) {
     const childs = contents.children;
     if (childs) {
@@ -41,9 +41,9 @@ contentsModule.addEventListener("drawContents", (client, id) => {
         cell = row.insertCell();
         const link = document.createElement("a");
         link.innerText = sprintf("  %02d. %s", index++, c.title);
-        link.href = "?p=" + id;
+        link.href = "?uuid=" + uuid;
         link.addEventListener("click", e => {
-          contentsModule.selectContents(c.id);
+          contentsModule.selectContents(c.uuid);
           e.preventDefault();
         });
         cell.appendChild(link);

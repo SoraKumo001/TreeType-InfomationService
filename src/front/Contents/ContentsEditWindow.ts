@@ -3,8 +3,14 @@
  *
  */
 import { ContentsModule, MainContents } from "./ContentsModule";
-import { TextEditWindow,PanelControl,Panel, sprintf, CalendarView } from "@jswf/core";
-import {Manager, FileModule, FileWindow} from "@jswf/manager";
+import {
+  TextEditWindow,
+  PanelControl,
+  Panel,
+  sprintf,
+  CalendarView
+} from "@jswf/core";
+import { Manager, FileModule, FileWindow } from "@jswf/manager";
 
 /**
  *コンテンツ編集用ウインドウクラス
@@ -24,7 +30,7 @@ export class ContentsEditWindow extends TextEditWindow {
    * @param {number} [id]
    * @memberof ContentsEditWindow
    */
-  public constructor(manager: Manager, id?: number) {
+  public constructor(manager: Manager, uuid?: string) {
     super();
     this.manager = manager;
     this.contentsModule = manager.getModule(ContentsModule);
@@ -66,15 +72,15 @@ export class ContentsEditWindow extends TextEditWindow {
       }
     });
     this.foreground();
-    if (id) {
-      this.loadContents(id);
+    if (uuid) {
+      this.loadContents(uuid);
     }
   }
   public insertFileContents(id: number, fileName: string) {
     const ext = fileName.split(".").pop();
     let imageFlag = false;
     if (ext) {
-      if (["gif","jpg", "jpeg", "png", "svg"].indexOf(ext.toLowerCase()) >= 0)
+      if (["gif", "jpg", "jpeg", "png", "svg"].indexOf(ext.toLowerCase()) >= 0)
         imageFlag = true;
     }
     const fileId = id.toString();
@@ -132,7 +138,7 @@ export class ContentsEditWindow extends TextEditWindow {
       type: "check",
       label: "表示"
     });
-        PanelControl.createControl(target, {
+    PanelControl.createControl(target, {
       label: "時刻設定",
       event: () => {
         const d = new Date();
@@ -175,7 +181,7 @@ export class ContentsEditWindow extends TextEditWindow {
       event: async () => {
         const contents = this.contents;
         if (contents) {
-          if (await this.contentsModule.deleteContents(contents.id))
+          if (await this.contentsModule.deleteContents(contents.uuid))
             this.close();
         }
       }
@@ -191,9 +197,9 @@ export class ContentsEditWindow extends TextEditWindow {
       event: () => {}
     });
 
-    const valueTypes = this.contentsModule.getContentsValueTypes().map((v)=>{
-      return {label:v};
-    })
+    const valueTypes = this.contentsModule.getContentsValueTypes().map(v => {
+      return { label: v };
+    });
     PanelControl.createControl(target, { type: "text", label: "コンテンツ" });
     PanelControl.createControl(target, {
       name: "value_type",
@@ -260,8 +266,8 @@ export class ContentsEditWindow extends TextEditWindow {
    * @param {number} id
    * @memberof ContentsEditWindow
    */
-  public async loadContents(id: number) {
-    const contents = await this.contentsModule.getContents(id);
+  public async loadContents(uuid: string) {
+    const contents = await this.contentsModule.getContents(uuid);
     if (contents) {
       const client = this.getClient();
       this.contents = contents;
@@ -293,15 +299,17 @@ export class ContentsEditWindow extends TextEditWindow {
     );
     const newContents: MainContents = {
       id: contents.id,
-      pid: contents.pid,
-      visible: PanelControl.getControlValue(client, "visible")===true,
+      uuid: contents.uuid,
+      visible: PanelControl.getControlValue(client, "visible") === true,
       type: (PanelControl.getControlValue(client, "type") as string) || "",
       title: (PanelControl.getControlValue(client, "title") as string) || "",
       title_type: parseInt(
         (PanelControl.getControlValue(client, "title_type") as string) || "0"
       ),
       date,
-      value_type:PanelControl.getControlValue(client, "value_type") as string || "TEXT",
+      value_type:
+        (PanelControl.getControlValue(client, "value_type") as string) ||
+        "TEXT",
       value: this.getHtml()
     };
     this.contentsModule.updateContents(newContents, save);

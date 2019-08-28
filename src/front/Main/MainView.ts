@@ -32,10 +32,10 @@ export class MainView extends JWF.BaseView {
     this.routerModule = routerModule;
 
     contentsModule.addEventListener("selectContents", (id, tree) => {
-      this.routerModule.setLocationParams({ p: id }, !tree);
+      this.routerModule.setLocationParams({ uuid: id }, !tree);
     });
-    contentsModule.addEventListener("selectPage", id => {
-      const title = this.selectPage(id);
+    contentsModule.addEventListener("selectPage", uuid => {
+      const title = this.selectPage(uuid);
       if (!title) return;
 
       //トラッカーに通知
@@ -48,7 +48,7 @@ export class MainView extends JWF.BaseView {
         gtag("config", AnalyticsUA, {
           page_title: title,
           page_location,
-          page_path: "/?p=" + id
+          page_path: "/?uuid=" + uuid
         });
       } catch (e) {
         // empty
@@ -60,30 +60,30 @@ export class MainView extends JWF.BaseView {
     let first = true;
     routerModule.addEventListener("goLocation", params => {
       //ページの更新や戻る/進むボタンの処理
-      const id = parseInt(params["p"] || "1");
-      infoTreeView.loadTree(id).then(e => {
+      const uuid = params["uuid"] || "";
+      infoTreeView.loadTree(uuid).then(e => {
         if (e) {
-          this.selectPage(id);
+          this.selectPage(uuid);
         }
       });
-      infoContentsView.loadPage(id);
+      infoContentsView.loadPage(uuid);
     });
 
     userModule.addEventListener("loginUser", () => {
       //二回目以降のログインでコンテンツの更新
       if (!first) {
         const params = routerModule.getLocationParams();
-        const id = parseInt(params["p"] || "1");
+        const uuid = params["uuid"] || "";
         //コンテンツの強制更新
-        infoTreeView.loadTree(id, true);
-        infoContentsView.loadPage(id, true);
+        infoTreeView.loadTree(uuid, true);
+        infoContentsView.loadPage(uuid, true);
       } else first = false;
     });
 
     routerModule.goLocation();
   }
-  public selectPage(id: number) {
-    let item: TreeItem | null = this.infoTreeView.findItemFromValue(id);
+  public selectPage(uuid: string) {
+    let item: TreeItem | null = this.infoTreeView.findItemFromValue(uuid);
     if (!item) return "";
     let title = "";
     const values: { name: string; value: number }[] = [];

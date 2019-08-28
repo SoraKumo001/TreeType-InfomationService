@@ -42,7 +42,7 @@ export class Rss extends amf.Module {
     const params = await this.getModule(ParamModule);
     const contents = await this.getModule(Contents);
     if (!contents || !params) return "";
-    const p = (await params.getGlobalParam("BASIC_DATA")) as {
+    const basicData = (await params.getGlobalParam("BASIC_DATA")) as {
       url: string;
       title: string;
       info: string;
@@ -50,10 +50,10 @@ export class Rss extends amf.Module {
     let link = "";
     let title = "";
     let description = "";
-    if (p) {
-      link = p.url || "";
-      title = p.title || "";
-      description = p.info || "";
+    if (basicData) {
+      link = basicData.url || "";
+      title = basicData.title || "";
+      description = basicData.info || "";
     }
     //コンテンツの読み出し
     const items = [];
@@ -66,9 +66,9 @@ export class Rss extends amf.Module {
           .replace(/&nbsp;/g, " ")
           .replace(/&amp;/g, "&");
         const item = {
-          guid: `${link}?p=${c.id}`,
+          guid: `${link}?uuid=${c.uuid}`,
           title: c.title,
-          link: `${link}?p=${c.id}`,
+          link: `${link}?uuid=${c.uuid}`,
           pubDate: new Date(c.update).toUTCString(),
           category: "topic",
           description
