@@ -10,7 +10,7 @@
     "watch:back": "npx tsc -b -w ",
     "build:manager": "npx tsc -b local_modules/@jswf/manager/src",
     "build:jwf": "npx tsc -b  local_modules/@jswf/core/src",
-    "watch:jwf": "npx webpack -b -w --config local_modules/@jswf/core/src/webpack.config.js",
+    "watch:jwf": "npx tsc -b -w local_modules/@jswf/core/src",
     "build:amf": "npx tsc -b local_modules/active-module-framework/src/",
     "watch:amf": "npx tsc -b -w local_modules/active-module-framework/src/",
     "build:all": "npm run build:amf && npm run build:back && npm run build:jwf && npm run build:manager && npm run build:front",
