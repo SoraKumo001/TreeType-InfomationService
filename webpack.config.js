@@ -4,8 +4,8 @@ const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const srcDir = "/src/front";
 const config = {
-  //mode: 'production',
-  mode: 'development',
+  mode: 'production',
+  //mode: 'development',
   entry: [
     path.resolve(__dirname+srcDir,'index.ts'),
   ].concat(glob.sync(path.resolve(__dirname+srcDir,"**/*.auto.ts"))),
