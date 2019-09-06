@@ -4,15 +4,14 @@
  */
 
 //使用するPollyfillの呼び出し
-import 'core-js/features/object';
-import 'core-js/features/promise'
-
+import "core-js/features/object";
+import "core-js/features/promise";
 
 import { MainView } from "./Main/MainView";
 import "./index.scss";
-import { Manager, UserModule, UserInfo, UserEditWindow } from '@jswf/manager';
+import { Manager, UserModule, UserInfo, UserEditWindow } from "@jswf/manager";
 
-export function getManager(){
+export function getManager() {
   return appManager;
 }
 
@@ -36,4 +35,5 @@ userModule.request();
 addEventListener("DOMContentLoaded", () => {
   //メイン画面の表示
   new MainView(appManager);
+
 });
