@@ -8,21 +8,7 @@ import { getManager } from "../..";
 
 const contentsModule = getManager().getModule(ContentsModule);
 
-// function createNode(node: HTMLElement, rawHtml: string) {
-//   const dummy = document.createElement("div");
-//   dummy.innerHTML = rawHtml;
-//   while (dummy.childNodes.length) {
-//     const child = dummy.childNodes[0] as HTMLScriptElement;
-//     dummy.removeChild(child);
-//     if (child.nodeName === "SCRIPT") {
-//       //SCRIPTタグなら再生成
-//       const script = document.createElement("SCRIPT") as HTMLScriptElement;
-//       if (child.src) script.src = child.src;
-//       script.innerHTML = child.innerHTML;
-//       node.appendChild(script);
-//     } else node.appendChild(child);
-//   }
-// }
+
 addEventListener("DOMContentLoaded", () => {
   const snsScripts = [
     "https://platform.twitter.com/widgets.js",
