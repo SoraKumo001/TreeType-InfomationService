@@ -40,14 +40,6 @@ export class Splitter extends BaseView {
     }
     const client = this.getClient();
 
-    //Chromeバグ対策76
-    setTimeout(() => {
-      this.getClient().style.overflow = "auto";
-      setTimeout(() => {
-        this.getClient().style.overflow = "hidden";
-      }, 100);
-    }, 1);
-
     client.dataset.splitterType = this.splitterType;
     this.childList = [new BaseView(), new BaseView()];
     super.addChild(this.childList[0]);
@@ -106,7 +98,7 @@ export class Splitter extends BaseView {
         handle = null;
         this.splitterMoving = false;
         this.layout();
-      }, 2000);
+      }, 1000);
       this.layout();
     });
     this.addEventListener("layout", (): void => {
