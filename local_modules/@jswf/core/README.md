@@ -20,7 +20,8 @@ JavaScript Window Framework (npm module version)
 
 ## history
 
-- 2019/08/23 1.0.0 Change package name
+- 2019/09/06 0.1.10 Fix Splitter
+- 2019/08/23 0.1.09 Change package name
 
 ## 使い方
 
