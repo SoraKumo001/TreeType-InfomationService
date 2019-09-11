@@ -28,8 +28,8 @@ export class ContentsEntity {
   uuid?: string;
   @typeorm.Column({ default: 1000 })
   priority!: number;
-  @typeorm.Column({ default: true })
-  visible!: boolean;
+  @typeorm.Column({ nullable: true  })
+  visible?: boolean;
   @typeorm.Column({ default: "PAGE" })
   type!: string;
   @typeorm.Column({ default: () => "current_timestamp" })
@@ -104,9 +104,9 @@ export class Contents extends amf.Module {
     if (id) {
       if (!this.repository) return;
       const entity = await this.repository.findOne(id);
-      if(entity){
+      if (entity) {
         creater.setStatus(301);
-        creater.addHeader("Location","?uuid="+entity.uuid);
+        creater.addHeader("Location", "?uuid=" + entity.uuid);
       }
     }
   }
@@ -245,7 +245,7 @@ export class Contents extends amf.Module {
     if (!repository) return undefined;
 
     const bread = await repository.getParent(["id=:id", { id }], {
-      select: ["id", "title","uuid"]
+      select: ["id", "title", "uuid"]
     });
     return bread;
   }
@@ -444,7 +444,6 @@ export class Contents extends amf.Module {
       parent: { id: pid },
       priority,
       type,
-      visible: false,
       title_type: titleType
     });
     if (!result) return null;
@@ -460,7 +459,7 @@ export class Contents extends amf.Module {
    * @memberof Contents
    */
   public async deleteContents(
-    id: number,
+    uuid: string|number,
     flag?: boolean
   ): Promise<boolean | null> {
     const repository = this.repository;
@@ -468,6 +467,7 @@ export class Contents extends amf.Module {
     //if (flag || flag === undefined) await remoteDB.run("begin");
 
     const promise: Promise<unknown>[] = [];
+    const id = typeof uuid === "string"?await this.getIdFromUuid(uuid):uuid;
     //関連ファイルの削除
     const fileDelete = async () => {
       const files = this.getSessionModule(Files);
@@ -484,7 +484,7 @@ export class Contents extends amf.Module {
       });
       if (ids) {
         const promise: Promise<unknown>[] = [];
-        for (const cid of ids) promise.push(this.deleteContents(cid.id, false));
+        for (const cid of ids) promise.push(this.deleteContents(cid.uuid!, false));
         await Promise.all(promise);
       }
     };
