@@ -102,8 +102,8 @@ export class InfoContentsView extends JWF.BaseView {
     contentsModule.addEventListener("selectContents", (id, tree) => {
       if (!tree) this.loadPage(id);
     });
-    contentsModule.addEventListener("createContents", async (pid, id) => {
-      await this.loadSubPage(pid, id);
+    contentsModule.addEventListener("createContents", async (puuid, id) => {
+      await this.loadSubPage(puuid, id);
       this.jumpContents(id);
     });
     contentsModule.addEventListener("deleteContents", id => {
@@ -185,7 +185,7 @@ export class InfoContentsView extends JWF.BaseView {
             selection.removeAllRanges();
         });
       }
-      contentsArea.dataset.contentsStat = contents.visible.toString();
+      contentsArea.dataset.contentsStat = contents.visible?"true":"false";
       title.dataset.nodeName = "H" + contents.title_type;
       title.textContent = contents.title;
       date.textContent = new Date(contents["date"]).toLocaleString();
@@ -306,12 +306,12 @@ export class InfoContentsView extends JWF.BaseView {
   }
   public async loadSubPage(pid: string, uuid: string) {
     //対象が存在しなければ全てを読み込みなおす
-    const parent = this.contentsNode[pid];
-    if (!parent) this.loadPage(uuid, true);
+    const parent = this.contentsNode[uuid];
+    if (!parent){ this.loadPage(uuid, true);return;}
 
     //部分的なコンテンツの読み出し
     const contentsModule = this.contentsModule;
-    const contents = await contentsModule.getContents(pid, true);
+    const contents = await contentsModule.getContents(uuid, true);
     if (!contents) return;
     const node = this.createContents(contents);
     if (parent.parentNode) parent.parentNode.replaceChild(node, parent);

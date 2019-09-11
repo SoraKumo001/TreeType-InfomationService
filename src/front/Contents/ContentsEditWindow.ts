@@ -271,7 +271,7 @@ export class ContentsEditWindow extends TextEditWindow {
     if (contents) {
       const client = this.getClient();
       this.contents = contents;
-      PanelControl.setControlValue(client, "visible", contents.visible);
+      PanelControl.setControlValue(client, "visible", contents.visible||contents.visible===null);
       PanelControl.setControlValue(client, "type", contents.type);
       PanelControl.setControlValue(client, "title", contents.title);
       PanelControl.setControlValue(client, "title_type", contents.title_type);

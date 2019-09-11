@@ -54,16 +54,16 @@ type ValueTypeProc = (
  */
 export class ContentsModule extends BaseModule<CustomMap> {
   private contentsValueTypes: { [name: string]: ValueTypeProc } = {};
-  public async createContents(pid: string, vector: number, type: string) {
+  public async createContents(puuid: string, vector: number, type: string) {
     const adapter = this.getAdapter();
     const result = (await adapter.exec(
       "Contents.createContents",
-      pid,
+      puuid,
       vector,
       type
-    )) as { pid: string; id: string } | null;
+    )) as { uuid: string } | null;
     if (result) {
-      this.callEvent("createContents", result.pid, result.id);
+      this.callEvent("createContents", puuid, result.uuid);
     }
     return result;
   }
