@@ -12,7 +12,7 @@ export class SeoModule extends amf.Module {
 
     const req = creater.getRequest();
     const uuid = req.query.uuid || "";
-    const id = uuid?await contentsModule.getIdFromUuid(uuid):1;
+    const id = uuid ? await contentsModule.getIdFromUuid(uuid) : 1;
 
     //パラメータの読み出し
     let [basicData, breads, contents] = await Promise.all([
@@ -82,9 +82,11 @@ export class SeoModule extends amf.Module {
           info += child.title + " ";
         }
       }
+      //タイトルの設定
+      if (title.length) title = " - " + title;
+      title = contents.title + title;
     }
 
-    //タイトルの設定
     document.title = title;
 
     //正規URLの作成(正規IDはページのIDを設定)
