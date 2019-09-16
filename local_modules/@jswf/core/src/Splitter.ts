@@ -106,7 +106,7 @@ export class Splitter extends BaseView {
       const child1 = this.childList[1];
 
       const active = (e: { active: boolean }): void => {
-        if (!e.active) {
+        if (!e.active && this.drawerModeNow) {
           splitter.setVisible(false);
           child0.setVisible(false);
           this.menuIcon.style.display = "block";
