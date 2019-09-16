@@ -14,7 +14,7 @@
     "build:amf": "npx tsc -b local_modules/active-module-framework/src/",
     "watch:amf": "npx tsc -b -w local_modules/active-module-framework/src/",
     "build:all": "npm run build:amf && npm run build:back && npm run build:jwf && npm run build:manager && npm run build:front",
-    "start": "node dist/app/index.js"
+    "start": "node --preserve-symlinks dist/app/index.js"
   },
   "keywords": [],
   "author": "SoraKumo",
@@ -40,7 +40,7 @@
     "css-loader": "~3.2.0",
     "dts-bundle": "~0.7.3",
     "dts-module-filter": "~1.0.0",
-    "eslint": "~6.3.0",
+    "eslint": "~6.4.0",
     "eslint-config-prettier": "~6.3.0",
     "eslint-plugin-prettier": "~3.1.0",
     "express": "~4.17.1",
