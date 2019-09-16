@@ -190,14 +190,14 @@ export class InfoContentsView extends JWF.BaseView {
       title.textContent = contents.title;
       date.textContent = new Date(contents["date"]).toLocaleString();
       this.contentsModule.createContentsValue(body, this.pageId, contents);
-      // const imageNodes = body.querySelectorAll("img");
-      // for (const i = 0; i < imageNodes.length; i++) {
-      //   const node = imageNodes[i];
-      //   node.src = node.src.replace("command=Files.download", "cmd=download");
-      //   node.addEventListener("click", () => {
-      //     window.open(node.src, "newtab");
-      //   });
-      // }
+      const imageNodes = body.querySelectorAll("img");
+      for (let i = 0; i < imageNodes.length; i++) {
+        const node = imageNodes[i];
+        node.style.maxWidth = "90%";
+        node.addEventListener("click", () => {
+          window.open(node.src, "newtab");
+        });
+      }
       const nodes = body.querySelectorAll(".code");
       for (let index = 0; nodes[index]; index++) {
         const node = nodes[index];
