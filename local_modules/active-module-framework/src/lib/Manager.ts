@@ -41,6 +41,7 @@ export interface ManagerParams {
   jsPriority: string[];
   cluster?: number;
   debug?: boolean | number;
+  autoReload?: boolean;
   listen: number | string;
   test?: boolean;
   listened?: (port: string | number) => void;
@@ -63,13 +64,11 @@ interface AdapterFormat {
  * @returns {Promise<void>}
  */
 export function Sleep(timeout: number): Promise<void> {
-  return new Promise(
-    (resolv): void => {
-      setTimeout((): void => {
-        resolv();
-      }, timeout);
-    }
-  );
+  return new Promise((resolv): void => {
+    setTimeout((): void => {
+      resolv();
+    }, timeout);
+  });
 }
 
 interface ManagerMap {
@@ -192,9 +191,10 @@ export class Manager {
    * @param {*} params
    * @memberof Manager
    */
-  public output(msg: string, ...params: unknown[]): void {
+  public async output(msg: string, ...params: unknown[]): Promise<void> {
     if (this.debug) {
       // eslint-disable-next-line no-console
+      (process.stdout as any)._handle.setBlocking(false);
       console.log(
         (process.env.NODE_APP_INSTANCE || "0") + ":" + msg,
         ...params
@@ -254,12 +254,9 @@ export class Manager {
       this.output("子プロセス起動");
       this.output("--- Start Manager");
       //エラーメッセージをキャプチャ
-      capcon.startCapture(
-        process.stderr,
-        (stderr: unknown): void => {
-          this.stderr += stderr;
-        }
-      );
+      capcon.startCapture(process.stderr, (stderr: unknown): void => {
+        this.stderr += stderr;
+      });
 
       //モジュールを読み出す
       const modulesType = this.loadModule(params.modulePath);
@@ -422,6 +419,15 @@ export class Manager {
   private initExpress(params: ManagerParams): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const exp = express();
+
+      if (params.autoReload) {
+        var browserSync = require("browser-sync");
+        var connectBrowserSync = require("connect-browser-sync");
+
+        var browserSyncConfigurations = { files: params.rootPath };
+        exp.use(connectBrowserSync(browserSync(browserSyncConfigurations)));
+      }
+
       const commands = this.commands;
       commands.exec = (req: express.Request, res: express.Response): void => {
         this.exec(req, res);
@@ -510,36 +516,30 @@ export class Manager {
 
       if (port) {
         //ソケットの待ち受け設定
-        exp.listen(
-          port,
-          (): void => {
-            this.output("http://localhost:%d", port);
-            if (params.listened) params.listened(port);
-            resolve(true);
-          }
-        );
+        exp.listen(port, (): void => {
+          this.output("http://localhost:%d", port);
+          if (params.listened) params.listened(port);
+          resolve(true);
+        });
       } else {
         const listen = (flag: boolean) => {
           //ソケットの待ち受け設定
-          exp.listen(
-            path,
-            (): void => {
-              this.output(path);
-              try {
-                fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
-                if (params.listened) params.listened(path);
-                resolve(true);
-              } catch (e) {
-                //初回かどうか識別
-                if (flag) {
-                  //ソケットファイルの削除
-                  this.removeSock(path);
-                  //リトライ
-                  listen(false);
-                }
+          exp.listen(path, (): void => {
+            this.output(path);
+            try {
+              fs.chmodSync(path, "666"); //ドメインソケットのアクセス権を設定
+              if (params.listened) params.listened(path);
+              resolve(true);
+            } catch (e) {
+              //初回かどうか識別
+              if (flag) {
+                //ソケットファイルの削除
+                this.removeSock(path);
+                //リトライ
+                listen(false);
               }
             }
-          ); //ソケットの待ち受け設定
+          }); //ソケットの待ち受け設定
         };
         listen(true);
       }
@@ -611,18 +611,15 @@ export class Manager {
         .on("data", function(v: string): void {
           postData += v;
         })
-        .on(
-          "end",
-          (): void => {
-            try {
-              const values = JSON.parse(postData);
-              this.excute(res, values);
-            } catch (e) {
-              res.status(500);
-              res.end("500 error");
-            }
+        .on("end", (): void => {
+          try {
+            const values = JSON.parse(postData);
+            this.excute(res, values);
+          } catch (e) {
+            res.status(500);
+            res.end("500 error");
           }
-        );
+        });
     }
   }
 

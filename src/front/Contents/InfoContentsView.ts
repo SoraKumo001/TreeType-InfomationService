@@ -21,6 +21,7 @@ highlight.registerLanguage("css", require("highlight.js/lib/languages/css"));
 highlight.registerLanguage("java", require("highlight.js/lib/languages/java"));
 highlight.registerLanguage("xml", require("highlight.js/lib/languages/xml"));
 highlight.registerLanguage("php", require("highlight.js/lib/languages/php"));
+highlight.registerLanguage("typescript", require("highlight.js/lib/languages/typescript"));
 
 export interface ContentsArea extends HTMLDivElement {
   contents: MainContents;

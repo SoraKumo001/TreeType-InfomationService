@@ -112,7 +112,9 @@ export class HtmlCreater {
     );
     if (this.jsdom) {
       res.write("<!DOCTYPE html>\n");
-      res.end(this.jsdom.window.document.documentElement.outerHTML);
+      res.end(
+        this.jsdom.window.document.documentElement.outerHTML
+      );
     } else res.end();
     return true;
   }
