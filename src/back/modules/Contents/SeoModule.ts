@@ -55,19 +55,20 @@ export class SeoModule extends amf.Module {
       if (title.length) title += " - ";
       title += item.title;
     }
-    for (let i = 0; i < list.length; i++) {
-      list[i].position = i + 1;
+    if (list.length) {
+      for (let i = 0; i < list.length; i++) {
+        list[i].position = i + 1;
+      }
+      const breadcrumbList = document.createElement("script");
+      breadcrumbList.type = "application/ld+json";
+      const breadcrumbValue = {
+        "@context": "http://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: list
+      };
+      breadcrumbList.textContent = JSON.stringify(breadcrumbValue);
+      document.head.appendChild(breadcrumbList);
     }
-    const breadcrumbList = document.createElement("script");
-    breadcrumbList.type = "application/ld+json";
-    const breadcrumbValue = {
-      "@context": "http://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: list
-    };
-    breadcrumbList.textContent = JSON.stringify(breadcrumbValue);
-    document.head.appendChild(breadcrumbList);
-
     //ページの説明文章の作成
     let info = "";
     if (contents) {
