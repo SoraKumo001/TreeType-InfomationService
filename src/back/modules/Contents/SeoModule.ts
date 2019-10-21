@@ -64,11 +64,14 @@ export class SeoModule extends amf.Module {
       const breadcrumbValue = {
         "@context": "http://schema.org",
         "@type": "BreadcrumbList",
-        itemListElement: list
+        itemListElement: list,
+        datePublished: contents!.date.toISOString(),
+        dateModified: contents!.update.toISOString()
       };
       breadcrumbList.textContent = JSON.stringify(breadcrumbValue);
       document.head.appendChild(breadcrumbList);
     }
+
     //ページの説明文章の作成
     let info = "";
     if (contents) {

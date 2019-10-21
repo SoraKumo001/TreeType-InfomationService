@@ -1,0 +1,17 @@
+{
+  "name": "ts-method-checker",
+  "version": "0.0.1",
+  "description": "Check typescript method arguments and return types during execution",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -b src",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["typescript"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "reflect-metadata": "^0.1.13",
+    "typescript": "^3.6.4"
+  }
+}

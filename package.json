@@ -4,6 +4,8 @@
   "description": "ツリー型情報掲載システム",
   "main": "dist/app/index.js",
   "scripts": {
+    "watch:all": "npx concurrently \"npm:watch:front\" \"npm:watch:back\" \"npm:start\"",
+    "build:all": "npm run build:amf && npm run build:back && npm run build:jwf && npm run build:manager && npm run build:front",
     "build:front": "npx webpack -b",
     "watch:front": "npx webpack -b -w",
     "build:back": "npx tsc -b ",
@@ -13,7 +15,6 @@
     "watch:jwf": "npx tsc -b -w local_modules/@jswf/core/src",
     "build:amf": "npx tsc -b local_modules/active-module-framework/src/",
     "watch:amf": "npx tsc -b -w local_modules/active-module-framework/src/",
-    "build:all": "npm run build:amf && npm run build:back && npm run build:jwf && npm run build:manager && npm run build:front",
     "start": "node --preserve-symlinks dist/app/index.js"
   },
   "keywords": [],
@@ -36,6 +37,7 @@
     "@typescript-eslint/eslint-plugin": "~2.3.0",
     "@typescript-eslint/parser": "~2.3.0",
     "analytics-gtag": "~1.0.2",
+    "concurrently": "^5.0.0",
     "core-js": "~3.2.1",
     "css-loader": "~3.2.0",
     "dts-bundle": "~0.7.3",
