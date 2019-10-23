@@ -179,8 +179,17 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
     //起点の取得
     const ids = new Set<number>();
     relationMaps.forEach(e => ids.add(e.id));
-    let index: number;
-    for (index = 0; ids.has(relationMaps[index].parentId); ++index);
+
+    const mapIndex = relationMaps.reduce(
+      (a, b, index) => {
+        if (!ids.has(b.parentId))
+          if (!a.id || b.id < a.id) return { id: b.id, index };
+        return a;
+      },
+      {} as { id?: number; index?: number }
+    );
+
+    const index = mapIndex.index!;
 
     this.buildChildrenEntityTree(
       entitiesAndScalars.entities[index],

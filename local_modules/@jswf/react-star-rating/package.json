@@ -1,0 +1,37 @@
+{
+  "name": "@jswf/react-star-rating",
+  "version": "1.0.1",
+  "description": "Star rating for React",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npx tsc -b src",
+    "watch": "npx tsc -b src -w",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react",
+    "starrating"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "SoraKumo",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^16.11.0",
+    "styled-components": "^4.4.1"
+  },
+  "devDependencies": {
+    "@types/react": "^16.9.11",
+    "@types/styled-components": "^4.1.20",
+    "typescript": "^3.6.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JavaScript-WindowFramework/react-star-rating.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JavaScript-WindowFramework/react-star-rating/issues"
+  },
+  "homepage": "https://github.com/JavaScript-WindowFramework/react-star-rating#readme"
+}

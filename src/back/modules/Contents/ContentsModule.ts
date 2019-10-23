@@ -603,7 +603,7 @@ export class Contents extends amf.Module {
         "title"
       ],
       where: visible,
-      order: `treeEntity.type='PAGE',"treeEntity".priority`
+      order: `treeEntity.type='PAGE',"treeEntity".priority,"treeEntity".id`
     });
     if (!values) return null;
     //最上位データを返す
