@@ -15,15 +15,32 @@
     "es6": true
   },
   "parserOptions": {
-    "sourceType": "module",
-    "project": "./tsconfig.json"
+    "sourceType": "module"
+    //  "project": "./tsconfig.json"
   },
   "rules": {
-    "prettier/prettier":["off"],
-    "@typescript-eslint/camelcase":["off"],
-    "@typescript-eslint/explicit-function-return-type":["off"],
-    "@typescript-eslint/class-name-casing":["off"],
-    "no-console":["off"],
-    "@typescript-eslint/no-var-requires":["off"]
+    "prettier/prettier": [
+      "off"
+    ],
+    "@typescript-eslint/camelcase": [
+      "off"
+    ],
+    "@typescript-eslint/explicit-function-return-type": [
+      "off"
+    ],
+    "@typescript-eslint/class-name-casing": [
+      "off"
+    ],
+    "no-console": [
+      "off"
+    ],
+    "@typescript-eslint/no-var-requires": [
+      "off"
+    ],
+    "@typescript-eslint/no-inferrable-types": "off",
+    "no-dupe-class-members": "off",
+    "require-atomic-updates": "off",
+    "@typescript-eslint/consistent-type-assertions": "off",
+    "@typescript-eslint/no-non-null-assertion": "off"
   }
 }

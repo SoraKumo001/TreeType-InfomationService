@@ -180,14 +180,11 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
     const ids = new Set<number>();
     relationMaps.forEach(e => ids.add(e.id));
 
-    const mapIndex = relationMaps.reduce(
-      (a, b, index) => {
-        if (!ids.has(b.parentId))
-          if (!a.id || b.id < a.id) return { id: b.id, index };
-        return a;
-      },
-      {} as { id?: number; index?: number }
-    );
+    const mapIndex = relationMaps.reduce((a, b, index) => {
+      if (!ids.has(b.parentId))
+        if (!a.id || b.id < a.id) return { id: b.id, index };
+      return a;
+    }, {} as { id?: number; index?: number });
 
     const index = mapIndex.index!;
 

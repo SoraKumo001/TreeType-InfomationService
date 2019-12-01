@@ -7,6 +7,7 @@ import * as JWF from "@jswf/core";
 import { ContentsModule } from "./ContentsModule";
 import "./scss/ContentsImportWindow.scss";
 import { Manager } from "@jswf/manager";
+
 export class ContentsImportWindow extends JWF.FrameWindow {
   public constructor(manager: Manager, uuid: string) {
     super();

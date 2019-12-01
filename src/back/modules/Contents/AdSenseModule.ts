@@ -1,4 +1,5 @@
-import { HtmlCreater, Module } from "active-module-framework";
+import { Module } from "@rfcs/core";
+import { HtmlCreater } from "../../HtmlCreater";
 import { ParamModule } from "../App/ParamModule";
 
 /**

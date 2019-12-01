@@ -1,9 +1,9 @@
-import * as amf from "active-module-framework";
-import { HtmlCreater } from "active-module-framework";
 import { Contents, ContentsEntity } from "./ContentsModule";
 import { ParamModule } from "../App/ParamModule";
+import { Module } from "@rfcs/core";
+import { HtmlCreater } from "../../HtmlCreater";
 
-export class SeoModule extends amf.Module {
+export class SeoModule extends Module {
   public async onCreateHtml(creater: HtmlCreater) {
     const paramsModule = await this.getModule(ParamModule);
     const contentsModule = await this.getModule(Contents);
@@ -15,6 +15,7 @@ export class SeoModule extends amf.Module {
     const id = uuid ? await contentsModule.getIdFromUuid(uuid) : 1;
 
     //パラメータの読み出し
+    // eslint-disable-next-line prefer-const
     let [basicData, breads, contents] = await Promise.all([
       paramsModule.getGlobalParam("BASIC_DATA") as Promise<{
         url?: string;
@@ -23,7 +24,7 @@ export class SeoModule extends amf.Module {
         title?: string;
       } | null>,
       contentsModule.getBreadcrumb(id),
-      contentsModule.getContents(id, true)
+      contentsModule.getContents(uuid, true)
     ]);
     if (!basicData) basicData = {};
 

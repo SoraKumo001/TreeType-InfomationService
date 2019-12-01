@@ -1,6 +1,6 @@
-import * as amf from "active-module-framework";
-import { HtmlCreater } from "active-module-framework";
 import { ParamModule } from "../App/ParamModule";
+import { Module } from "@rfcs/core";
+import { HtmlCreater } from "../../HtmlCreater";
 
 /**
  *アナリティクス初期設定用クラス
@@ -9,7 +9,7 @@ import { ParamModule } from "../App/ParamModule";
  * @class Analytics
  * @extends {amf.Module}
  */
-export class Analytics extends amf.Module {
+export class Analytics extends Module {
   public async onCreateHtml(creater: HtmlCreater): Promise<void> {
     const paramsModule = await this.getModule(ParamModule);
 

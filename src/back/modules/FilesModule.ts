@@ -1,4 +1,4 @@
-import * as amf from "active-module-framework";
+import * as amf from "@rfcs/core";
 import { Users } from "./User/UsersModule";
 import { RemoteDB } from "./RemoteDBModule";
 import express = require("express");
@@ -105,7 +105,7 @@ export class Files extends amf.Module {
 
     return repository.findOne(fileId);
   }
-  public async createDir(parentId: number, path: string) {
+  public async _createDir(parentId: number, path: string) {
     const repository = this.repository;
     if (!repository) return 0;
 
@@ -136,7 +136,7 @@ export class Files extends amf.Module {
     }
     return id;
   }
-  public async setFileName(fileId: number, name: string) {
+  public async _setFileName(fileId: number, name: string) {
     const repository = this.repository;
     if (!repository) return null;
     return repository.update(fileId, { name });
@@ -155,7 +155,7 @@ export class Files extends amf.Module {
     }
     return values;
   }
-  public async deleteFile(fileId: number | number[]) {
+  public async _deleteFile(fileId: number | number[]) {
     //パラメータが配列だった場合は複数削除
     if (Array.isArray(fileId)) {
       const promise = [];
@@ -192,7 +192,7 @@ export class Files extends amf.Module {
     });
   }
 
-  public async getFileList(parentId: number) {
+  public async _getFileList(parentId: number) {
     const repository = this.repository;
     if (!repository) return null;
 
@@ -204,15 +204,13 @@ export class Files extends amf.Module {
       .getRawMany();
     return result;
   }
-  public async getDirList() {
+  public async _getDirList() {
     const repository = this.repository;
     if (!repository) return null;
 
     const dirInfos = (await repository
       .createQueryBuilder()
-      .select(
-        `id,"parentId",kind,name,date,octet_length(value) as size`
-      )
+      .select(`id,"parentId",kind,name,date,octet_length(value) as size`)
       .where("kind=0")
       .orderBy("name")
       .getRawMany()) as FileInfo[];
@@ -243,7 +241,7 @@ export class Files extends amf.Module {
     ]);
     await repository.save({ kind: 0, name: "[ROOT]" });
   }
-  public async getDirId(parentId: number, path: string) {
+  public async _getDirId(parentId: number, path: string) {
     const repository = this.repository;
     if (!repository) return null;
 
@@ -259,7 +257,7 @@ export class Files extends amf.Module {
     }
     return id;
   }
-  public async uploadFile(parentId: number, name: string, buffer: Buffer) {
+  public async _uploadFile(parentId: number, name: string, buffer: Buffer) {
     const repository = this.repository;
     if (!repository) return null;
     const check = await repository.findOne({
@@ -355,38 +353,46 @@ export class Files extends amf.Module {
     return (<FileEntity>file).id;
   }
   public isAdmin() {
+    if(!this.isSession())
+      return true;
     const users = this.getSessionModule(Users);
     return users.isAdmin();
   }
-  public async JS_createDir(parentId: number, path: string) {
+  @amf.EXPORT
+  public async createDir(parentId: number, path: string) {
     if (!this.isAdmin()) return null;
-    return this.createDir(parentId, path);
+    return this._createDir(parentId, path);
   }
-  public async JS_setFileName(fileId: number, name: string) {
+  @amf.EXPORT
+  public async setFileName(fileId: number, name: string) {
     if (!this.isAdmin()) return null;
-    return this.setFileName(fileId, name);
+    return this._setFileName(fileId, name);
   }
-  public async JS_deleteFile(fileIds: number | number[]) {
+  @amf.EXPORT
+  public async deleteFile(fileIds: number | number[]) {
     if (!this.isAdmin()) return null;
-    return this.deleteFile(fileIds);
+    return this._deleteFile(fileIds);
   }
-  public async JS_getFileList(parentId: number) {
+  @amf.EXPORT
+  public async getFileList(parentId: number) {
     if (!this.isAdmin()) return null;
-    return this.getFileList(parentId);
+    return this._getFileList(parentId);
   }
-  public async JS_getDirList() {
+  @amf.EXPORT
+  public async getDirList() {
     if (!this.isAdmin()) return null;
-    return this.getDirList();
+    return this._getDirList();
   }
-  public async JS_getDirId(parentId: number, name: string) {
+  @amf.EXPORT
+  public async getDirId(parentId: number, name: string) {
     if (!this.isAdmin()) return null;
-    return this.getDirId(parentId, name);
+    return this._getDirId(parentId, name);
   }
-
-  public async JS_uploadFile(parentId: number, name: string) {
+  @amf.EXPORT
+  public async uploadFile(parentId: number, name: string) {
     if (!this.isAdmin()) return null;
     const users = this.getSessionModule(Users);
     const buffer = this.getSession().getBuffer();
-    if (buffer) return this.uploadFile(parentId, name, buffer);
+    if (buffer) return this._uploadFile(parentId, name, buffer);
   }
 }

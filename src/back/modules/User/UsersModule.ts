@@ -1,5 +1,5 @@
 import * as crypto from "crypto";
-import * as amf from "active-module-framework";
+import * as amf from "@rfcs/core";
 import * as typeorm from "typeorm";
 import { RemoteDB } from "../RemoteDBModule";
 
@@ -23,11 +23,10 @@ export class Users extends amf.Module {
   private userRepository?: typeorm.Repository<UserEntity>;
   private userInfo?: UserInfo;
 
-
   public async onCreateModule(): Promise<boolean> {
     this.getLocalDB().addEntity(UserEntity);
 
-        //データベースの初期化
+    //データベースの初期化
     const remoteDB = await this.getModule(RemoteDB);
     remoteDB.addEntity(UserEntity);
 
@@ -42,8 +41,6 @@ export class Users extends amf.Module {
     return true;
   }
   public async onCreatedModule(): Promise<boolean> {
-
-
     return true;
   }
 
@@ -100,8 +97,7 @@ export class Users extends amf.Module {
     } else {
       //リモートユーザ
       const userRepository = this.userRepository;
-      if(!userRepository)
-        return false;
+      if (!userRepository) return false;
 
       const result = await userRepository.findOne({
         id: userId,
@@ -116,15 +112,14 @@ export class Users extends amf.Module {
     no: number,
     local: boolean
   ): Promise<UserInfo | null> {
-    let userEntity: UserEntity|undefined;
+    let userEntity: UserEntity | undefined;
     if (local) {
       const userModel = this.getLocalDB().getRepository(UserEntity);
       userEntity = await userModel.findOne(no);
     } else {
       //リモートユーザ
       const userRepository = this.userRepository;
-      if(!userRepository)
-        return null;
+      if (!userRepository) return null;
       userEntity = await userRepository.findOne(no);
     }
     if (!userEntity) return null;
@@ -145,15 +140,14 @@ export class Users extends amf.Module {
     return userInfo.no;
   }
   public async getUserInfo(userId: string, local: boolean) {
-    let userEntity: UserEntity|undefined;
+    let userEntity: UserEntity | undefined;
     if (local) {
       const userRepository = this.getLocalDB().getRepository(UserEntity);
       userEntity = await userRepository.findOne({ id: userId });
     } else {
       //リモートユーザ
       const userRepository = this.userRepository;
-      if(!userRepository)
-        return null;
+      if (!userRepository) return null;
       userEntity = await userRepository.findOne({ id: userId });
     }
     if (!userEntity) return null;
@@ -166,6 +160,14 @@ export class Users extends amf.Module {
       type: local ? "local" : "remote"
     };
   }
+  public isAdmin() {
+    return this.userInfo ? this.userInfo.admin : false;
+  }
+  @amf.EXPORT
+  public async request() {
+    return this.userInfo;
+  }
+  @amf.EXPORT
   public logout() {
     const user = {
       no: -1,
@@ -179,21 +181,13 @@ export class Users extends amf.Module {
     this.userInfo = user;
     return user;
   }
-  public isAdmin() {
-    return this.userInfo ? this.userInfo.admin : false;
-  }
-  public async JS_request() {
-    return this.userInfo;
-  }
-  public async JS_logout() {
-    return this.logout();
-  }
-  public async JS_login(
+  @amf.EXPORT
+  public async login(
     userId: string,
     userPass: string,
     local: boolean,
     keep?: boolean
-  ) {
+  ):Promise<false | UserInfo | null> {
     if (await this.isLogin(userId, userPass, local)) {
       const result = await this.getUserInfo(userId, local);
       if (result) {
@@ -205,7 +199,8 @@ export class Users extends amf.Module {
     }
     return false;
   }
-  public async JS_setUser(
+  @amf.EXPORT
+  public async setUser(
     userNo: number,
     userId: string,
     userName: string,
@@ -219,50 +214,60 @@ export class Users extends amf.Module {
       const userEntity = await userRepository.findOne(userNo);
       if (userNo && !userEntity) return false;
       if (userNo == 0 && userPass === "") return false;
-
       if (userName === "") userName = userId;
       const pass = userPass ? getSHA256(userPass) : userEntity!.password;
       let result;
-      if (userNo == 0) {
-        result = await userRepository.insert({
-          id: userId,
-          password: pass,
-          name: userName
-        });
-      } else {
-        //作成したシリアル番号を返す
-        result = await userRepository.update(userNo, {
-          id: userId,
-          password: pass,
-          name: userName
-        });
+      try {
+        if (userNo == 0) {
+          result = await userRepository.insert({
+            id: userId,
+            password: pass,
+            name: userName
+          });
+        } else {
+          //作成したシリアル番号を返す
+          result = await userRepository.update(userNo, {
+            id: userId,
+            password: pass,
+            name: userName
+          });
+        }
+      } catch {
+        result = null;
       }
       return result;
     } else {
       //リモートユーザ
       const userRepository = this.userRepository;
-      if(!userRepository)
-        return false;
+      if (!userRepository) return false;
       //ユーザが存在するか確認
       const userEntity = await userRepository.findOne(userNo);
-
-      let result;
-      if (userEntity) {
-        result = await userRepository.update(userNo, {
-          password: userPass ? userEntity.password : getSHA256(userPass),
-          name: userName
-        });
-      } else {
-        result = await userRepository.insert({
-          id: userId,
-          password: getSHA256(userPass),
-          name: userName
-        });
+      if (userName === "") userName = userId;
+      let result:any;
+      try {
+        if (userEntity) {
+          result = await userRepository.update(userNo, {
+            password: userPass ? userEntity.password : getSHA256(userPass),
+            name: userName
+          });
+        } else {
+          result = await userRepository.insert({
+            id: userId,
+            password: getSHA256(userPass),
+            name: userName
+          }) ;
+        }
+        if (result) {
+          result.type = result.type ? "local" : "remote";
+        }
+      } catch {
+        result = null;
       }
       return result;
     }
   }
-  public async JS_delUser(userNo: number, local: boolean) {
+  @amf.EXPORT
+  public async delUser(userNo: number, local: boolean) {
     if (!this.isAdmin()) return false;
     if (local) {
       const userModel = this.getLocalDB().getRepository(UserEntity);
@@ -271,15 +276,14 @@ export class Users extends amf.Module {
     } else {
       //リモートユーザ
       const userRepository = this.userRepository;
-      if(!userRepository)
-        return false;
+      if (!userRepository) return false;
 
       const result = await userRepository.delete(userNo);
       return !!result;
     }
   }
-
-  public async JS_getUsers(local: boolean): Promise<UserInfo[] | null> {
+  @amf.EXPORT
+  public async getUsers(local: boolean): Promise<UserInfo[] | null> {
     if (!this.isAdmin()) return null;
     let userEntitys: UserEntity[];
     if (local) {
@@ -289,8 +293,7 @@ export class Users extends amf.Module {
     } else {
       //リモートユーザ
       const userRepository = this.userRepository;
-      if(!userRepository)
-        return null;
+      if (!userRepository) return null;
       //ユーザが存在するか確認
       userEntitys = await userRepository.find({ order: { no: "ASC" } });
     }

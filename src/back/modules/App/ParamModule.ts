@@ -1,4 +1,4 @@
-import * as amf from "active-module-framework";
+import * as amf from "@rfcs/core";
 import { AppEntity, AppRepository } from "./AppEntity";
 import { Users } from "../User/UsersModule";
 import { RemoteDB } from "../RemoteDBModule";
@@ -38,25 +38,22 @@ export class ParamModule extends amf.Module {
     const users = this.getSessionModule(Users);
     return users.isAdmin();
   }
+  @amf.EXPORT
   public getGlobalParam(name: string) {
     return this.getItem("Global_" + name);
   }
-  public setGlobalParam(name: string, value: unknown) {
+  @amf.EXPORT
+  public async setGlobalParam(name: string, value: unknown) {
+    if (!this.isAdmin()) return null;
     return this.setItem("Global_" + name, value);
   }
-  public JS_getGlobalParam(name: string) {
-    return this.getGlobalParam(name);
-  }
-
-  public async JS_setGlobalParam(name: string, value: unknown) {
-    if (!this.isAdmin()) return null;
-    return this.setGlobalParam(name, value);
-  }
-  public async JS_getParam(name: string) {
+  @amf.EXPORT
+  public async getParam(name: string) {
     if (!this.isAdmin()) return null;
     return this.getItem(name);
   }
-  public async JS_setParam(name: string, value: unknown) {
+  @amf.EXPORT
+  public async setParam(name: string, value: unknown) {
     if (!this.isAdmin()) return null;
     return this.setItem(name, value);
   }

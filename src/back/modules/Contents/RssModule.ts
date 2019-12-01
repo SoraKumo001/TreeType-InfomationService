@@ -1,11 +1,11 @@
-import * as amf from "active-module-framework";
 import express = require("express");
 import { Contents } from "./ContentsModule";
 import * as xml2js from "xml2js";
-import { HtmlCreater } from "active-module-framework";
 import { ParamModule } from "../App/ParamModule";
+import { HtmlCreater } from "../../HtmlCreater";
+import { Module } from "@rfcs/core";
 
-export class Rss extends amf.Module {
+export class Rss extends Module {
   public async onCreateModule(): Promise<boolean> {
     this.addCommand(
       "rss",

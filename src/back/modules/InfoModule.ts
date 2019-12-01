@@ -1,4 +1,4 @@
-import * as amf from "active-module-framework";
+import * as amf from "@rfcs/core";
 
 /**
  *テストモジュール
@@ -17,11 +17,12 @@ export class InfoModule extends amf.Module {
       info: "テスト用"
     };
   }
-
-  public JS_add(a: number, b: number) {
+  @amf.EXPORT
+  public add(a: number, b: number) {
     return a + b;
   }
-  public JS_getModuleInfo() {
+  @amf.EXPORT
+  public getModuleInfo() {
     const manager = this.getManager();
     const types = manager.getModuleTypes();
     const infos: amf.ModuleInfo[] = [];

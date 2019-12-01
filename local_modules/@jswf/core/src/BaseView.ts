@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/class-name-casing */
-/* eslint-disable no-dupe-class-members */
 import "../scss/Window.scss";
 import { WindowManager } from "./WindowManager";
 import { FrameWindow } from "./FrameWindow";
@@ -1566,7 +1564,7 @@ export class BaseView<T extends WINDOW_EVENT_MAP = WINDOW_EVENT_MAP> {
   public setMaximize(flag: boolean): void {
     let that = this;
     function animationEnd(this: HTMLElement): void {
-      this.style.minWidth = null;
+      this.style.minWidth = null as never;
       this.style.minHeight = that.JData.titleSize + "px";
       this.removeEventListener("animationend", animationEnd);
     }
