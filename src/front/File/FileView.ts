@@ -2,8 +2,8 @@ import * as JWF from "@jswf/core";
 import { FileModule, FileInfo } from "./FileModule";
 import { FileEditWindow } from "./FileEditWindow";
 import { WINDOW_EVENT_MAP } from "@jswf/core";
-import IMAGE_FILE from "../../resource/File/images/file.svg";
-import IMAGE_FOLDER from "../../resource/File/images/folder.svg";
+import IMAGE_FILE from "../resource/File/images/file.svg";
+import IMAGE_FOLDER from "../resource/File/images/folder.svg";
 
 export interface CustomMap extends WINDOW_EVENT_MAP {
   selectDir: [number]; //parameter
@@ -195,9 +195,10 @@ export class FileView extends JWF.BaseView {
     }
   }
   public uploadFile() {
-    let input = document.createElement("input");
+    const input = document.createElement("input");
     input.type = "file";
     input.multiple = true;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const that = this;
     input.addEventListener("change", function() {
       const files = this.files;

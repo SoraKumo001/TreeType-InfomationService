@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-this-alias */
 /**
  *コンテンツ編集用ウインドウ
  *
@@ -8,7 +9,7 @@ import {
   PanelControl,
   Panel,
   sprintf,
-  CalendarView
+  CalendarView,
 } from "@jswf/core";
 import { Manager, FileModule, FileWindow } from "@jswf/manager";
 
@@ -42,7 +43,7 @@ export class ContentsEditWindow extends TextEditWindow {
       this.panel[i] = panel;
       this.addChild(panel, "top");
     }
-    this.getEditableView().addEventListener("insertFile", param => {
+    this.getEditableView().addEventListener("insertFile", (param) => {
       param.enter = true;
       this.insertFile(param.fileList);
     });
@@ -64,12 +65,12 @@ export class ContentsEditWindow extends TextEditWindow {
         const fileWindow = new FileWindow(manager, fid);
         this.addChild(fileWindow);
         fileWindow.setPos();
-        fileWindow.addEventListener("enterFile", param => {
+        fileWindow.addEventListener("enterFile", (param) => {
           param.enter = true;
           const fileInfo = param.fileInfo;
           this.insertFileContents(fileInfo.id, fileInfo.name);
         });
-      }
+      },
     });
     this.foreground();
     if (uuid) {
@@ -125,18 +126,18 @@ export class ContentsEditWindow extends TextEditWindow {
       label: "保存",
       event: () => {
         this.updateContents(true);
-      }
+      },
     });
     PanelControl.createControl(target, {
       label: "確認",
       event: () => {
         this.updateContents(false);
-      }
+      },
     });
     PanelControl.createControl(target, {
       name: "visible",
       type: "check",
-      label: "表示"
+      label: "表示",
     });
     PanelControl.createControl(target, {
       label: "時刻設定",
@@ -147,7 +148,7 @@ export class ContentsEditWindow extends TextEditWindow {
         date.value = that.getDateString(d);
         const time = client.querySelector("[name=time]") as HTMLInputElement;
         time.value = that.getTimeString(d);
-      }
+      },
     });
     PanelControl.createControl(target, {
       name: "date",
@@ -155,18 +156,18 @@ export class ContentsEditWindow extends TextEditWindow {
       label: "日付",
       size: 10,
       value: this.getDateString(new Date()),
-      event: function(e) {
+      event: function (e) {
         const input = e as HTMLInputElement;
         const calendar = new CalendarView({ frame: true });
         calendar.setSelect(new Date(input.value));
 
         that.addFrameChild(calendar);
         calendar.setPos();
-        calendar.addEventListener("date", e => {
+        calendar.addEventListener("date", (e) => {
           input.value = that.getDateString(e.date);
           calendar.close();
         });
-      }
+      },
     });
 
     PanelControl.createControl(target, {
@@ -174,7 +175,7 @@ export class ContentsEditWindow extends TextEditWindow {
       type: "input",
       label: "時間",
       value: this.getTimeString(new Date()),
-      size: 10
+      size: 10,
     });
     PanelControl.createControl(target, {
       label: "削除",
@@ -184,7 +185,7 @@ export class ContentsEditWindow extends TextEditWindow {
           if (await this.contentsModule.deleteContents(contents.uuid))
             this.close();
         }
-      }
+      },
     });
 
     target = this.panel[1].getClient();
@@ -194,10 +195,10 @@ export class ContentsEditWindow extends TextEditWindow {
       type: "select",
       label: "",
       option: [{ label: "PAGE" }, { label: "ITEM" }],
-      event: () => {}
+      event: () => undefined,
     });
 
-    const valueTypes = this.contentsModule.getContentsValueTypes().map(v => {
+    const valueTypes = this.contentsModule.getContentsValueTypes().map((v) => {
       return { label: v };
     });
     PanelControl.createControl(target, { type: "text", label: "コンテンツ" });
@@ -206,7 +207,7 @@ export class ContentsEditWindow extends TextEditWindow {
       type: "select",
       label: "",
       option: valueTypes,
-      event: () => {}
+      event: () => undefined,
     });
     PanelControl.createControl(target, { type: "text", label: "題名" });
     PanelControl.createControl(target, {
@@ -217,15 +218,15 @@ export class ContentsEditWindow extends TextEditWindow {
         { label: "無", value: "0" },
         { label: "大", value: "1" },
         { label: "中", value: "2" },
-        { label: "小", value: "3" }
+        { label: "小", value: "3" },
       ],
-      event: () => {}
+      event: () => undefined,
     });
     PanelControl.createControl(target, {
       name: "title",
       type: "input",
       label: "",
-      size: 40
+      size: 40,
     });
   }
   /**
@@ -271,7 +272,11 @@ export class ContentsEditWindow extends TextEditWindow {
     if (contents) {
       const client = this.getClient();
       this.contents = contents;
-      PanelControl.setControlValue(client, "visible", contents.visible||contents.visible===null);
+      PanelControl.setControlValue(
+        client,
+        "visible",
+        contents.visible || contents.visible === null
+      );
       PanelControl.setControlValue(client, "type", contents.type);
       PanelControl.setControlValue(client, "title", contents.title);
       PanelControl.setControlValue(client, "title_type", contents.title_type);
@@ -310,7 +315,7 @@ export class ContentsEditWindow extends TextEditWindow {
       value_type:
         (PanelControl.getControlValue(client, "value_type") as string) ||
         "TEXT",
-      value: this.getHtml()
+      value: this.getHtml(),
     };
     this.contentsModule.updateContents(newContents, save);
   }

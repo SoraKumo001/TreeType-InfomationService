@@ -54,7 +54,7 @@ export class RouterModule extends BaseModule<CustomMap> {
     history?: boolean
   ) {
     let search = "";
-    for (let key of Object.keys(p)) {
+    for (const key of Object.keys(p)) {
       if (p[key] != null) {
         let value = p[key];
         if (value.toString) value = value.toString();

@@ -11,9 +11,11 @@ import { MainView } from "./Main/MainView";
 import "./index.scss";
 import { Manager, UserModule, UserInfo, UserEditWindow } from "@jswf/manager";
 
-
 //全体で使用するアプリケーションマネージャを作成
 const appManager = new Manager();
+export function getManager() {
+  return appManager;
+}
 
 const userModule = appManager.getModule(UserModule);
 userModule.addEventListener("loginUser", (userInfo: UserInfo) => {
@@ -32,5 +34,4 @@ userModule.request();
 addEventListener("DOMContentLoaded", () => {
   //メイン画面の表示
   new MainView(appManager);
-
 });
