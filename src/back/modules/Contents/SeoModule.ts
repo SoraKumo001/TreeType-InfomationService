@@ -12,7 +12,7 @@ export class SeoModule extends Module {
 
     const req = creater.getRequest();
     const uuid = req.query.uuid || "";
-    const id = uuid ? await contentsModule.getIdFromUuid(uuid) : 1;
+    const id = uuid ? await contentsModule.getIdFromUuid(uuid as string) : 1;
 
     //パラメータの読み出し
     // eslint-disable-next-line prefer-const
@@ -24,7 +24,7 @@ export class SeoModule extends Module {
         title?: string;
       } | null>,
       contentsModule.getBreadcrumb(id),
-      contentsModule.getContents(uuid, true)
+      contentsModule.getContents(uuid as string, true),
     ]);
     if (!basicData) basicData = {};
 
@@ -49,8 +49,8 @@ export class SeoModule extends Module {
         position: 1,
         item: {
           "@id": url + "/?uuid=" + item.uuid,
-          name: item.title
-        }
+          name: item.title,
+        },
       };
       list.unshift(bradcrumb);
       if (title.length) title += " - ";
@@ -67,7 +67,7 @@ export class SeoModule extends Module {
         "@type": "BreadcrumbList",
         itemListElement: list,
         datePublished: contents!.date.toISOString(),
-        dateModified: contents!.update.toISOString()
+        dateModified: contents!.update.toISOString(),
       };
       breadcrumbList.textContent = JSON.stringify(breadcrumbValue);
       document.head.appendChild(breadcrumbList);

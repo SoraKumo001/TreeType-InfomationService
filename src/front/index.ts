@@ -11,9 +11,6 @@ import { MainView } from "./Main/MainView";
 import "./index.scss";
 import { Manager, UserModule, UserInfo, UserEditWindow } from "@jswf/manager";
 
-export function getManager() {
-  return appManager;
-}
 
 //全体で使用するアプリケーションマネージャを作成
 const appManager = new Manager();

@@ -12,7 +12,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "~3.6.4",
-    "@jswf/core": "file:../core"
+    "@jswf/core": "^0.1.10",
+    "typescript": "~3.8.3"
   }
 }

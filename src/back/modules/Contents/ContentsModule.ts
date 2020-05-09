@@ -103,7 +103,7 @@ export class Contents extends Module {
     const id = creater.getRequest().query.p;
     if (id) {
       if (!this.repository) return;
-      const entity = await this.repository.findOne(id);
+      const entity = await this.repository.findOne(parseInt(id as string));
       if (entity) {
         creater.setStatus(301);
         creater.addHeader("Location", "?uuid=" + entity.uuid);
@@ -122,7 +122,7 @@ export class Contents extends Module {
     if (!this.repository) return 0;
     //PAGEタイプを持つ親を探す
     const contents = await this.repository.getParent({ id } as ContentsEntity, {
-      select: ["id", "type"]
+      select: ["id", "type"],
     });
     if (!contents) return 0;
     let parent: typeof contents | undefined = contents;
@@ -205,7 +205,7 @@ export class Contents extends Module {
     };
     values.forEach(getPage);
     //ページの更新日時を設定
-    const getUpdate = function(
+    const getUpdate = function (
       this: ContentsEntity | void,
       contents: ContentsEntity
     ) {
@@ -217,7 +217,7 @@ export class Contents extends Module {
     pages.forEach(getUpdate);
 
     //階層タイトルの設定
-    pages.forEach(page => {
+    pages.forEach((page) => {
       let title = "";
       let parent: ContentsEntity | undefined = page;
       do {
@@ -245,7 +245,7 @@ export class Contents extends Module {
     if (!repository) return undefined;
 
     const bread = await repository.getParent(["id=:id", { id }], {
-      select: ["id", "title", "uuid"]
+      select: ["id", "title", "uuid"],
     });
     return bread;
   }
@@ -358,7 +358,7 @@ export class Contents extends Module {
     if (!repository) return null;
     let count = 0;
     const result = await repository.getParent(id, {
-      select: ["id", "type"]
+      select: ["id", "type"],
     });
     if (!result) return null;
     let parent: ContentsEntity | undefined = result;
@@ -444,7 +444,7 @@ export class Contents extends Module {
       parent: { id: pid },
       priority,
       type,
-      title_type: titleType
+      title_type: titleType,
     });
     if (!result) return null;
     this.updatePriority(pid);
@@ -477,7 +477,7 @@ export class Contents extends Module {
     const contentsDelete = async () => {
       const ids = await repository.find({
         where: { parentId: id },
-        select: ["id"]
+        select: ["id"],
       });
       if (ids) {
         const promise: Promise<unknown>[] = [];
@@ -560,13 +560,16 @@ export class Contents extends Module {
    * @returns {(Promise<boolean | null>)}
    * @memberof Contents
    */
-  public async _moveVector(id: number, vector: number): Promise<boolean | null> {
+  public async _moveVector(
+    id: number,
+    vector: number
+  ): Promise<boolean | null> {
     const repository = this.repository;
     if (!repository) return null;
     const priority = (await this.getContentsPriority(id)) as number;
     if (!priority) return false;
     await repository.update(id, {
-      priority: priority + (vector < 0 ? -15 : 15)
+      priority: priority + (vector < 0 ? -15 : 15),
     });
     await this.updatePriorityFromChild(id);
     const priority2 = await this.getContentsPriority(id);
@@ -597,10 +600,10 @@ export class Contents extends Module {
         "date",
         "update",
         "type",
-        "title"
+        "title",
       ],
       where: visible,
-      order: `treeEntity.type='PAGE',"treeEntity".priority,"treeEntity".id`
+      order: `treeEntity.type='PAGE',"treeEntity".priority,"treeEntity".id`,
     });
     if (!values) return null;
     //最上位データを返す
@@ -626,7 +629,7 @@ export class Contents extends Module {
     //親の組み替え
     const flag = !!(await repository.update(fromId, {
       parentId: toId,
-      priority: 100000
+      priority: 100000,
     }));
     //親子関係のmpathを再構成
     await this.updateTree(fromId);
@@ -658,7 +661,7 @@ export class Contents extends Module {
     const repository = this.repository;
     if (!repository) return false;
     const item = await repository.getChildren(id, {
-      select: ["id", "parentId"]
+      select: ["id", "parentId"],
     });
     if (!item) return false;
     //親のmpathを取得
@@ -801,7 +804,7 @@ export class Contents extends Module {
         await repository.metadata.connection.transaction(async () => {
           await repository.clear();
           await repository.query("select setval ($1, 1, false)", [
-            repository.metadata.tableName + "_id_seq"
+            repository.metadata.tableName + "_id_seq",
           ]);
           //関連ファイルの削除
           await fileModule.clear();
@@ -863,7 +866,7 @@ export class Contents extends Module {
         if (fileList) {
           contents.files = [];
           for (const fileId of fileList) {
-            await fileModule.getFile(fileId).then(fileData => {
+            await fileModule.getFile(fileId).then((fileData) => {
               if (fileData) contents.files!.push(fileData);
             });
           }
@@ -903,7 +906,7 @@ export class Contents extends Module {
       .getRawMany()) as { uuid: string; value: string }[] | null;
     if (!results) return null;
     const keywords = keyword
-      .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+      .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function (s) {
         return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
       })
       .toLowerCase()
@@ -918,7 +921,7 @@ export class Contents extends Module {
         .replace(/&gt;/g, ">")
         .replace(/&lt;/g, "<")
         .replace(/&amp;/g, "&")
-        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function (s) {
           return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
         })
         .toLowerCase();
@@ -940,7 +943,7 @@ export class Contents extends Module {
     if (!repository) return 0;
     const entity = await repository.findOne({
       select: ["id"],
-      where: { uuid }
+      where: { uuid },
     });
     if (!entity) return 0;
     return entity.id;
@@ -1058,7 +1061,7 @@ export class Contents extends Module {
    * @memberof Contents
    */
   @EXPORT
-  public async getTree(uuid: string|null): Promise<TreeContents | null> {
+  public async getTree(uuid: string | null): Promise<TreeContents | null> {
     const admin = this.isAdmin();
     const id = uuid ? await this.getIdFromUuid(uuid) : 1;
     return this._getTree(id, admin);
@@ -1090,11 +1093,11 @@ export class Contents extends Module {
   @EXPORT
   public async getContents(
     uuid: string,
-    child?: boolean
+    child: boolean | null
   ): Promise<ContentsEntity | undefined> {
     const id = await this.getIdFromUuid(uuid);
     const admin = this.isAdmin();
-    return this._getContents(id, child, admin);
+    return this._getContents(id, !!child, admin);
   }
   /**
    *コンテンツを削除

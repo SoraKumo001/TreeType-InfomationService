@@ -12,7 +12,7 @@ import { Manager } from "@jswf/manager";
 
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const highlight = require("highlight.js/lib/highlight");
+const highlight = require("highlight.js/lib/core");
 highlight.registerLanguage(
   "javascript",
   require("highlight.js/lib/languages/javascript")

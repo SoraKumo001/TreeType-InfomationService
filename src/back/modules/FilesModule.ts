@@ -75,7 +75,7 @@ export class Files extends amf.Module {
       "download",
       (req: express.Request, res: express.Response) => {
         const fileId = req.query.id;
-        if (fileId) this.downloadFile(res, fileId);
+        if (fileId) this.downloadFile(res, parseInt(fileId as string));
       }
     );
     return true;
@@ -291,7 +291,7 @@ export class Files extends amf.Module {
     let httpDisposition = "inline;";
     if (result) {
       const fileName = result.name as string;
-      let ext = fileName.split(".").pop();
+      const ext = fileName.split(".").pop();
       let contentType = "application/octet-stream;";
       if (ext) {
         switch (ext.toLowerCase()) {
