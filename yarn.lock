@@ -30,10 +30,8 @@
   dependencies:
     fs-extra "~8.1.0"
 
-"@jswf/manager@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@jswf/manager/-/manager-1.0.3.tgz#accbaa79e6f93f289030729a5527093536ad5f77"
-  integrity sha512-mc6bGuXP09/Usrm6WgY+IM2RC+Uyzv+Q0M6yBA2lTlLVM5RgvFxV3boZuGN+aVAnc3IlUZeeu47g1OQRjEnCGw==
+"@jswf/manager@file:local_modules/manager":
+  version "1.0.0"
 
 "@rfcs/adapter@^1.0.0":
   version "1.0.0"

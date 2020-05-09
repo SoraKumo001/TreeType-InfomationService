@@ -12,7 +12,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: node_modules
-          key: ${{ runner.OS }}-${{ hashFiles('ttis-back/yarn.lock') }}
+          key: ${{ runner.OS }}-${{ hashFiles('yarn.lock') }}
           restore-keys: ${{ runner.OS }}-${{ env.cache-name }}
       - name: package-install
         if: steps.cache.outputs.cache-hit != 'true'
