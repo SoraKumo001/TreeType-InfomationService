@@ -1,7 +1,11 @@
 import * as JWF from "@jswf/core";
 
 import "./TopMenu.scss";
-import { Manager, SettingWindow, LoginWindow, UserModule, ParamsModule, UserInfo } from "@jswf/manager";
+import { Manager } from "../Manager/Manager";
+import { LoginWindow } from "../User/LoginWindow";
+import { SettingWindow } from "../Setting/SettingWindow";
+import { UserInfo, UserModule } from "../User/UserModule";
+import { ParamsModule } from "../Manager/ParamsModule";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LogoImage = require("../images/sorakumo_logo.svg");

@@ -11,7 +11,9 @@ import {
   sprintf,
   CalendarView,
 } from "@jswf/core";
-import { Manager, FileModule, FileWindow } from "@jswf/manager";
+import { Manager } from "../Manager/Manager";
+import { FileModule } from "../File/FileModule";
+import { FileWindow } from "../File/FileWindow";
 
 /**
  *コンテンツ編集用ウインドウクラス

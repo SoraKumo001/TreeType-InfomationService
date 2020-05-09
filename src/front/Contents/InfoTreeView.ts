@@ -9,7 +9,7 @@ import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
 import { ContentsImportWindow } from "./ContentsInportWindow";
 import "./scss/InfoTreeView.scss";
-import { Manager } from "@jswf/manager";
+import { Manager } from "../Manager/Manager";
 
 export class InfoTreeView extends JWF.TreeView {
   private manager: Manager;

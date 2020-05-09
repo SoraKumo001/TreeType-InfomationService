@@ -9,7 +9,9 @@ import "core-js/features/promise";
 
 import { MainView } from "./Main/MainView";
 import "./index.scss";
-import { Manager, UserModule, UserInfo, UserEditWindow } from "@jswf/manager";
+import { Manager } from "./Manager/Manager";
+import { UserModule, UserInfo } from "./User/UserModule";
+import { UserEditWindow } from "./User/UserEditWindow";
 
 //全体で使用するアプリケーションマネージャを作成
 const appManager = new Manager();

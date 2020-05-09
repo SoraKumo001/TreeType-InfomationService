@@ -1,7 +1,10 @@
 import * as JWF from "@jswf/core";
-import { SettingView, Manager, ParamsModule, FileWindow, SettingModule } from "@jswf/manager";
 import { MessageBox } from "@jswf/core";
 import { getManager } from "..";
+import { SettingView, SettingModule } from "../Setting/SettingModule";
+import { ParamsModule } from "../Manager/ParamsModule";
+import { Manager } from "../Manager/Manager";
+import { FileWindow } from "../File/FileWindow";
 
 
 

@@ -1,6 +1,8 @@
 import "./ModuleView.scss";
-import { SettingView, Manager, InfoModule, SettingModule } from "@jswf/manager";
 import { getManager } from "..";
+import { SettingView, SettingModule } from "../Setting/SettingModule";
+import { Manager } from "../Manager/Manager";
+import { InfoModule } from "../Setting/InfoModule";
 
 
 export class ModuleView extends SettingView {

@@ -5,7 +5,9 @@ import { ContentsModule } from "../Contents/ContentsModule";
 import { InfoContentsView } from "../Contents/InfoContentsView";
 import { TreeItem } from "@jswf/core";
 import "analytics-gtag";
-import { Manager, RouterModule, UserModule } from "@jswf/manager";
+import { RouterModule } from "../Manager/RouterModule";
+import { Manager } from "../Manager/Manager";
+import { UserModule } from "../User/UserModule";
 
 export class MainView extends JWF.BaseView {
   private routerModule: RouterModule;
@@ -45,6 +47,7 @@ export class MainView extends JWF.BaseView {
         })["AnalyticsUA"];
         // eslint-disable-next-line no-undef
         const page_location = `${location.protocol}://${location.host}${location.pathname}`;
+        // eslint-disable-next-line no-undef
         gtag("config", AnalyticsUA, {
           page_title: title,
           page_location,

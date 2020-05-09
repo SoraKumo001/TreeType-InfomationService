@@ -4,8 +4,10 @@
  */
 
 import * as JWF from "@jswf/core";
-import { SettingView, ParamsModule, Manager, SettingModule } from "@jswf/manager";
 import { getManager } from "../..";
+import { SettingView, SettingModule } from "../../Setting/SettingModule";
+import { ParamsModule } from "../../Manager/ParamsModule";
+import { Manager } from "../../Manager/Manager";
 
 
 

@@ -14,11 +14,12 @@ import {
 } from "@jswf/core";
 import { ContentsCacheModule } from "./ContentsCache.auto";
 import { getManager } from "../..";
-import { RouterModule, Manager } from "@jswf/manager";
+import { RouterModule } from "../../Manager/RouterModule";
+import { Manager } from "../../Manager/Manager";
 const contentsModule = getManager().getModule(ContentsModule);
 const contentsCacheModule = getManager().getModule(ContentsCacheModule);
 
-contentsModule.addEventListener("drawContents", (client, id) => {
+contentsModule.addEventListener("drawContents", (client, _id) => {
   const contentsPage = client.querySelector(
     "[data-type=ContentsPage]"
   ) as HTMLElement;
@@ -32,6 +33,7 @@ contentsModule.addEventListener("drawContents", (client, id) => {
   search.style.borderRadius = "1em";
   search.innerText = "検索";
   search.addEventListener("click", () => {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     new ContentsSearchWindow(getManager());
   });
   contentsPage.insertBefore(search, contentsPage.firstChild);
@@ -42,7 +44,7 @@ const routerModule = getManager().getModule(RouterModule);
 export class ContentsSearchWindow extends FrameWindow {
   private searchBox: TextBox;
   private listView: ListView;
-  public constructor(manager: Manager) {
+  public constructor(_manager: Manager) {
     super();
     this.setTitle("検索");
     this.setSize(600, 400);
@@ -95,7 +97,7 @@ export class ContentsSearchWindow extends FrameWindow {
             date.getDate()
           );
           let title = "";
-          let parent: TreeContents | null = contents;
+          const parent: TreeContents | null = contents;
       //    do {
             if (title.length) title += " - ";
             title += parent.title;

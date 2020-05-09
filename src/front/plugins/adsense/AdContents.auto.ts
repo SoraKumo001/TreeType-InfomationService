@@ -5,8 +5,8 @@
  */
 
 import { ContentsModule } from "../../Contents/ContentsModule";
-import { ParamsModule } from "@jswf/manager";
 import { getManager } from "../..";
+import { ParamsModule } from "../../Manager/ParamsModule";
 
 declare var adsbygoogle: unknown;
 /**

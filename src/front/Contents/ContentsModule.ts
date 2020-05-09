@@ -1,4 +1,4 @@
-import { ModuleMap, BaseModule } from "@jswf/manager";
+import { ModuleMap, BaseModule } from "../Manager/BaseModule";
 
 export interface TreeContents {
   id:number;

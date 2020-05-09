@@ -4,8 +4,9 @@
  */
 
 import { ContentsModule, TreeContents } from "../../Contents/ContentsModule";
-import { BaseModule, Manager } from "@jswf/manager";
 import { getManager } from "../..";
+import { BaseModule } from "../../Manager/BaseModule";
+import { Manager } from "../../Manager/Manager";
 
 
 export class ContentsCacheModule extends BaseModule {
@@ -20,7 +21,7 @@ export class ContentsCacheModule extends BaseModule {
       }
       this.treeContents = treeContents;
     });
-    contentsModule.addEventListener("createContents", treeContents => {});
+    contentsModule.addEventListener("createContents", _treeContents => undefined);
     contentsModule.addEventListener("deleteContents", id => {
       //コンテンツキャッシュからデータを削除
       const treeContents = this.findTreeContents(id);

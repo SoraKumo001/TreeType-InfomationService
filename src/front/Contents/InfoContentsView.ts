@@ -8,7 +8,7 @@ import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
 import "./scss/InfoContentsView.scss";
 import "highlight.js/styles/tomorrow-night-eighties.css";
-import { Manager } from "@jswf/manager";
+import { Manager } from "../Manager/Manager";
 
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires

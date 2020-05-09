@@ -1,7 +1,9 @@
 import * as JWF from "@jswf/core";
 import "./DatabaseView.scss";
-import { BaseModule, SettingView, Manager, SettingModule } from "@jswf/manager";
 import { getManager } from "..";
+import { BaseModule } from "../Manager/BaseModule";
+import { Manager } from "../Manager/Manager";
+import { SettingView, SettingModule } from "../Setting/SettingModule";
 
 interface DatabaseInfo {
   connect: boolean;

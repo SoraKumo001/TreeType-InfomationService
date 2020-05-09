@@ -1,6 +1,9 @@
 import * as JWF from "@jswf/core";
-import { SettingView, UserModule, Manager, UserEditWindow, SettingModule } from "@jswf/manager";
 import { getManager } from "..";
+import { SettingView, SettingModule } from "../Setting/SettingModule";
+import { UserModule } from "../User/UserModule";
+import { Manager } from "../Manager/Manager";
+import { UserEditWindow } from "../User/UserEditWindow";
 
 export interface UserInfo {
   no: number;

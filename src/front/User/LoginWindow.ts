@@ -2,8 +2,8 @@ import * as JWF from "@jswf/core";
 import { UserModule } from "./UserModule";
 import { Manager } from "../Manager/Manager";
 
-import LOGIN_ID_SVG from "../../resource/User/images/login_id.svg";
-import LOGIN_PASS_SVG from "../../resource/User/images/login_pass.svg";
+import LOGIN_ID_SVG from "../resource/User/images/login_id.svg";
+import LOGIN_PASS_SVG from "../resource/User/images/login_pass.svg";
 
 /**
  *ログインウインドウ用クラス
