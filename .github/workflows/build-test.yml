@@ -18,4 +18,4 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: yarn
       - name: build
-        run: yarn build:all
+        run: yarn build
