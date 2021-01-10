@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import * as amf from "@rfcs/core";
 import { Users } from "./User/UsersModule";
 import * as typeorm from "typeorm";
@@ -46,7 +47,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
       name: "リモートデータベースモジュール",
       version: 1,
       author: "空雲",
-      info: "メインデータベースアクセス用"
+      info: "メインデータベースアクセス用",
     };
   }
   public getConnection() {
@@ -57,7 +58,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
   }
   public async onCreateModule() {
     this.getLocalDB().addEntity(DatabaseConfigEntity);
-    this.getManager().addEventListener("message", e => {
+    this.getManager().addEventListener("message", (e) => {
       if (e === "connect") this.connect();
     });
     return true;
@@ -103,7 +104,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
       database, // DB名
       synchronize: true,
       logging: false,
-      entities: [...this.entities]
+      entities: [...this.entities],
     });
     if (this.connection) this.callEvent("connect", this.connection);
     return true;
@@ -149,7 +150,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
       REMOTEDB_PORT: port,
       REMOTEDB_DATABASE: database,
       REMOTEDB_USER: username,
-      REMOTEDB_PASSWORD: password
+      REMOTEDB_PASSWORD: password,
     };
     return result;
   }

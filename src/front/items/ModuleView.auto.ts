@@ -4,7 +4,6 @@ import { SettingView, SettingModule } from "../Setting/SettingModule";
 import { Manager } from "../Manager/Manager";
 import { InfoModule } from "../Setting/InfoModule";
 
-
 export class ModuleView extends SettingView {
   public constructor(manager: Manager) {
     super(manager);
@@ -12,7 +11,7 @@ export class ModuleView extends SettingView {
 
     const client = this.getClient();
     const infoModule = manager.getModule(InfoModule);
-    infoModule.getInfo().then(infoModule => {
+    infoModule.getInfo().then((infoModule) => {
       while (client.childNodes.length) client.removeChild(client.childNodes[0]);
 
       if (!infoModule) return;
@@ -25,7 +24,7 @@ export class ModuleView extends SettingView {
           ["名称", info.name],
           ["バージョン", info.version],
           ["制作者", info.author],
-          ["概要", info.info]
+          ["概要", info.info],
         ];
 
         for (let j = 0; j < p.length; j++) {
@@ -39,4 +38,4 @@ export class ModuleView extends SettingView {
 }
 
 const settingModule = getManager().getModule(SettingModule);
-settingModule.addSetting("システム/モジュール確認",ModuleView);
+settingModule.addSetting("システム/モジュール確認", ModuleView);

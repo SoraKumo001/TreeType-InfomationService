@@ -51,21 +51,26 @@ export class DatabaseView extends SettingView {
         name: "REMOTEDB_HOST",
         label: "アドレス",
         type: "string",
-        value: dev ? "localhost" : "/var/run/postgresql"
+        value: dev ? "localhost" : "/var/run/postgresql",
       },
       { name: "REMOTEDB_PORT", label: "ポート", type: "number", value: "5432" },
       {
         name: "REMOTEDB_DATABASE",
         label: "データベース",
         type: "string",
-        value: "ttis"
+        value: "ttis",
       },
-      { name: "REMOTEDB_USER", label: "ユーザID", type: "string", value: "ttis" },
+      {
+        name: "REMOTEDB_USER",
+        label: "ユーザID",
+        type: "string",
+        value: "ttis",
+      },
       {
         name: "REMOTEDB_PASSWORD",
         label: "パスワード",
         type: "password",
-        value: "test"
+        value: "test",
       },
       {
         name: "submit",
@@ -78,9 +83,9 @@ export class DatabaseView extends SettingView {
             databaseModule.setConfig(params).then(() => {
               this.loadStatus();
             });
-          }
-        }
-      }
+          },
+        },
+      },
     ]);
     this.addChild(form, "top");
 
@@ -119,7 +124,10 @@ export class DatabaseView extends SettingView {
         row = table.insertRow();
         row.insertCell().innerText = "サイズ";
         row.insertCell().innerText = info.size
-          ? String(Math.floor(info.size / 1024)).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") + " KB"
+          ? String(Math.floor(info.size / 1024)).replace(
+              /(\d)(?=(\d\d\d)+(?!\d))/g,
+              "$1,"
+            ) + " KB"
           : "";
 
         row = table.insertRow();

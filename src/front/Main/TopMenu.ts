@@ -45,7 +45,7 @@ export class TopMenu extends JWF.BaseView {
     });
 
     const paramsModule = manager.getModule(ParamsModule);
-    paramsModule.getGlobalParam("BASIC_DATA").then(e => {
+    paramsModule.getGlobalParam("BASIC_DATA").then((e) => {
       if (e) {
         const params = e as { logo: string; title: string };
         if (params.logo) titleLogo.src = "?cmd=download&id=" + params.logo;

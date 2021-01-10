@@ -2,7 +2,6 @@
  *検索ボタン表示用プラグイン
  */
 
-
 import { ContentsModule, TreeContents } from "../../Contents/ContentsModule";
 import {
   FrameWindow,
@@ -10,16 +9,15 @@ import {
   Panel,
   Button,
   TextBox,
-  sprintf
+  sprintf,
 } from "@jswf/core";
 import { ContentsCacheModule } from "./ContentsCache.auto";
 import { getManager } from "../..";
 import { RouterModule } from "../../Manager/RouterModule";
-import { Manager } from "../../Manager/Manager";
 const contentsModule = getManager().getModule(ContentsModule);
 const contentsCacheModule = getManager().getModule(ContentsCacheModule);
 
-contentsModule.addEventListener("drawContents", (client, _id) => {
+contentsModule.addEventListener("drawContents", (client) => {
   const contentsPage = client.querySelector(
     "[data-type=ContentsPage]"
   ) as HTMLElement;
@@ -33,8 +31,7 @@ contentsModule.addEventListener("drawContents", (client, _id) => {
   search.style.borderRadius = "1em";
   search.innerText = "検索";
   search.addEventListener("click", () => {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    new ContentsSearchWindow(getManager());
+    new ContentsSearchWindow();
   });
   contentsPage.insertBefore(search, contentsPage.firstChild);
 });
@@ -44,7 +41,7 @@ const routerModule = getManager().getModule(RouterModule);
 export class ContentsSearchWindow extends FrameWindow {
   private searchBox: TextBox;
   private listView: ListView;
-  public constructor(_manager: Manager) {
+  public constructor() {
     super();
     this.setTitle("検索");
     this.setSize(600, 400);
@@ -68,7 +65,7 @@ export class ContentsSearchWindow extends FrameWindow {
     this.listView = listView;
     this.addChild(listView, "client");
     listView.addHeader([["更新", 100], "タイトル"]);
-    listView.addEventListener("itemClick", e => {
+    listView.addEventListener("itemClick", (e) => {
       const uuid = listView.getItemValue(e.itemIndex) as string;
       contentsModule.selectContents(uuid);
     });
@@ -76,10 +73,10 @@ export class ContentsSearchWindow extends FrameWindow {
       routerModule.setLocationParams({ search: null });
     });
   }
-  public async search(keyword?:string) {
-    if(!keyword){
+  public async search(keyword?: string) {
+    if (!keyword) {
       keyword = this.searchBox.getText();
-    }else{
+    } else {
       this.searchBox.setText(keyword);
     }
     const listView = this.listView;
@@ -98,10 +95,10 @@ export class ContentsSearchWindow extends FrameWindow {
           );
           let title = "";
           const parent: TreeContents | null = contents;
-      //    do {
-            if (title.length) title += " - ";
-            title += parent.title;
-      //    } while ((parent = contentsCacheModule.findTreeContents(parent.puuid)));
+          //    do {
+          if (title.length) title += " - ";
+          title += parent.title;
+          //    } while ((parent = contentsCacheModule.findTreeContents(parent.puuid)));
           listView.addItem([dateStr, title], r);
 
           routerModule.setLocationParams({ search: keyword });
@@ -110,11 +107,11 @@ export class ContentsSearchWindow extends FrameWindow {
     }
   }
 }
-routerModule.addEventListener("goLocation",()=>{
+routerModule.addEventListener("goLocation", () => {
   const keyword = routerModule.getLocationParam("search");
-  if(keyword){
-    const searchWindow = new ContentsSearchWindow(getManager());
+  if (keyword) {
+    const searchWindow = new ContentsSearchWindow();
     searchWindow.search(keyword);
     searchWindow.foreground();
   }
-})
+});

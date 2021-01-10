@@ -25,7 +25,7 @@ contentsModule.addEventListener("drawContents", (client, uuid) => {
       //SEO対策のためaタグを生成
       const link = document.createElement("a");
       const uuid = parent.uuid;
-      link.href = "?uuid="+uuid;
+      link.href = "?uuid=" + uuid;
       link.innerText = parent.title;
       link.addEventListener("click", (e) => {
         contentsModule.selectContents(uuid);

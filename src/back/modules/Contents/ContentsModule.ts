@@ -721,6 +721,7 @@ export class Contents extends Module {
     const entity = Object.assign({}, value);
 
     //データの挿入
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const v: any = value;
     if (v.childs) v.children = v.childs;
     if (v.stat) v.visible = v.stat === 1;

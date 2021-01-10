@@ -61,7 +61,7 @@ export class Users extends amf.Module {
         type: "local",
         id: "Admin",
         name: "暫定管理者",
-        admin: true
+        admin: true,
       };
     } else {
       //セッションユーザの確認
@@ -91,7 +91,7 @@ export class Users extends amf.Module {
       const userModel = this.getLocalDB().getRepository(UserEntity);
       const result = await userModel.findOne({
         id: userId,
-        password: getSHA256(userPass)
+        password: getSHA256(userPass),
       });
       if (!result) return false;
     } else {
@@ -102,7 +102,7 @@ export class Users extends amf.Module {
       const result = await userRepository.findOne({
         id: userId,
         password: getSHA256(userPass),
-        enable: true
+        enable: true,
       });
       if (!result) return false;
     }
@@ -128,7 +128,7 @@ export class Users extends amf.Module {
       id: userEntity.id,
       admin: true,
       name: userEntity.name,
-      type: local ? "local" : "remote"
+      type: local ? "local" : "remote",
     };
   }
   public getRemoteNo() {
@@ -157,7 +157,7 @@ export class Users extends amf.Module {
       id: userEntity.id,
       admin: true,
       name: userEntity.name,
-      type: local ? "local" : "remote"
+      type: local ? "local" : "remote",
     };
   }
   public isAdmin() {
@@ -174,7 +174,7 @@ export class Users extends amf.Module {
       id: "GUEST",
       name: "GUEST",
       type: "normal",
-      admin: false
+      admin: false,
     };
     this.setGlobalItem("user", null);
     this.setSessionItem("user", null);
@@ -187,7 +187,7 @@ export class Users extends amf.Module {
     userPass: string,
     local: boolean,
     keep?: boolean
-  ):Promise<false | UserInfo | null> {
+  ): Promise<false | UserInfo | null> {
     if (await this.isLogin(userId, userPass, local)) {
       const result = await this.getUserInfo(userId, local);
       if (result) {
@@ -222,14 +222,14 @@ export class Users extends amf.Module {
           result = await userRepository.insert({
             id: userId,
             password: pass,
-            name: userName
+            name: userName,
           });
         } else {
           //作成したシリアル番号を返す
           result = await userRepository.update(userNo, {
             id: userId,
             password: pass,
-            name: userName
+            name: userName,
           });
         }
       } catch {
@@ -243,19 +243,20 @@ export class Users extends amf.Module {
       //ユーザが存在するか確認
       const userEntity = await userRepository.findOne(userNo);
       if (userName === "") userName = userId;
-      let result:any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: any;
       try {
         if (userEntity) {
           result = await userRepository.update(userNo, {
             password: userPass ? userEntity.password : getSHA256(userPass),
-            name: userName
+            name: userName,
           });
         } else {
           result = await userRepository.insert({
             id: userId,
             password: getSHA256(userPass),
-            name: userName
-          }) ;
+            name: userName,
+          });
         }
         if (result) {
           result.type = result.type ? "local" : "remote";
@@ -304,7 +305,7 @@ export class Users extends amf.Module {
         id: userEntity.id,
         admin: true,
         name: userEntity.name,
-        type: local ? "local" : "remote"
+        type: local ? "local" : "remote",
       });
     }
     return userInfos;

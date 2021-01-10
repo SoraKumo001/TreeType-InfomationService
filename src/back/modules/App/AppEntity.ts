@@ -4,15 +4,15 @@ import {
   PrimaryColumn,
   Column,
   EntityRepository,
-  Connection
+  Connection,
 } from "typeorm";
 
 @Entity()
 export class AppEntity {
   @PrimaryColumn()
   name!: string;
-  @Column('simple-json', { default: "{}" })
-  value!: {};
+  @Column("simple-json", { default: "{}" })
+  value!: unknown;
 }
 
 @EntityRepository(AppEntity)
@@ -30,7 +30,7 @@ export class AppRepository extends ExtendRepository<AppEntity> {
   }
   public async setItem(name: string, value: unknown) {
     //const value = JSON.stringify(values);
-    return await this.save({ name, value:value as {} });
+    return await this.save({ name, value });
   }
   /**
    *アプリケーションデータの設定
@@ -42,7 +42,7 @@ export class AppRepository extends ExtendRepository<AppEntity> {
   public async setItems(values: { [key: string]: unknown }): Promise<void> {
     for (const name of Object.keys(values)) {
       const v = values[name as keyof typeof values];
-      await this.save({ name, value:JSON.stringify(v) });
+      await this.save({ name, value: JSON.stringify(v) });
     }
   }
   /**
@@ -56,7 +56,7 @@ export class AppRepository extends ExtendRepository<AppEntity> {
   public async getItem<T>(name: string, defValue?: T): Promise<T>;
   public async getItem(name: string, defValue?: unknown): Promise<unknown> {
     const entity = await this.findOne(name);
-    const value = entity?entity.value:undefined;
+    const value = entity ? entity.value : undefined;
     if (value) {
       if (typeof defValue === "number" && typeof value === "string")
         return parseInt(value) as typeof defValue;

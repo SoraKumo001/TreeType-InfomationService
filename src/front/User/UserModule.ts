@@ -1,7 +1,6 @@
 import { BaseModule, ModuleMap } from "../Manager/BaseModule";
 import { Manager } from "../Manager/Manager";
 
-
 export interface UserInfo {
   no: number;
   type: string;
@@ -12,7 +11,7 @@ export interface UserInfo {
 
 interface CustomMap extends ModuleMap {
   loginUser: [UserInfo];
-  updateUser: [{no:number}];
+  updateUser: [{ no: number }];
 }
 
 /**
@@ -56,7 +55,12 @@ export class UserModule extends BaseModule<CustomMap> {
     this.callEvent("loginUser", user);
     return user;
   }
-  public async login(userId: string, userPass: string, local: boolean, keep: boolean) {
+  public async login(
+    userId: string,
+    userPass: string,
+    local: boolean,
+    keep: boolean
+  ) {
     const adapter = this.getAdapter();
     const user = (await adapter.exec(
       "Users.login",
@@ -109,7 +113,7 @@ export class UserModule extends BaseModule<CustomMap> {
     const adapter = this.getAdapter();
     return (adapter.exec("Users.delUser", userNo, local) as Promise<
       boolean | null
-    >).then(result => {
+    >).then((result) => {
       this.callEvent("updateUser", { no: userNo });
       return result;
     });

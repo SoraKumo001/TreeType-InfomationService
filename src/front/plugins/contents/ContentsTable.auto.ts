@@ -37,12 +37,11 @@ contentsModule.addEventListener("drawContents", (client, uuid) => {
         flag = true;
 
         const row = table.insertRow();
-        let cell: HTMLTableDataCellElement;
-        cell = row.insertCell();
+        const cell = row.insertCell();
         const link = document.createElement("a");
         link.innerText = sprintf("  %02d. %s", index++, c.title);
         link.href = "?uuid=" + uuid;
-        link.addEventListener("click", e => {
+        link.addEventListener("click", (e) => {
           contentsModule.selectContents(c.uuid);
           e.preventDefault();
         });

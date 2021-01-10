@@ -18,7 +18,7 @@ interface FileInfo {
  * @class HtmlCreater
  */
 export class HtmlCreater {
-  private status: number = 200;
+  private status = 200;
   private jsdom?: JSDOM;
   private links: string[] = [];
   private headers: { [key: string]: string } = {};
@@ -95,7 +95,7 @@ export class HtmlCreater {
       jsPriority: priorityJs,
       rootPath,
       jsPath,
-      cssPath
+      cssPath,
     } = this.options;
 
     if (!(await this.openTemplate(indexPath))) return false;
@@ -113,14 +113,20 @@ export class HtmlCreater {
     this.addScript(jsFiles);
     this.addCSS(cssFiles);
 
-    this.addLink(jsFiles.map((v): string => v.dir + "/" + v.name), "script");
-    this.addLink(cssFiles.map((v): string => v.dir + "/" + v.name), "style");
+    this.addLink(
+      jsFiles.map((v): string => v.dir + "/" + v.name),
+      "script"
+    );
+    this.addLink(
+      cssFiles.map((v): string => v.dir + "/" + v.name),
+      "style"
+    );
 
     res.writeHead(
       this.status,
       Object.assign(this.headers, {
         "Content-Type": "text/html; charset=UTF-8",
-        link: this.links
+        link: this.links,
       })
     );
     if (this.jsdom) {

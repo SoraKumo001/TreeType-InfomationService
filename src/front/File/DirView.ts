@@ -33,7 +33,7 @@ export class DirView extends JWF.BaseView {
       if (parentId) {
         const dirEdit = new FileEditWindow({
           fileModule: this.fileModule,
-          parentId: this.dirTree.getSelectItemValue() as number
+          parentId: this.dirTree.getSelectItemValue() as number,
         });
         this.addFrameChild(dirEdit);
         dirEdit.setPos();
@@ -47,10 +47,10 @@ export class DirView extends JWF.BaseView {
         const dirId = item.getItemValue() as number;
         const messageBox = new JWF.MessageBox("削除", "削除しますか？", [
           ["OK", true],
-          ["Cancel", false]
+          ["Cancel", false],
         ]);
         this.addFrameChild(messageBox);
-        messageBox.addEventListener("buttonClick", e => {
+        messageBox.addEventListener("buttonClick", (e) => {
           if (e) this.fileModule.deleteFile(dirId);
         });
         messageBox.setPos();
@@ -65,14 +65,14 @@ export class DirView extends JWF.BaseView {
         const dirEdit = new FileEditWindow({
           fileModule: this.fileModule,
           fileId: fileId as number,
-          name: item.getItemText()
+          name: item.getItemText(),
         });
         this.addFrameChild(dirEdit);
         dirEdit.setPos();
       }
     });
     this.addRemover(
-      fileModule.addEventListener("delete_file", dirId => {
+      fileModule.addEventListener("delete_file", (dirId) => {
         //削除対象が選択中かどうか
         const selectId = this.dirTree.getSelectItemValue();
         if (dirId === selectId) {
@@ -88,7 +88,7 @@ export class DirView extends JWF.BaseView {
           this.loadDirs(id);
         } else this.loadDirs();
       }),
-      fileModule.addEventListener("update_dir", parentId => {
+      fileModule.addEventListener("update_dir", (parentId) => {
         this.loadDirs(parentId);
       }),
       fileModule.addEventListener("update_file", () => {

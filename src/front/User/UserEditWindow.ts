@@ -13,7 +13,14 @@ import LOGIN_PASS_SVG from "../resource/User/images/login_pass.svg";
 export class UserEditWindow extends JWF.FrameWindow {
   private textUserID?: JWF.TextBox;
   private textUserPass?: JWF.TextBox;
-  public constructor(manager: Manager, no?: number, id?: string, name?: string, pass?: string, local?: boolean) {
+  public constructor(
+    manager: Manager,
+    no?: number,
+    id?: string,
+    name?: string,
+    pass?: string,
+    local?: boolean
+  ) {
     super();
 
     const userModule = manager.getModule(UserModule);
@@ -24,7 +31,7 @@ export class UserEditWindow extends JWF.FrameWindow {
     const textUserID = new JWF.TextBox({
       label: "ユーザID",
       text: id || "",
-      image: LOGIN_ID_SVG
+      image: LOGIN_ID_SVG,
     });
     this.addChild(textUserID, "top");
     textUserID.setMargin(0, 0, 0, 10);
@@ -32,7 +39,7 @@ export class UserEditWindow extends JWF.FrameWindow {
     const textUserName = new JWF.TextBox({
       label: "ユーザ名(省略時ユーザID)",
       text: name || "",
-      image: LOGIN_ID_SVG
+      image: LOGIN_ID_SVG,
     });
     this.addChild(textUserName, "top");
     textUserName.setMargin(0, 0, 0, 10);
@@ -40,7 +47,7 @@ export class UserEditWindow extends JWF.FrameWindow {
       label: "パスワード(入力無しは無変更)",
       type: "password",
       text: pass || "",
-      image: LOGIN_PASS_SVG
+      image: LOGIN_PASS_SVG,
     });
     textUserPass.setMargin(0, 10, 0, 10);
     this.addChild(textUserPass, "top");
@@ -56,26 +63,29 @@ export class UserEditWindow extends JWF.FrameWindow {
       msgLabel.setText("設定中");
 
       if (userModule) {
-        const info = await userModule.setUser(no ? no : 0, textUserID.getText(), textUserName.getText(), textUserPass.getText(), local);
+        const info = await userModule.setUser(
+          no ? no : 0,
+          textUserID.getText(),
+          textUserName.getText(),
+          textUserPass.getText(),
+          local
+        );
         if (info) {
           msgLabel.setText("設定成功");
           await JWF.Sleep(1000);
           this.close();
-        }
-        else {
+        } else {
           msgLabel.setText("設定失敗");
         }
       }
     });
   }
   public getUserId() {
-    if (!this.textUserID)
-      return null;
+    if (!this.textUserID) return null;
     return this.textUserID.getText();
   }
   public getUserPass() {
-    if (!this.textUserPass)
-      return null;
+    if (!this.textUserPass) return null;
     return this.textUserPass.getText();
   }
 }

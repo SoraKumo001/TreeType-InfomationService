@@ -33,7 +33,7 @@ export class RouterModule extends BaseModule<CustomMap> {
     const values = this.getLocationParams();
     if (value == null) delete values[name];
     else values[name.toString()] = value.toString();
-    this.updateLocation(values,history);
+    this.updateLocation(values, history);
   }
 
   public setLocationParams(
@@ -47,7 +47,7 @@ export class RouterModule extends BaseModule<CustomMap> {
       else if (typeof value === "number") p[key] = value.toString();
       else p[key] = value;
     }
-    this.updateLocation(p,history);
+    this.updateLocation(p, history);
   }
   private updateLocation(
     p: { [key: string]: string | number | boolean },
@@ -75,7 +75,7 @@ export class RouterModule extends BaseModule<CustomMap> {
     window.location.search
       .substring(1)
       .split("&")
-      .forEach(function(v) {
+      .forEach(function (v) {
         const s = v.split("=");
         if (s[0].length && s[1].length) p[decodeURI(s[0])] = decodeURI(s[1]);
       });

@@ -8,21 +8,20 @@ import { getManager } from "../..";
 import { BaseModule } from "../../Manager/BaseModule";
 import { Manager } from "../../Manager/Manager";
 
-
 export class ContentsCacheModule extends BaseModule {
   private treeContents?: TreeContents;
   public constructor(manager: Manager) {
     super(manager);
     const contentsModule = manager.getModule(ContentsModule);
-    contentsModule.addEventListener("getTree", treeContents => {
+    contentsModule.addEventListener("getTree", (treeContents) => {
       const id = treeContents.id;
       if (id === undefined || id === 1) {
         this.treeContents = treeContents;
       }
       this.treeContents = treeContents;
     });
-    contentsModule.addEventListener("createContents", _treeContents => undefined);
-    contentsModule.addEventListener("deleteContents", id => {
+    contentsModule.addEventListener("createContents", () => undefined);
+    contentsModule.addEventListener("deleteContents", (id) => {
       //コンテンツキャッシュからデータを削除
       const treeContents = this.findTreeContents(id);
       if (treeContents) {
@@ -33,9 +32,9 @@ export class ContentsCacheModule extends BaseModule {
         }
       }
     });
-    contentsModule.addEventListener("updateContents", mainContents => {
+    contentsModule.addEventListener("updateContents", (mainContents) => {
       const treeContents = this.findTreeContents(mainContents.uuid);
-      if(treeContents){
+      if (treeContents) {
         treeContents.title = mainContents.title;
         treeContents.type = mainContents.type;
         treeContents.visible = mainContents.visible;
@@ -61,7 +60,6 @@ export class ContentsCacheModule extends BaseModule {
   public getTreeCache() {
     return this.treeContents;
   }
-
 }
 //起動直後に呼ばれるように自分自身を作成
 getManager().getModule(ContentsCacheModule);

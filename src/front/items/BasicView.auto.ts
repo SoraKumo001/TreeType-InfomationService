@@ -6,8 +6,6 @@ import { ParamsModule } from "../Manager/ParamsModule";
 import { Manager } from "../Manager/Manager";
 import { FileWindow } from "../File/FileWindow";
 
-
-
 export class BasicView extends SettingView {
   private paramsModule: ParamsModule;
   private form: JWF.TableFormView;
@@ -29,7 +27,7 @@ export class BasicView extends SettingView {
         name: "info",
         label: "サイトの説明",
         type: "string",
-        value: ""
+        value: "",
       },
       { name: "analytics", label: "アナリティクス", type: "string", value: "" },
       {
@@ -42,13 +40,13 @@ export class BasicView extends SettingView {
           click: () => {
             new MessageBox("ロゴの選択", "動作を指定してください", [
               ["ロゴのクリア", 0],
-              ["ファイル選択", 1]
-            ]).addEventListener("buttonClick", e => {
+              ["ファイル選択", 1],
+            ]).addEventListener("buttonClick", (e) => {
               if (e) {
                 const fileWindow = new FileWindow(manager);
                 this.addFrameChild(fileWindow);
                 fileWindow.setPos();
-                fileWindow.addEventListener("enterFile", param => {
+                fileWindow.addEventListener("enterFile", (param) => {
                   param.enter = true;
                   const img = form.getItem("logo") as HTMLImageElement & {
                     value: string;
@@ -64,8 +62,8 @@ export class BasicView extends SettingView {
                 img.value = "";
               }
             });
-          }
-        }
+          },
+        },
       },
       {
         label: "設定",
@@ -80,9 +78,9 @@ export class BasicView extends SettingView {
             } else {
               msg.setText("設定エラー");
             }
-          }
-        }
-      }
+          },
+        },
+      },
     ]);
     this.addChild(form, "client");
     this.loadSetting();

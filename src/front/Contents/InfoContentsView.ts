@@ -10,7 +10,6 @@ import "./scss/InfoContentsView.scss";
 import "highlight.js/styles/tomorrow-night-eighties.css";
 import { Manager } from "../Manager/Manager";
 
-
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const highlight = require("highlight.js/lib/core");
 highlight.registerLanguage(
@@ -21,7 +20,10 @@ highlight.registerLanguage("css", require("highlight.js/lib/languages/css"));
 highlight.registerLanguage("java", require("highlight.js/lib/languages/java"));
 highlight.registerLanguage("xml", require("highlight.js/lib/languages/xml"));
 highlight.registerLanguage("php", require("highlight.js/lib/languages/php"));
-highlight.registerLanguage("typescript", require("highlight.js/lib/languages/typescript"));
+highlight.registerLanguage(
+  "typescript",
+  require("highlight.js/lib/languages/typescript")
+);
 
 export interface ContentsArea extends HTMLDivElement {
   contents: MainContents;
@@ -40,10 +42,10 @@ export class InfoContentsView extends JWF.BaseView {
   private contentsPage: HTMLDivElement;
   private contentsNode: { [key: string]: ContentsArea } = {};
   private timerHandle?: number;
-  private selectId: string = '0';
+  private selectId = "0";
   private manager: Manager;
-  private scrollFlag: boolean = false;
-  private pageId: string = '0';
+  private scrollFlag = false;
+  private pageId = "0";
 
   /**
    *Creates an instance of InfoContentsView.
@@ -107,19 +109,18 @@ export class InfoContentsView extends JWF.BaseView {
       await this.loadSubPage(puuid, id);
       this.jumpContents(id);
     });
-    contentsModule.addEventListener("deleteContents", id => {
+    contentsModule.addEventListener("deleteContents", (id) => {
       const contents = this.contentsNode[id];
       if (contents && contents.parentNode) {
         contents.parentNode.removeChild(contents);
       }
     });
-    contentsModule.addEventListener("updateContents", contents => {
+    contentsModule.addEventListener("updateContents", (contents) => {
       const contentsNode = this.contentsNode[contents.uuid];
       if (contentsNode) {
-        if(contentsNode.contents.type !== contents.type)
-          this.loadPage(contents.uuid,true);
-        else
-          contentsNode.update(contents);
+        if (contentsNode.contents.type !== contents.type)
+          this.loadPage(contents.uuid, true);
+        else contentsNode.update(contents);
       }
     });
     contentsModule.addEventListener("moveVector", (uuid, vector) => {
@@ -166,7 +167,7 @@ export class InfoContentsView extends JWF.BaseView {
         childs.appendChild(this.createContents(child));
       }
     }
-    contentsArea.update = contents => {
+    contentsArea.update = (contents) => {
       contentsArea.contents = contents;
       this.contentsNode[contents.uuid] = contentsArea;
       // if (contentsArea.dataset.contentsType === contents["type"]) {
@@ -178,15 +179,14 @@ export class InfoContentsView extends JWF.BaseView {
           title.parentNode.removeChild(title);
         }
         title = newTitle;
-        title.addEventListener("dblclick", e => {
+        title.addEventListener("dblclick", (e) => {
           new ContentsEditWindow(this.manager, contents.uuid);
           e.preventDefault();
           const selection = getSelection();
-          if(selection)
-            selection.removeAllRanges();
+          if (selection) selection.removeAllRanges();
         });
       }
-      contentsArea.dataset.contentsStat = contents.visible?"true":"false";
+      contentsArea.dataset.contentsStat = contents.visible ? "true" : "false";
       title.dataset.nodeName = "H" + contents.title_type;
       title.textContent = contents.title;
       date.textContent = new Date(contents["date"]).toLocaleString();
@@ -308,7 +308,10 @@ export class InfoContentsView extends JWF.BaseView {
   public async loadSubPage(pid: string, uuid: string) {
     //対象が存在しなければ全てを読み込みなおす
     const parent = this.contentsNode[uuid];
-    if (!parent){ this.loadPage(uuid, true);return;}
+    if (!parent) {
+      this.loadPage(uuid, true);
+      return;
+    }
 
     //部分的なコンテンツの読み出し
     const contentsModule = this.contentsModule;

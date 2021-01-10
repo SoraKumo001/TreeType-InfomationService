@@ -14,7 +14,7 @@ declare var adsbygoogle: unknown;
  *
  */
 declare interface Window {
-  adsbygoogle: {}[];
+  adsbygoogle: unknown[];
 }
 declare var window: Window;
 
@@ -33,7 +33,7 @@ loadAdParam();
 const contentsModule = getManager().getModule(ContentsModule);
 contentsModule.addEventListener("drawContents", (client) => {
   if (adSenseValue) {
-   // let flag = false;
+    // let flag = false;
     const top = adSenseValue.top;
     if (top) {
       let v = client.querySelector("[data-adsense=top]") as HTMLDivElement;
@@ -57,6 +57,7 @@ contentsModule.addEventListener("drawContents", (client) => {
         v.style.minHeight = "2em";
         v.innerHTML = bottom;
         client.appendChild(v);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (adsbygoogle = window.adsbygoogle || []).push({});
       }
     }

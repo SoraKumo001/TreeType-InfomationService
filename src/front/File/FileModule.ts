@@ -15,7 +15,7 @@ export interface FileModuleMap extends ModuleMap {
   update_dir: [number, number]; //parentId,dirId
   delete_file: [number | number[]]; //fileId
   update_file: [number]; //fileId
-  upload_file: [number,number,File]; //parentId,id,File
+  upload_file: [number, number, File]; //parentId,id,File
 }
 
 /**
@@ -67,15 +67,20 @@ export class FileModule extends BaseModule<FileModuleMap> {
   public async uploadFile(parentId: number, files: FileList) {
     const adapter = this.getAdapter();
     const count = files.length;
-    const result:{pid:number,id:number,file:File}[]=[]
+    const result: { pid: number; id: number; file: File }[] = [];
     for (let i = 0; i < count; i++) {
       const file = files.item(i);
       if (file) {
-        const r = await adapter.upload(file, "Files.uploadFile", parentId, file.name) as {id:number,size:number}|null;
-        if(r){
+        const r = (await adapter.upload(
+          file,
+          "Files.uploadFile",
+          parentId,
+          file.name
+        )) as { id: number; size: number } | null;
+        if (r) {
           const id = r.id;
-          result.push({pid:parentId,id,file});
-          this.callEvent("upload_file", parentId,id,file);
+          result.push({ pid: parentId, id, file });
+          this.callEvent("upload_file", parentId, id, file);
         }
       }
     }

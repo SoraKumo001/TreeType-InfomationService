@@ -1,10 +1,10 @@
 /**
  *更新リスト表示用プラグイン
-  */
+ */
 import {
   TreeContents,
   MainContents,
-  ContentsModule
+  ContentsModule,
 } from "../../Contents/ContentsModule";
 import { sprintf } from "@jswf/core";
 import { ContentsCacheModule } from "./ContentsCache.auto";
@@ -15,7 +15,7 @@ const contentsCacheModule = getManager().getModule(ContentsCacheModule);
 
 function getContentsList(
   treeContents: TreeContents,
-  list?: (typeof treeContents)[]
+  list?: typeof treeContents[]
 ) {
   if (!list) list = [];
   const childs = treeContents.children;
@@ -25,8 +25,7 @@ function getContentsList(
     }
   }
   //ページのみ保存
-  if(treeContents.type === 'PAGE')
-    list.push(treeContents);
+  if (treeContents.type === "PAGE") list.push(treeContents);
   return list;
 }
 /**
@@ -45,7 +44,7 @@ function contentsUpdate(
   }
   const list = getContentsList(tree);
   list.sort((a, b) => {
-    if(a.pageNew && b.pageNew)
+    if (a.pageNew && b.pageNew)
       return b.pageNew.date.getTime() - a.pageNew.date.getTime();
     return 0;
   });
@@ -53,8 +52,7 @@ function contentsUpdate(
   table.dataset.type = "UpdateTable";
   for (let i = 0; list[i] && i < 10; i++) {
     const t = list[i];
-    if(t.uuid === uuid)
-      continue;
+    if (t.uuid === uuid) continue;
     const row = table.insertRow();
 
     //クリックイベントの作成
@@ -66,11 +64,11 @@ function contentsUpdate(
 
     //日付の作成
     const pageNew = t.pageNew;
-    const date = pageNew?pageNew.date:t.date;
+    const date = pageNew ? pageNew.date : t.date;
     const d = sprintf(
       "%04d/%02d/%02d %02d:%02d",
       date.getFullYear(),
-      date.getMonth()+1,
+      date.getMonth() + 1,
       date.getDate(),
       date.getHours(),
       date.getMinutes()
@@ -81,12 +79,12 @@ function contentsUpdate(
 
     //タイトルの設定
     cell = row.insertCell();
-    let p: typeof t | undefined = pageNew||t;
+    let p: typeof t | undefined = pageNew || t;
     do {
       if (p.uuid === uuid) break;
       const title = document.createElement("span");
       title.innerText = p.title;
-      cell.insertBefore(title,cell.firstChild);
+      cell.insertBefore(title, cell.firstChild);
     } while ((p = p.parent));
   }
   body.appendChild(table);

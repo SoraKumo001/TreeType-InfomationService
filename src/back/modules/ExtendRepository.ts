@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   TreeRepository,
   Connection,
@@ -5,7 +6,7 @@ import {
   getManager,
   EntityRepository,
   ObjectLiteral,
-  SelectQueryBuilder
+  SelectQueryBuilder,
 } from "typeorm";
 import * as typeorm from "typeorm";
 import { AbstractSqliteDriver } from "typeorm/driver/sqlite-abstract/AbstractSqliteDriver";
@@ -40,7 +41,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
     Object.assign(this, {
       manager: manager,
       metadata: metadata,
-      queryRunner: queryRunner
+      queryRunner: queryRunner,
     });
   }
   /**
@@ -69,9 +70,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
       order?: string | [string, "ASC" | "DESC", "NULLS FIRST" | "NULLS LAST"];
     }
   ): Promise<Entity | undefined> {
-    let builder: SelectQueryBuilder<Entity>;
-
-    builder = this.createAncestorsQueryBuilder(
+    const builder = this.createAncestorsQueryBuilder(
       "treeEntity",
       "treeClosure",
       entity
@@ -82,12 +81,12 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
         const parents = this.metadata.treeParentRelation!.foreignKeys[0]
           .columnNames;
         builder.select([
-          ...options.select.map(v => {
+          ...options.select.map((v) => {
             return "treeEntity." + v;
           }),
-          ...parents.map(v => {
+          ...parents.map((v) => {
             return "treeEntity." + v;
-          })
+          }),
         ]);
       }
       if (options.where) builder.andWhere(options.where);
@@ -105,7 +104,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
 
     //起点の取得
     const ids = new Set<number>();
-    relationMaps.forEach(e => ids.add(e.parentId));
+    relationMaps.forEach((e) => ids.add(e.parentId));
     let index: number;
     for (index = 0; ids.has(relationMaps[index].id); ++index);
 
@@ -119,9 +118,9 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
   /**
    *起点から子方向へツリー構造のデータを取得
    *
-   * @param {(Entity | [string, { [key: string]: string | number | boolean }])} entity　起点
+   * @param {(Entity | [string, { [key: string]: string | number | boolean }])} entity 起点
    * @param {{
-   *       select?: (keyof Entity)[];　抽出フィールド
+   *       select?: (keyof Entity)[]; 抽出フィールド
    *     }} [options]
    * @returns {Promise<Entity>}
    * @memberof ExtendRepository
@@ -142,9 +141,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
       order?: string | [string, "ASC" | "DESC", "NULLS FIRST" | "NULLS LAST"];
     }
   ): Promise<Entity | undefined> {
-    let builder: SelectQueryBuilder<Entity>;
-
-    builder = this.createDescendantsQueryBuilder(
+    const builder = this.createDescendantsQueryBuilder(
       "treeEntity",
       "treeClosure",
       entity
@@ -155,12 +152,12 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
         const parents = this.metadata.treeParentRelation!.foreignKeys[0]
           .columnNames;
         builder.select([
-          ...options.select.map(v => {
+          ...options.select.map((v) => {
             return "treeEntity." + v;
           }),
-          ...parents.map(v => {
+          ...parents.map((v) => {
             return "treeEntity." + v;
-          })
+          }),
         ]);
       }
       if (options.where) builder.andWhere(options.where);
@@ -178,7 +175,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
 
     //起点の取得
     const ids = new Set<number>();
-    relationMaps.forEach(e => ids.add(e.id));
+    relationMaps.forEach((e) => ids.add(e.id));
 
     const mapIndex = relationMaps.reduce((a, b, index) => {
       if (!ids.has(b.parentId))
@@ -201,12 +198,12 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
     relationMaps: { id: any; parentId: any }[]
   ): void {
     const map: { [key: number]: any } = {};
-    entities.forEach(e => {
+    entities.forEach((e) => {
       const id = this.metadata.primaryColumns[0].getEntityValue(e);
       map[id] = e;
     });
     const childProperty = this.metadata.treeChildrenRelation!.propertyName;
-    relationMaps.forEach(e => {
+    relationMaps.forEach((e) => {
       if (e.parentId != null) {
         const parent = map[e.parentId];
         if (parent) {
@@ -227,7 +224,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
   ): SelectQueryBuilder<Entity> {
     if (this.metadata.treeType === "closure-table") {
       const joinCondition = this.metadata.closureJunctionTable.ancestorColumns
-        .map(column => {
+        .map((column) => {
           return (
             closureTableAlias +
             "." +
@@ -242,7 +239,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
 
       const parameters: ObjectLiteral = {};
       const whereCondition = this.metadata.closureJunctionTable.ancestorColumns
-        .map(column => {
+        .map((column) => {
           if (entity instanceof Array) {
             const qb = this.createQueryBuilder();
             Object.assign(parameters, entity[1]);
@@ -297,7 +294,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
         this.metadata.nestedSetRightColumn!.propertyPath;
       const parameters: ObjectLiteral = {};
       const whereCondition = this.metadata
-        .treeParentRelation!.joinColumns.map(joinColumn => {
+        .treeParentRelation!.joinColumns.map((joinColumn) => {
           const parameterName = joinColumn.referencedColumn!.propertyPath.replace(
             ".",
             "_"
@@ -340,7 +337,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
       );
     } else if (this.metadata.treeType === "materialized-path") {
       // example: SELECT * FROM category category WHERE (SELECT mpath FROM `category` WHERE id = 2) LIKE CONCAT(category.mpath, '%');
-      return this.createQueryBuilder(alias).where(qb => {
+      return this.createQueryBuilder(alias).where((qb) => {
         const subQuery = qb
           .subQuery()
           .select(
@@ -387,7 +384,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
 
     if (this.metadata.treeType === "closure-table") {
       const joinCondition = this.metadata.closureJunctionTable.descendantColumns
-        .map(column => {
+        .map((column) => {
           return (
             escape(closureTableAlias) +
             "." +
@@ -402,7 +399,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
 
       const parameters: ObjectLiteral = {};
       const whereCondition = this.metadata.closureJunctionTable.ancestorColumns
-        .map(column => {
+        .map((column) => {
           if (entity instanceof Array) {
             const qb = this.createQueryBuilder();
             Object.assign(parameters, entity[1]);
@@ -457,7 +454,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
         this.metadata.nestedSetRightColumn!.propertyPath;
       const parameters: ObjectLiteral = {};
       const joinCondition = this.metadata
-        .treeParentRelation!.joinColumns.map(joinColumn => {
+        .treeParentRelation!.joinColumns.map((joinColumn) => {
           const parameterName = joinColumn.referencedColumn!.propertyPath.replace(
             ".",
             "_"
@@ -500,7 +497,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
       );
       //.where(joinCondition, parameters);
     } else if (this.metadata.treeType === "materialized-path") {
-      return this.createQueryBuilder(alias).where(qb => {
+      return this.createQueryBuilder(alias).where((qb) => {
         const subQuery = qb
           .subQuery()
           .select(

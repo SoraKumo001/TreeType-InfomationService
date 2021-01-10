@@ -14,7 +14,7 @@ export class InfoModule extends amf.Module {
       name: "テストモジュール",
       version: 1,
       author: "空雲",
-      info: "テスト用"
+      info: "テスト用",
     };
   }
   @amf.EXPORT

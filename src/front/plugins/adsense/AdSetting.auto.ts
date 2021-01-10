@@ -9,8 +9,6 @@ import { SettingView, SettingModule } from "../../Setting/SettingModule";
 import { ParamsModule } from "../../Manager/ParamsModule";
 import { Manager } from "../../Manager/Manager";
 
-
-
 export class AdSettingView extends SettingView {
   private paramsModule: ParamsModule;
   private form: JWF.TableFormView;
@@ -26,8 +24,20 @@ export class AdSettingView extends SettingView {
     this.form = form;
     form.setAutoSize(true);
     form.addItem([
-      { name: "top", label: "ヘッダー", type: "textarea", value: "" ,styles:{height:"10em"}},
-      { name: "bottom", label: "フッター", type: "textarea", value: "" ,styles:{height:"10em"}},
+      {
+        name: "top",
+        label: "ヘッダー",
+        type: "textarea",
+        value: "",
+        styles: { height: "10em" },
+      },
+      {
+        name: "bottom",
+        label: "フッター",
+        type: "textarea",
+        value: "",
+        styles: { height: "10em" },
+      },
       {
         label: "設定",
         type: "submit",
@@ -41,9 +51,9 @@ export class AdSettingView extends SettingView {
             } else {
               msg.setText("設定エラー");
             }
-          }
-        }
-      }
+          },
+        },
+      },
     ]);
     this.addChild(form, "client");
     this.loadSetting();
@@ -53,8 +63,7 @@ export class AdSettingView extends SettingView {
     const params = (await this.paramsModule.getGlobalParam("ADSENSE_DATA")) as {
       [key: string]: string | number | boolean;
     };
-    if(params)
-      form.setParams(params);
+    if (params) form.setParams(params);
   }
 }
 

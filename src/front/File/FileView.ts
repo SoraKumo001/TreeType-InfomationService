@@ -56,7 +56,7 @@ export class FileView extends JWF.BaseView {
       ["*", 40],
       ["ファイル名", 128],
       ["サイズ", 80],
-      "更新"
+      "更新",
     ]);
     const fileClinet = fileList.getClient();
     fileList.addEventListener("itemDblClick", () => {
@@ -73,10 +73,10 @@ export class FileView extends JWF.BaseView {
       this.previewFile();
     });
     //ドラッグドロップの許可
-    fileClinet.ondragover = function(e) {
+    fileClinet.ondragover = function (e) {
       e.preventDefault();
     };
-    fileClinet.addEventListener("drop", e => {
+    fileClinet.addEventListener("drop", (e) => {
       const parentId = this.parentId;
       if (e.dataTransfer && parentId)
         fileModule.uploadFile(parentId, e.dataTransfer.files);
@@ -102,10 +102,10 @@ export class FileView extends JWF.BaseView {
       if (values.length) {
         const messageBox = new JWF.MessageBox("削除", "削除しますか？", [
           ["OK", true],
-          ["Cancel", false]
+          ["Cancel", false],
         ]);
         this.addFrameChild(messageBox);
-        messageBox.addEventListener("buttonClick", e => {
+        messageBox.addEventListener("buttonClick", (e) => {
           if (e) {
             const ids: number[] = [];
             for (const file of values) {
@@ -125,7 +125,7 @@ export class FileView extends JWF.BaseView {
         const editWindow = new FileEditWindow({
           fileModule: this.fileModule,
           fileId: values[0].id,
-          name: values[0].name
+          name: values[0].name,
         });
         this.addFrameChild(editWindow);
         editWindow.setPos();
@@ -138,7 +138,7 @@ export class FileView extends JWF.BaseView {
     });
 
     this.addRemover(
-      fileModule.addEventListener("delete_file", fileId => {
+      fileModule.addEventListener("delete_file", (fileId) => {
         const values = this.fileList.getItemValues() as FileInfo[];
         let flag = false;
         for (const file of values) {
@@ -148,10 +148,10 @@ export class FileView extends JWF.BaseView {
         }
         if (flag) this.loadFiles();
       }),
-      fileModule.addEventListener("upload_file", parentId => {
+      fileModule.addEventListener("upload_file", (parentId) => {
         if (this.parentId === parentId) this.loadFiles();
       }),
-      fileModule.addEventListener("update_file", fileId => {
+      fileModule.addEventListener("update_file", (fileId) => {
         const values = this.fileList.getItemValues() as FileInfo[];
         let flag = false;
         for (const file of values) {
@@ -200,7 +200,7 @@ export class FileView extends JWF.BaseView {
     input.multiple = true;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const that = this;
-    input.addEventListener("change", function() {
+    input.addEventListener("change", function () {
       const files = this.files;
       const parentId = that.parentId;
       if (parentId && files) that.fileModule.uploadFile(parentId, files);

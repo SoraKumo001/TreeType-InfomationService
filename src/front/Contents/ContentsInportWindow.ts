@@ -21,10 +21,10 @@ export class ContentsImportWindow extends JWF.FrameWindow {
 
     const msg = client.querySelector("[name=msg]") as HTMLDivElement;
     //ドラッグドロップの許可
-    client.ondragover = function(e) {
+    client.ondragover = function (e) {
       e.preventDefault();
     };
-    client.addEventListener("drop", e => {
+    client.addEventListener("drop", (e) => {
       if (!e.dataTransfer) return;
       e.preventDefault();
 

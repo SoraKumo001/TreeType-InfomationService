@@ -90,7 +90,7 @@ export class Files extends amf.Module {
     for (const name of dirs) {
       const result = await repository.findOne({
         where: { parentId: pid, name },
-        select: ["id"]
+        select: ["id"],
       });
       if (!result) return null;
       id = result.id as number;
@@ -146,7 +146,7 @@ export class Files extends amf.Module {
     if (!repository) return null;
     const result = await repository.find({
       select: ["id"],
-      where: { parent: { id: dirId } }
+      where: { parent: { id: dirId } },
     });
     if (!result) return null;
     const values: number[] = [];
@@ -188,7 +188,7 @@ export class Files extends amf.Module {
 
     return repository.findOne({
       select: ["id", "kind", "name", "date"],
-      where: { id: fileId }
+      where: { id: fileId },
     });
   }
 
@@ -237,7 +237,7 @@ export class Files extends amf.Module {
     if (!repository) return null;
     await repository.clear();
     await repository.query("select setval ($1, 1, false)", [
-      repository.metadata.tableName + "_id_seq"
+      repository.metadata.tableName + "_id_seq",
     ]);
     await repository.save({ kind: 0, name: "[ROOT]" });
   }
@@ -250,7 +250,7 @@ export class Files extends amf.Module {
     for (const name of dirs) {
       const result = await repository.findOne({
         select: ["id"],
-        where: { parentId: id, name }
+        where: { parentId: id, name },
       });
       if (!result) return null;
       id = result.id;
@@ -262,7 +262,7 @@ export class Files extends amf.Module {
     if (!repository) return null;
     const check = await repository.findOne({
       select: ["id"],
-      where: { parentId: parentId, name }
+      where: { parentId: parentId, name },
     });
     const file = {
       id: check ? check.id : undefined,
@@ -270,7 +270,7 @@ export class Files extends amf.Module {
       name,
       date: () => "default",
       kind: 1,
-      value: buffer
+      value: buffer,
     };
     await repository.save((file as unknown) as FileEntity);
     return file;
@@ -347,14 +347,13 @@ export class Files extends amf.Module {
       name,
       date,
       parent: { id: pid },
-      value
+      value,
     };
     await repository.save(file);
     return (<FileEntity>file).id;
   }
   public isAdmin() {
-    if(!this.isSession())
-      return true;
+    if (!this.isSession()) return true;
     const users = this.getSessionModule(Users);
     return users.isAdmin();
   }
@@ -391,7 +390,6 @@ export class Files extends amf.Module {
   @amf.EXPORT
   public async uploadFile(parentId: number, name: string) {
     if (!this.isAdmin()) return null;
-    const users = this.getSessionModule(Users);
     const buffer = this.getSession().getBuffer();
     if (buffer) return this._uploadFile(parentId, name, buffer);
   }

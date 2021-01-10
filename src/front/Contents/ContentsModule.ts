@@ -1,8 +1,8 @@
 import { ModuleMap, BaseModule } from "../Manager/BaseModule";
 
 export interface TreeContents {
-  id:number;
-  uuid:string;
+  id: number;
+  uuid: string;
   visible: boolean;
   date: Date;
   update: Date;
@@ -13,8 +13,8 @@ export interface TreeContents {
   pageNew?: TreeContents;
 }
 export interface MainContents {
-  id:number;
-  uuid:string;
+  id: number;
+  uuid: string;
   priority?: number;
   visible: boolean;
   type: string;
@@ -144,9 +144,10 @@ export class ContentsModule extends BaseModule<CustomMap> {
    */
   public async deleteContents(uuid: string) {
     const adapter = this.getAdapter();
-    const flag = (await adapter.exec("Contents.deleteContents", uuid)) as Promise<
-      boolean | null
-    >;
+    const flag = (await adapter.exec(
+      "Contents.deleteContents",
+      uuid
+    )) as Promise<boolean | null>;
     if (flag) {
       this.callEvent("deleteContents", uuid);
     }

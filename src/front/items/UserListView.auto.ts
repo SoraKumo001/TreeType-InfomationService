@@ -36,14 +36,14 @@ export class UserListView extends SettingView {
       name: "local",
       options: [
         { label: "ローカル", value: true },
-        { label: "リモート", value: false }
+        { label: "リモート", value: false },
       ],
       event: {
         change: () => {
           this.local = remoteSelect.getValue() == "true";
           this.getUsers();
-        }
-      }
+        },
+      },
     });
     panel.addChild(remoteSelect, "left");
 
@@ -73,11 +73,14 @@ export class UserListView extends SettingView {
         const messageBox = new JWF.MessageBox(
           "確認",
           `[${userInfo.name}]を削除しますか？`,
-          [["OK", true], ["Cancel", false]]
+          [
+            ["OK", true],
+            ["Cancel", false],
+          ]
         );
-        messageBox.addEventListener("buttonClick", value => {
+        messageBox.addEventListener("buttonClick", (value) => {
           if (value) {
-            this.userModule.delUser(userInfo.no, this.local).then(result => {
+            this.userModule.delUser(userInfo.no, this.local).then((result) => {
               if (!result) {
                 new JWF.MessageBox("エラー", `削除失敗`);
               }
@@ -92,7 +95,7 @@ export class UserListView extends SettingView {
     this.listView = list;
     list.addHeader(["NO", ["ID", 100], "NAME"]);
     list.setColumnStyles(["right"]);
-    list.addEventListener("itemDblClick", async e => {
+    list.addEventListener("itemDblClick", async (e) => {
       const user = list.getItemValue(e.itemIndex) as UserInfo;
       new UserEditWindow(
         manager,

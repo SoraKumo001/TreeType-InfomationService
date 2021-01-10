@@ -14,8 +14,8 @@ import { Manager } from "../Manager/Manager";
 export class InfoTreeView extends JWF.TreeView {
   private manager: Manager;
   private contentsModule: ContentsModule;
-  private selectId: string = "0";
-  private overId: string = "";
+  private selectId = "0";
+  private overId = "";
   public constructor(manager: Manager) {
     super();
     this.manager = manager;
@@ -27,26 +27,26 @@ export class InfoTreeView extends JWF.TreeView {
     const optionNode = document.createElement("div");
     optionNode.className = "TreeOption";
     optionNode.innerText = "🔧";
-    optionNode.addEventListener("click", e => {
+    optionNode.addEventListener("click", (e) => {
       this.showEditMenu(this.overId);
       e.cancelBubble = true;
     });
 
-    this.addEventListener("itemSelect", e => {
+    this.addEventListener("itemSelect", (e) => {
       if (e.user)
         contentsModule.selectContents(e.item.getItemValue() as string, false);
     });
-    this.addEventListener("itemDblClick", e => {
+    this.addEventListener("itemDblClick", (e) => {
       new ContentsEditWindow(this.manager, e.item.getItemValue() as string);
     });
-    this.addEventListener("itemOver", e => {
+    this.addEventListener("itemOver", (e) => {
       const item = e.item;
       this.overId = item.getItemValue() as string;
       item.getNode().childNodes[0].appendChild(optionNode);
       e.event.preventDefault();
     });
 
-    this.addEventListener("itemDrop", e => {
+    this.addEventListener("itemDrop", (e) => {
       if (typeof e.srcValue === "string")
         this.contentsModule.moveContents(
           e.srcValue,
@@ -55,30 +55,30 @@ export class InfoTreeView extends JWF.TreeView {
 
       e.event.preventDefault();
     });
-    contentsModule.addEventListener("getTree", treeContents => {
+    contentsModule.addEventListener("getTree", (treeContents) => {
       this.drawTree(treeContents);
     });
-    contentsModule.addEventListener("selectContents", uuid => {
+    contentsModule.addEventListener("selectContents", (uuid) => {
       this.selectId = uuid;
       this.selectItemFromValue(uuid, true);
     });
     contentsModule.addEventListener("createContents", (pid, uuid) => {
       this.loadTree(uuid);
     });
-    contentsModule.addEventListener("moveContents", fromId => {
+    contentsModule.addEventListener("moveContents", (fromId) => {
       this.loadTree(fromId, true);
     });
-    contentsModule.addEventListener("deleteContents", id => {
+    contentsModule.addEventListener("deleteContents", (id) => {
       const item = this.findItemFromValue(id);
       if (item) item.removeItem();
     });
-    contentsModule.addEventListener("updateContents", contents => {
+    contentsModule.addEventListener("updateContents", (contents) => {
       const item = this.findItemFromValue(contents.uuid);
       if (item) {
         const node = item.getNode();
         if (node.dataset.contentType !== contents.type) {
           //タイプ変更の場合はツリーを読み直す
-          this.loadTree(undefined ,true);
+          this.loadTree(undefined, true);
         } else {
           item.setItemText(contents.title);
           node.dataset.contentStat = contents.visible ? "true" : "false";
@@ -153,7 +153,7 @@ export class InfoTreeView extends JWF.TreeView {
   }
   private setTreeItem(item: TreeItem, value: TreeContents) {
     const node = item.getNode();
-   // const level = item.getTreeLevel();
+    // const level = item.getTreeLevel();
     item.setItemText(value.title);
     item.setItemValue(value.uuid);
     node.dataset.contentStat = value.visible ? "true" : "false";

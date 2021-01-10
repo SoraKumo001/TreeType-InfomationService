@@ -71,7 +71,7 @@ export class Rss extends Module {
           link: `${link}?uuid=${c.uuid}`,
           pubDate: new Date(c.update).toUTCString(),
           category: "topic",
-          description
+          description,
         };
         items.push(item);
       }
@@ -81,10 +81,10 @@ export class Rss extends Module {
     const rss = {
       rss: {
         $: {
-          version: "2.0"
+          version: "2.0",
         },
-        channel: { title, description, link, language: "ja-jp", item: items }
-      }
+        channel: { title, description, link, language: "ja-jp", item: items },
+      },
     };
 
     const xml = new xml2js.Builder();

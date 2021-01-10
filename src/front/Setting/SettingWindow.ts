@@ -1,9 +1,5 @@
 import * as JWF from "@jswf/core";
-import {
-  SettingModule,
-  SettingData,
-  SettingView
-} from "./SettingModule";
+import { SettingModule, SettingData, SettingView } from "./SettingModule";
 import { Manager } from "../Manager/Manager";
 
 export class SettingWindow extends JWF.FrameWindow {
@@ -25,7 +21,7 @@ export class SettingWindow extends JWF.FrameWindow {
     this.treeView = treeView;
     splitter.addChild(0, treeView, "client");
 
-    treeView.addEventListener("itemSelect", e => {
+    treeView.addEventListener("itemSelect", (e) => {
       splitter.removeChildAll(1);
       const value = e.item.getItemValue() as typeof SettingView;
       if (value) {

@@ -27,18 +27,16 @@ export class LoginWindow extends JWF.FrameWindow {
 
     const userModule = manager.getModule(UserModule);
     const userInfo = userModule.getUserInfo();
-    if(userInfo){
-      if(!userId)
-        userId  = userInfo.id;
-      if(local === undefined){
-        local = userInfo.type==="local";
+    if (userInfo) {
+      if (!userId) userId = userInfo.id;
+      if (local === undefined) {
+        local = userInfo.type === "local";
       }
     }
 
-
     const textUserID = new JWF.TextBox({
       label: "ユーザID",
-      image: LOGIN_ID_SVG
+      image: LOGIN_ID_SVG,
     });
     this.addChild(textUserID, "top");
     textUserID.setMargin(0, 0, 0, 10);
@@ -46,14 +44,14 @@ export class LoginWindow extends JWF.FrameWindow {
     const textUserPass = new JWF.TextBox({
       label: "パスワード",
       type: "password",
-      image: LOGIN_PASS_SVG
+      image: LOGIN_PASS_SVG,
     });
     textUserPass.setMargin(0, 10, 0, 10);
     this.addChild(textUserPass, "top");
     if (userPass) textUserPass.setText(userPass);
     const localCheck = new JWF.CheckBox({
       text: "ローカルログイン",
-      checked: true
+      checked: true,
     });
     this.addChild(localCheck, "top");
     if (local) localCheck.setCheck(local);

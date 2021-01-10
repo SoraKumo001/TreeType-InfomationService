@@ -13,16 +13,14 @@ export class ContentsControleWindow extends FrameWindow {
     this.setSize(200, 350);
     this.foreground();
 
-    this.addEventListener("active",(e)=>{
-      if(!e.active)
-        this.close();
-    })
+    this.addEventListener("active", (e) => {
+      if (!e.active) this.close();
+    });
   }
-  public addMenu(name: string,event?:()=>void) {
+  public addMenu(name: string, event?: () => void) {
     const div = document.createElement("div");
     div.innerText = name;
-    if(event)
-      div.addEventListener('click',event)
+    if (event) div.addEventListener("click", event);
     this.getClient().appendChild(div);
   }
 }

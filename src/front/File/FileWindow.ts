@@ -15,7 +15,7 @@ interface CustomMap extends JWF.WINDOW_EVENT_MAP {
  * @extends {JWF.FrameWindow}
  */
 export class FileWindow<T extends CustomMap> extends JWF.FrameWindow<T> {
-  public constructor(manager: Manager,dirId?:number) {
+  public constructor(manager: Manager, dirId?: number) {
     super();
     this.setJwfStyle("FileWindow");
 
@@ -35,18 +35,12 @@ export class FileWindow<T extends CustomMap> extends JWF.FrameWindow<T> {
     const fileView = new FileView(fileModule);
     splitter.addChild(1, fileView, "client");
 
-    fileView.addEventListener(
-      "selectDir",
-      (parentId): void => {
-        dirTree.selectDir(parentId as number);
-      }
-    );
-    fileView.addEventListener(
-      "enterFile",
-      (param): void => {
-        this.callEvent("enterFile", param);
-      }
-    );
+    fileView.addEventListener("selectDir", (parentId): void => {
+      dirTree.selectDir(parentId as number);
+    });
+    fileView.addEventListener("enterFile", (param): void => {
+      this.callEvent("enterFile", param);
+    });
 
     dirTree.getTree().addEventListener("itemSelect", () => {
       fileView.loadFiles(dirTree.getDirId());

@@ -21,28 +21,27 @@ export class FileEditWindow extends JWF.FrameWindow {
     this.setTitle(params.parentId ? "新規ディレクトリ作成" : "名前の変更");
 
     const fileModule = params.fileModule;
-    const label = new JWF.Label(params.parentId ? "ディレクトリ名を入力" : "新しい名前を入力");
+    const label = new JWF.Label(
+      params.parentId ? "ディレクトリ名を入力" : "新しい名前を入力"
+    );
     this.addChild(label, "top");
     const text = new JWF.TextBox({
       label: "名前",
-      text: params.name ? params.name : ""
+      text: params.name ? params.name : "",
     });
 
-        const enter = async () => {
+    const enter = async () => {
       if (params.parentId) {
         const id = await fileModule.createDir(params.parentId, text.getText());
-        if (!id)
-          label.setText("作成エラー");
+        if (!id) label.setText("作成エラー");
         else {
           this.close();
         }
-      }
-      else {
+      } else {
         if (params.fileId) {
           if (!fileModule.setFileName(params.fileId, text.getText())) {
             label.setText("変更エラー");
-          }
-          else {
+          } else {
             this.close();
           }
         }

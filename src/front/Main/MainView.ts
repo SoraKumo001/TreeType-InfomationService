@@ -36,13 +36,13 @@ export class MainView extends JWF.BaseView {
     contentsModule.addEventListener("selectContents", (id, tree) => {
       this.routerModule.setLocationParams({ uuid: id }, !tree);
     });
-    contentsModule.addEventListener("selectPage", uuid => {
+    contentsModule.addEventListener("selectPage", (uuid) => {
       const title = this.selectPage(uuid);
       if (!title) return;
 
       //トラッカーに通知
       try {
-        const AnalyticsUA = (global as unknown as NodeJS.Global & {
+        const AnalyticsUA = ((global as unknown) as NodeJS.Global & {
           AnalyticsUA: string;
         })["AnalyticsUA"];
         // eslint-disable-next-line no-undef
@@ -51,7 +51,7 @@ export class MainView extends JWF.BaseView {
         gtag("config", AnalyticsUA, {
           page_title: title,
           page_location,
-          page_path: "/?uuid=" + uuid
+          page_path: "/?uuid=" + uuid,
         });
       } catch (e) {
         // empty
@@ -61,10 +61,10 @@ export class MainView extends JWF.BaseView {
     const userModule = manager.getModule(UserModule);
 
     let first = true;
-    routerModule.addEventListener("goLocation", params => {
+    routerModule.addEventListener("goLocation", (params) => {
       //ページの更新や戻る/進むボタンの処理
       const uuid = params["uuid"] || "";
-      infoTreeView.loadTree(uuid).then(e => {
+      infoTreeView.loadTree(uuid).then((e) => {
         if (e) {
           this.selectPage(uuid);
         }
@@ -94,7 +94,7 @@ export class MainView extends JWF.BaseView {
       const name = item.getItemText();
       values.push({
         name,
-        value: item.getItemValue() as number
+        value: item.getItemValue() as number,
       });
       if (title.length) title += " - ";
       title += name;
