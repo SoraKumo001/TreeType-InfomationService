@@ -1,0 +1,28 @@
+version: "3.7"
+services:
+  postgres:
+    container_name: ttis-old-postgres
+    image: postgres:alpine
+    environment:
+      POSTGRES_DB: ttis
+      POSTGRES_USER: ttis
+      POSTGRES_PASSWORD: test
+    volumes:
+      - postgresql-vol:/var/lib/postgresql/data
+      - socket-vol:/var/run/
+    restart: always
+  ttis:
+    container_name: ttis-old
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    depends_on:
+      - postgres      
+    volumes:
+      - ttis-vol:/app/dist/db
+      - socket-vol:/var/run/
+    restart: always    
+volumes:
+  postgresql-vol:
+  ttis-vol:
+  socket-vol:

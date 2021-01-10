@@ -1,9 +1,9 @@
 node_modules
-/dist/sock/app.sock
-/dist/log/
-/dist/db/*.db
+/dist
+*.db
 package-lock.json
 *.tsbuildinfo
 /temp/
 dist/public/favicon.ico
 .vscode/
+.env-deploy

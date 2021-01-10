@@ -1,0 +1,15 @@
+version: "3.7"
+services:
+  postgres:
+    container_name: ttis-old-postgres
+    image: postgres:alpine
+    environment:
+      POSTGRES_DB: ttis
+      POSTGRES_USER: ttis
+      POSTGRES_PASSWORD: test
+    volumes:
+      - postgresql-vol:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+volumes:
+  postgresql-vol:

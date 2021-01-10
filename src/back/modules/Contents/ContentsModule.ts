@@ -1,7 +1,7 @@
 import { Users } from "../User/UsersModule";
 import { RemoteDB } from "../RemoteDBModule";
 import { Files, FileEntity } from "../FilesModule";
-import { sprintf } from "sprintf";
+import { sprintf } from "sprintf-js";
 import * as express from "express";
 import * as typeorm from "typeorm";
 import { ExtendRepository } from "../ExtendRepository";
