@@ -6,7 +6,6 @@ import * as express from "express";
 import * as typeorm from "typeorm";
 import { ExtendRepository } from "../ExtendRepository";
 import { Module, EXPORT } from "@rfcs/core";
-import { HtmlCreater } from "../../HtmlCreater";
 
 interface TreeContents {
   id: number;
@@ -90,7 +89,7 @@ export class Contents extends Module {
 
         const repository = new ExtendRepository(connection, ContentsEntity);
         this.repository = repository;
-        if (!(await repository.findOne(1)))
+        if (!(await repository.findOne({ where: { id: 1 } })))
           await repository.save({ title: "TOP" });
         //await this.updateTree();
       }
@@ -99,17 +98,17 @@ export class Contents extends Module {
 
     return true;
   }
-  public async onCreateHtml(creater: HtmlCreater) {
-    const id = creater.getRequest().query.p;
-    if (id) {
-      if (!this.repository) return;
-      const entity = await this.repository.findOne(parseInt(id as string));
-      if (entity) {
-        creater.setStatus(301);
-        creater.addHeader("Location", "?uuid=" + entity.uuid);
-      }
-    }
-  }
+  // public async onCreateHtml(creater: HtmlCreater) {
+  //   const id = creater.getRequest().query.p;
+  //   if (id) {
+  //     if (!this.repository) return;
+  //     const entity = await this.repository.findOne(parseInt(id as string));
+  //     if (entity) {
+  //       creater.setStatus(301);
+  //       creater.addHeader("Location", "?uuid=" + entity.uuid);
+  //     }
+  //   }
+  // }
 
   /**
    *コンテンツを含むPageIDを返す
@@ -140,7 +139,7 @@ export class Contents extends Module {
    */
   public async getParent(id: number): Promise<number | null> {
     if (!this.repository) return 0;
-    const contents = await this.repository.findOne(id);
+    const contents = await this.repository.findOne({ where: { id } });
     if (!contents || !contents.parentId) return 0;
     return contents.parentId;
   }
@@ -294,7 +293,7 @@ export class Contents extends Module {
     const where: { visible?: boolean; type?: string; parentId?: number } = admin
       ? {}
       : { visible: true };
-    const entity = await repository.findOne(id, { where });
+    const entity = await repository.findOne({ where: { id, ...where } });
     if (!entity) return;
 
     where.type = "ITEM";
@@ -342,7 +341,7 @@ export class Contents extends Module {
   public async getContentsPriority(id: number): Promise<number | null> {
     const repository = this.repository;
     if (!repository) return null;
-    const result = await repository.findOne(id, { select: ["priority"] });
+    const result = await repository.findOne({ where: { id }, select: ["priority"] });
     if (!result) return null;
     return result.priority;
   }
@@ -718,18 +717,19 @@ export class Contents extends Module {
     const fileModule = await this.getModule(Files);
     if (!fileModule) return null;
 
-    const entity = Object.assign({}, value);
+    const entity = { ...value, children: [], parentId: undefined };
 
     //データの挿入
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const v: any = value;
-    if (v.childs) v.children = v.childs;
+
+    //if (v.childs) v.children = v.childs;
     if (v.stat) v.visible = v.stat === 1;
 
-    (<{ id: unknown }>entity).id = undefined;
-    (<{ parentId: unknown }>entity).parentId = undefined;
+    entity.children
+    entity.id = undefined as never;
+    entity.parentId = undefined;
     if (pid) (<{ parent: { id: number } }>entity).parent = { id: pid };
-
     await repository.save(entity);
     const id = entity.id;
 
@@ -949,7 +949,15 @@ export class Contents extends Module {
     if (!entity) return 0;
     return entity.id;
   }
-
+  public async getUuidFromId(id: number) {
+    const repository = this.repository;
+    if (!repository) return 0;
+    const entity = await repository.findOne({
+      select: ["uuid"],
+      where: { id },
+    });
+    return entity?.uuid;
+  }
   /**
    *コンテンツのエクスポート
    *
@@ -1108,7 +1116,7 @@ export class Contents extends Module {
    * @memberof Contents
    */
   @EXPORT
-  public async deleteContents(id: number): Promise<boolean | null> {
+  public async deleteContents(id: string): Promise<boolean | null> {
     if (!this.isAdmin()) return null;
     const flag = await this._deleteContents(id);
     return flag;

@@ -1,6 +1,4 @@
 FROM node:alpine as build
-RUN apk add --no-cache --virtual .gyp python make g++ \
-    && apk --no-cache add avahi-dev
 WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn

@@ -147,7 +147,7 @@ export class ContentsModule extends BaseModule<CustomMap> {
     const flag = (await adapter.exec(
       "Contents.deleteContents",
       uuid
-    )) as Promise<boolean | null>;
+    )) as boolean | null;
     if (flag) {
       this.callEvent("deleteContents", uuid);
     }

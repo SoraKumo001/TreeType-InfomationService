@@ -22,6 +22,10 @@ const config = {
           from: path.resolve(__dirname, "template"),
           to: path.resolve(__dirname, "dist", "template"),
         },
+        {
+          from: path.resolve(__dirname, "public"),
+          to: path.resolve(__dirname, "dist", "public"),
+        },
       ],
     }),
     new MiniCssExtractPlugin({

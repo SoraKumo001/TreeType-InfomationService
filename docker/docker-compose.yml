@@ -17,11 +17,11 @@ services:
       context: ..
       dockerfile: ./docker/Dockerfile
     depends_on:
-      - postgres      
+      - postgres
     volumes:
       - ttis-vol:/app/dist/db
       - socket-vol:/var/run/
-    restart: always    
+    restart: always
 volumes:
   postgresql-vol:
   ttis-vol:

@@ -46,7 +46,7 @@ export class Users extends amf.Module {
 
   public async getLocalCount() {
     const userModel = this.getLocalDB().getRepository(UserEntity);
-    const count = userModel.count({ where: { enable: 1 } });
+    const count = userModel.count({ where: { enable: true } });
     return count;
   }
 
@@ -90,8 +90,10 @@ export class Users extends amf.Module {
       //ローカルユーザ
       const userModel = this.getLocalDB().getRepository(UserEntity);
       const result = await userModel.findOne({
-        id: userId,
-        password: getSHA256(userPass),
+        where: {
+          id: userId,
+          password: getSHA256(userPass),
+        }
       });
       if (!result) return false;
     } else {
@@ -100,9 +102,11 @@ export class Users extends amf.Module {
       if (!userRepository) return false;
 
       const result = await userRepository.findOne({
-        id: userId,
-        password: getSHA256(userPass),
-        enable: true,
+        where: {
+          id: userId,
+          password: getSHA256(userPass),
+          enable: true,
+        }
       });
       if (!result) return false;
     }
@@ -112,15 +116,15 @@ export class Users extends amf.Module {
     no: number,
     local: boolean
   ): Promise<UserInfo | null> {
-    let userEntity: UserEntity | undefined;
+    let userEntity: UserEntity | null;
     if (local) {
       const userModel = this.getLocalDB().getRepository(UserEntity);
-      userEntity = await userModel.findOne(no);
+      userEntity = await userModel.findOne({ where: { no } });
     } else {
       //リモートユーザ
       const userRepository = this.userRepository;
       if (!userRepository) return null;
-      userEntity = await userRepository.findOne(no);
+      userEntity = await userRepository.findOne({ where: { no } });
     }
     if (!userEntity) return null;
     return <UserInfo>{
@@ -140,15 +144,15 @@ export class Users extends amf.Module {
     return userInfo.no;
   }
   public async getUserInfo(userId: string, local: boolean) {
-    let userEntity: UserEntity | undefined;
+    let userEntity: UserEntity | null;
     if (local) {
       const userRepository = this.getLocalDB().getRepository(UserEntity);
-      userEntity = await userRepository.findOne({ id: userId });
+      userEntity = await userRepository.findOne({ where: { id: userId } });
     } else {
       //リモートユーザ
       const userRepository = this.userRepository;
       if (!userRepository) return null;
-      userEntity = await userRepository.findOne({ id: userId });
+      userEntity = await userRepository.findOne({ where: { id: userId } });
     }
     if (!userEntity) return null;
 
@@ -211,7 +215,7 @@ export class Users extends amf.Module {
     if (local) {
       const userRepository = this.getLocalDB().getRepository(UserEntity);
       //ユーザが存在するか確認
-      const userEntity = await userRepository.findOne(userNo);
+      const userEntity = await userRepository.findOne({ where: { no: userNo } });
       if (userNo && !userEntity) return false;
       if (userNo == 0 && userPass === "") return false;
       if (userName === "") userName = userId;
@@ -241,7 +245,7 @@ export class Users extends amf.Module {
       const userRepository = this.userRepository;
       if (!userRepository) return false;
       //ユーザが存在するか確認
-      const userEntity = await userRepository.findOne(userNo);
+      const userEntity = await userRepository.findOne({ where: { no: userNo } });
       if (userName === "") userName = userId;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let result: any;

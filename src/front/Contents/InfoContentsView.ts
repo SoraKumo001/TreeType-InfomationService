@@ -7,8 +7,8 @@ import { ContentsModule, MainContents } from "./ContentsModule";
 import { ContentsControleWindow } from "./ContentsControleWindow";
 import { ContentsEditWindow } from "./ContentsEditWindow";
 import "./scss/InfoContentsView.scss";
-import "highlight.js/styles/tomorrow-night-eighties.css";
 import { Manager } from "../Manager/Manager";
+import "highlight.js/scss/tomorrow-night-bright.scss";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const highlight = require("highlight.js/lib/core");

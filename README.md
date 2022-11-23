@@ -12,24 +12,16 @@
 
 ## 使い方
 
-- 各種コンパイル
+- 開発モード
 
 ```.sh
-npm run build-jwf
-npm run build-public
-npm run build-app
+yarn dev
 ```
 
-- 実行
+- デプロイ(Docker使用)
 
 ```.sh
-npm start
-```
-
-- pm2で実行する場合
-
-```.sh
-pm2 start
+yarn deploy
 ```
 
 - 確認

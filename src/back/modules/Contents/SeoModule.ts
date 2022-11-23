@@ -11,7 +11,7 @@ export class SeoModule extends Module {
     const document = creater.getDocument();
 
     const req = creater.getRequest();
-    const uuid = req.query.uuid || "";
+    const uuid = req.query.uuid || (await contentsModule.getUuidFromId(1));
     const id = uuid ? await contentsModule.getIdFromUuid(uuid as string) : 1;
 
     //パラメータの読み出し

@@ -59,11 +59,11 @@ export class Files extends amf.Module {
       "connect",
       async (): Promise<void> => {
         const repository = new ExtendRepository(
-          remoteDB.getConnection() as typeorm.Connection,
+          remoteDB.dataSource!,
           FileEntity
         );
         this.repository = repository;
-        if (!(await repository.findOne(1)))
+        if (!(await repository.findOne({ where: { id: 1 } })))
           await repository.save({ kind: 0, name: "[ROOT]" });
       }
     );
@@ -103,7 +103,7 @@ export class Files extends amf.Module {
     const repository = this.repository;
     if (!repository) return null;
 
-    return repository.findOne(fileId);
+    return repository.findOne({ where: { id: fileId } });
   }
   public async _createDir(parentId: number, path: string) {
     const repository = this.repository;
@@ -283,11 +283,11 @@ export class Files extends amf.Module {
       .select("name,octet_length(value) as size,date,value")
       .where("id=:id and kind=1", { id: fileId })
       .getRawOne()) as {
-      name: string;
-      size: number;
-      date: Date;
-      value: Buffer;
-    };
+        name: string;
+        size: number;
+        date: Date;
+        value: Buffer;
+      };
     let httpDisposition = "inline;";
     if (result) {
       const fileName = result.name as string;
@@ -339,7 +339,7 @@ export class Files extends amf.Module {
     if (!repository) return null;
 
     let id: number | undefined;
-    const result = await repository.findOne({ parentId: pid, name });
+    const result = await repository.findOne({ where: { parentId: pid, name } });
     if (result) id = result.id;
     const file = {
       id,

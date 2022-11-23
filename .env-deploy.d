@@ -1,0 +1,5 @@
+# .env-deploy
+# デプロイ用ホスト設定
+DOCKER_TLS_VERIFY=1
+DOCKER_HOST=tcp://HOST:2375
+COMPOSE_TLS_VERSION=TLSv1_2

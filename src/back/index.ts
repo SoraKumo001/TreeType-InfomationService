@@ -1,4 +1,4 @@
-import { Manager } from "@rfcs/core";
+import { Manager, Module, Session } from "@rfcs/core";
 import * as path from "path";
 import Express from "express";
 import * as fs from "fs";
@@ -7,8 +7,8 @@ import browserSync from "browser-sync";
 import { Server } from "http";
 import { Adapter } from "@rfcs/adapter";
 import { Users, UserInfo } from "./modules/User/UsersModule";
-import * as cluster from "cluster";
-import * as os from "os";
+import cluster from "cluster";
+import os from "os";
 const connectBrowserSync = require("connect-browser-sync");
 
 const dev = process.env.NODE_ENV !== "production";
@@ -36,16 +36,7 @@ interface AdapterUserMap {
 //管理用マネージャクラスの作成
 const manager = new Manager();
 
-const htmlCreater = new HtmlCreater({
-  baseUrl: "",
-  indexPath: path.resolve(__dirname, "../template/index.html"), //index.thmlテンプレート
-  rootPath: path.resolve(__dirname, "../public"), //一般コンテンツのローカルパス
-  cssPath: ["css"], //自動ロード用CSSパス
-  jsPath: ["js"], //一般コンテンツのローカルパス
-  jsPriority: [], //優先JSファイル設定
-});
-
-if (cluster.isMaster && !dev) {
+if (cluster.isPrimary && !dev) {
   try {
     fs.unlinkSync(sock_path);
   } catch (error) {
@@ -88,21 +79,45 @@ if (cluster.isMaster && !dev) {
           )
         );
       }
+      const htmlCreater = new HtmlCreater({
+        baseUrl: "",
+        indexPath: path.resolve(__dirname, "../template/index.html"), //index.thmlテンプレート
+        rootPath: path.resolve(__dirname, "../public"), //一般コンテンツのローカルパス
+        cssPath: ["css"], //自動ロード用CSSパス
+        jsPath: ["js"], //一般コンテンツのローカルパス
+        jsPriority: [], //優先JSファイル設定
+        callback: async (htmlCreater) => {
+          await manager.execute(null, async (session: Session) => {
+            const modules = await session.getModules();
+            if (modules) {
+              const htmlModules = modules as (Module & {
+                onCreateHtml: (creater: HtmlCreater) => Promise<boolean>;
+              })[];
+              const htmlResult = htmlModules
+                .filter((module) => module.onCreateHtml)
+                .map((module, index) =>
+                  module.onCreateHtml(htmlCreater).catch(() => console.log(module))
+                );
+              await Promise.all(htmlResult);
+            }
+          });
+        },
+      });
+
       express.get("/", htmlCreater.output.bind(htmlCreater));
       //静的ファイルの設定(index.jsからの相対パス)
       express.use(Express.static(path.resolve(__dirname, "../public")));
 
       let server: Server;
       const promise = new Promise((resolve) => {
-        const id = cluster.worker?.id || 0;
         //待ち受けポート設定
         if (!socket || testMode) {
           server = express.listen(port_number, () => resolve(null));
-          manager.output(`listen: [${id}] http://localhost:${port_number}`);
+          manager.output(`listen: [http://localhost:${port_number}`);
         } else {
           server = express.listen(sock_path, () => {
             fs.chmodSync(sock_path, "666");
-            manager.output(`listen: [${id}] ${sock_path}`);
+            manager.output(`listen: ${sock_path}`);
             resolve(null);
           });
         }

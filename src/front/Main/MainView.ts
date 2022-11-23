@@ -42,7 +42,7 @@ export class MainView extends JWF.BaseView {
 
       //トラッカーに通知
       try {
-        const AnalyticsUA = ((global as unknown) as NodeJS.Global & {
+        const AnalyticsUA = ((global as unknown) as Global & {
           AnalyticsUA: string;
         })["AnalyticsUA"];
         // eslint-disable-next-line no-undef

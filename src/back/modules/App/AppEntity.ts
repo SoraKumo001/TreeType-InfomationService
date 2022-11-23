@@ -4,7 +4,7 @@ import {
   PrimaryColumn,
   Column,
   EntityRepository,
-  Connection,
+  DataSource,
 } from "typeorm";
 
 @Entity()
@@ -17,7 +17,7 @@ export class AppEntity {
 
 @EntityRepository(AppEntity)
 export class AppRepository extends ExtendRepository<AppEntity> {
-  constructor(con: Connection) {
+  constructor(con: DataSource) {
     super(con, AppEntity);
   }
 
@@ -55,7 +55,7 @@ export class AppRepository extends ExtendRepository<AppEntity> {
   public async getItem(name: string): Promise<unknown>;
   public async getItem<T>(name: string, defValue?: T): Promise<T>;
   public async getItem(name: string, defValue?: unknown): Promise<unknown> {
-    const entity = await this.findOne(name);
+    const entity = await this.findOne({ where: { name } });
     const value = entity ? entity.value : undefined;
     if (value) {
       if (typeof defValue === "number" && typeof value === "string")

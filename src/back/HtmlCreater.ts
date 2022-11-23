@@ -10,6 +10,15 @@ interface FileInfo {
   name: string;
   date: Date;
 }
+interface Options {
+  baseUrl: string;
+  rootPath: string;
+  indexPath: string;
+  cssPath: string[];
+  jsPath: string[];
+  jsPriority: string[];
+  callback?: (htmlCreater: HtmlCreater) => void;
+}
 
 /**
  *トップページ用HTML作成クラス
@@ -23,22 +32,8 @@ export class HtmlCreater {
   private links: string[] = [];
   private headers: { [key: string]: string } = {};
   private req?: express.Request;
-  private options: {
-    baseUrl: string;
-    rootPath: string;
-    indexPath: string;
-    cssPath: string[];
-    jsPath: string[];
-    jsPriority: string[];
-  };
-  constructor(options: {
-    baseUrl: string;
-    rootPath: string;
-    indexPath: string;
-    cssPath: string[];
-    jsPath: string[];
-    jsPriority: string[];
-  }) {
+  private options: Options;
+  constructor(options: Options) {
     this.options = options;
     this.output.bind(this);
   }
@@ -96,6 +91,7 @@ export class HtmlCreater {
       rootPath,
       jsPath,
       cssPath,
+      callback,
     } = this.options;
 
     if (!(await this.openTemplate(indexPath))) return false;
@@ -121,7 +117,7 @@ export class HtmlCreater {
       cssFiles.map((v): string => v.dir + "/" + v.name),
       "style"
     );
-
+    await callback?.(this);
     res.writeHead(
       this.status,
       Object.assign(this.headers, {

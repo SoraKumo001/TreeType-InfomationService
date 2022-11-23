@@ -90,7 +90,7 @@ export class LoginWindow extends JWF.FrameWindow {
     });
     buttonLogout.addEventListener("buttonClick", async () => {
       msgLabel.setText("ログアウト中");
-      const info = userModule.logout();
+      const info = await userModule.logout();
       if (info) {
         msgLabel.setText("ログアウト完了");
         await JWF.Sleep(500);

@@ -2,6 +2,7 @@
 import * as amf from "@rfcs/core";
 import { Users } from "./User/UsersModule";
 import * as typeorm from "typeorm";
+import { Not, ObjectLiteral } from "typeorm";
 
 @typeorm.Entity()
 class DatabaseConfigEntity extends typeorm.BaseEntity {
@@ -26,8 +27,8 @@ export function Sleep(timeout: number): Promise<void> {
     }, timeout);
   });
 }
-export interface CustomMap extends amf.ModuleMap {
-  connect: [typeorm.Connection];
+export type CustomMap = ObjectLiteral & amf.ModuleMap & {
+  connect: [typeorm.DataSource];
   disconnect: [];
 }
 export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
@@ -36,11 +37,11 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
   public addEntity<T>(model: (new () => T) | Function) {
     this.entities.push(model);
   }
-  public getRepository<T>(model: new () => T): typeorm.Repository<T> {
-    if (!this.connection) throw "Error can't local database";
-    return this.connection.getRepository(model);
+  public getRepository<T extends ObjectLiteral>(model: new () => T): typeorm.Repository<T> {
+    if (!this.dataSource) throw "Error can't local database";
+    return this.dataSource.getRepository(model);
   }
-  connection?: typeorm.Connection;
+  dataSource?: typeorm.DataSource;
   public static getModuleInfo(): amf.ModuleInfo {
     return {
       className: this.name,
@@ -51,10 +52,10 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
     };
   }
   public getConnection() {
-    return this.connection;
+    return this.dataSource;
   }
   public isConnect() {
-    return this.connection && this.connection.isConnected;
+    return this.dataSource && this.dataSource.isConnected;
   }
   public async onCreateModule() {
     this.getLocalDB().addEntity(DatabaseConfigEntity);
@@ -81,7 +82,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
     await this.close();
 
     if (!this.localRepository) return false;
-    const config = await this.localRepository.findOne();
+    const config = await this.localRepository.findOneBy({ id: Not(0) });
     if (!config) return false;
 
     const host = config.REMOTEDB_HOST || "localhost";
@@ -94,7 +95,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
     //this.first = true;
     //ユーザ名が設定されていなければ戻る
     if (!username) return false;
-    this.connection = await typeorm.createConnection({
+    this.dataSource = await typeorm.createConnection({
       name: "RemoteDB",
       type: "postgres",
       host, // 接続するDBホスト名
@@ -106,15 +107,15 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
       logging: false,
       entities: [...this.entities],
     });
-    if (this.connection) this.callEvent("connect", this.connection);
+    if (this.dataSource) this.callEvent("connect", this.dataSource);
     return true;
   }
   public async close() {
-    const connection = this.connection;
+    const connection = this.dataSource;
     if (connection) {
       this.callEvent("disconnect");
       await connection.close();
-      this.connection = undefined;
+      this.dataSource = undefined;
     }
   }
 
@@ -136,7 +137,7 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
     if (!this.isAdmin()) return null;
 
     if (!this.localRepository) return false;
-    const config = await this.localRepository.findOne();
+    const config = await this.localRepository.findOneBy({ id: Not(0) });
     if (!config) return false;
 
     const host = config.REMOTEDB_HOST || "localhost";
@@ -159,14 +160,14 @@ export class RemoteDB<T extends CustomMap = CustomMap> extends amf.Module<T> {
     if (!this.isAdmin()) return null;
     if (!this.localRepository) return null;
     await this.localRepository.clear();
-    await this.localRepository.save(config);
+    await this.localRepository.save(config).then(console.log);
     this.getManager().sendMessage("connect");
     return this.connect();
   }
   @amf.EXPORT
   public async getInfo() {
-    if (!this.isAdmin() || !this.connection) return null;
-    const result = await this.connection.query(
+    if (!this.isAdmin() || !this.dataSource) return null;
+    const result = await this.dataSource.query(
       "select true as connect,current_database() as database,pg_database_size(current_database()) as size,version() as server"
     );
     return result ? result[0] : null;

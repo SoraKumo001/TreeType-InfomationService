@@ -20,27 +20,23 @@ import { AbstractSqliteDriver } from "typeorm/driver/sqlite-abstract/AbstractSql
  * @template Entity
  */
 @EntityRepository()
-export class ExtendRepository<Entity> extends TreeRepository<Entity> {
+export class ExtendRepository<Entity extends ObjectLiteral> extends TreeRepository<Entity> {
   /**
    *Creates an instance of ExtendRepository.
    * @param {Connection} connection
    * @param {ObjectType<Entity>} entity
    * @memberof ExtendRepository
    */
-  constructor(connection: Connection, entity: ObjectType<Entity>) {
-    super();
+  constructor(connection: typeorm.DataSource, entity: ObjectType<Entity>) {
     let manager;
     try {
       manager = getManager(connection.name);
     } catch {
-      manager = new typeorm.EntityManager(connection);
+      manager = connection.manager;
     }
-
-    const metadata = connection.getMetadata(entity);
+    super(entity, manager);
     const queryRunner = manager.queryRunner;
     Object.assign(this, {
-      manager: manager,
-      metadata: metadata,
       queryRunner: queryRunner,
     });
   }
@@ -63,9 +59,9 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
       select?: (keyof Entity)[];
       level?: number;
       where?:
-        | string
-        | typeorm.Brackets
-        | ((qb: SelectQueryBuilder<Entity>) => string);
+      | string
+      | typeorm.Brackets
+      | ((qb: SelectQueryBuilder<Entity>) => string);
       parameters?: ObjectLiteral | undefined;
       order?: string | [string, "ASC" | "DESC", "NULLS FIRST" | "NULLS LAST"];
     }
@@ -82,7 +78,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
           .columnNames;
         builder.select([
           ...options.select.map((v) => {
-            return "treeEntity." + v;
+            return "treeEntity." + v.toString();
           }),
           ...parents.map((v) => {
             return "treeEntity." + v;
@@ -97,7 +93,9 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
 
     const entitiesAndScalars = await builder.getRawAndEntities();
     if (entitiesAndScalars.raw.length === 0) return undefined;
-    const relationMaps = this.createRelationMaps(
+    const relationMaps = typeorm.TreeRepositoryUtils.createRelationMaps(
+      this.manager,
+      this.metadata,
       "treeEntity",
       entitiesAndScalars.raw
     );
@@ -108,7 +106,8 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
     let index: number;
     for (index = 0; ids.has(relationMaps[index].id); ++index);
 
-    this.buildParentEntityTree(
+    typeorm.TreeRepositoryUtils.buildParentEntityTree(
+      this.metadata,
       entitiesAndScalars.entities[index],
       entitiesAndScalars.entities,
       relationMaps
@@ -134,9 +133,9 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
       select?: (keyof Entity)[];
       level?: number;
       where?:
-        | string
-        | typeorm.Brackets
-        | ((qb: SelectQueryBuilder<Entity>) => string);
+      | string
+      | typeorm.Brackets
+      | ((qb: SelectQueryBuilder<Entity>) => string);
       parameters?: ObjectLiteral | undefined;
       order?: string | [string, "ASC" | "DESC", "NULLS FIRST" | "NULLS LAST"];
     }
@@ -153,7 +152,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
           .columnNames;
         builder.select([
           ...options.select.map((v) => {
-            return "treeEntity." + v;
+            return "treeEntity." + v.toString();
           }),
           ...parents.map((v) => {
             return "treeEntity." + v;
@@ -168,7 +167,9 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
 
     const entitiesAndScalars = await builder.getRawAndEntities();
     if (entitiesAndScalars.raw.length === 0) return undefined;
-    const relationMaps = this.createRelationMaps(
+    const relationMaps = typeorm.TreeRepositoryUtils.createRelationMaps(
+      this.manager,
+      this.metadata,
       "treeEntity",
       entitiesAndScalars.raw
     );
@@ -341,8 +342,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
         const subQuery = qb
           .subQuery()
           .select(
-            `${this.metadata.targetName}.${
-              this.metadata.materializedPathColumn!.propertyPath
+            `${this.metadata.targetName}.${this.metadata.materializedPathColumn!.propertyPath
             }`,
             "path"
           )
@@ -357,13 +357,11 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
 
         qb.setNativeParameters(subQuery.expressionMap.nativeParameters);
         if (this.manager.connection.driver instanceof AbstractSqliteDriver) {
-          return `${subQuery.getQuery()} LIKE ${alias}.${
-            this.metadata.materializedPathColumn!.propertyPath
-          } || '%'`;
+          return `${subQuery.getQuery()} LIKE ${alias}.${this.metadata.materializedPathColumn!.propertyPath
+            } || '%'`;
         } else {
-          return `${subQuery.getQuery()} LIKE CONCAT(${alias}.${
-            this.metadata.materializedPathColumn!.propertyPath
-          }, '%')`;
+          return `${subQuery.getQuery()} LIKE CONCAT(${alias}.${this.metadata.materializedPathColumn!.propertyPath
+            }, '%')`;
         }
       });
     }
@@ -501,8 +499,7 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
         const subQuery = qb
           .subQuery()
           .select(
-            `${this.metadata.targetName}.${
-              this.metadata.materializedPathColumn!.propertyPath
+            `${this.metadata.targetName}.${this.metadata.materializedPathColumn!.propertyPath
             }`,
             "path"
           )
@@ -516,13 +513,11 @@ export class ExtendRepository<Entity> extends TreeRepository<Entity> {
         }
         qb.setNativeParameters(subQuery.expressionMap.nativeParameters);
         if (this.manager.connection.driver instanceof AbstractSqliteDriver) {
-          return `${alias}.${
-            this.metadata.materializedPathColumn!.propertyPath
-          } LIKE ${subQuery.getQuery()} || '%'`;
+          return `${alias}.${this.metadata.materializedPathColumn!.propertyPath
+            } LIKE ${subQuery.getQuery()} || '%'`;
         } else {
-          return `${alias}.${
-            this.metadata.materializedPathColumn!.propertyPath
-          } LIKE CONCAT(${subQuery.getQuery()}, '%')`;
+          return `${alias}.${this.metadata.materializedPathColumn!.propertyPath
+            } LIKE CONCAT(${subQuery.getQuery()}, '%')`;
         }
       });
     }
